@@ -1,0 +1,15 @@
+node_modules/
+.media/
+.next/
+out/
+build/
+.env
+.env*.local
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+.remember/logs/
+.remember/tmp/
+
+# scripts temporaires de refactoring
+scripts/_*

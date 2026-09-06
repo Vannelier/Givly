@@ -1,0 +1,1284 @@
+/* ---------------------------------------------------------------------------
+   Formulaire de composition — partagé entre la création (/) et l'édition
+   (/admin/[token]). Même composant, donc mêmes styles.
+   --------------------------------------------------------------------------- */
+
+.hero {
+  text-align: center;
+  margin-bottom: clamp(2rem, 7vw, 3rem);
+}
+
+.hero h1 {
+  font-size: clamp(1.9rem, 6.5vw, 2.9rem);
+  text-wrap: balance;
+}
+
+.hero p {
+  margin: 1rem auto 0;
+  max-width: 34rem;
+  color: var(--ink-soft);
+}
+
+.editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(1.1rem, 4vw, 1.6rem);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel h2 {
+  font-size: 1.22rem;
+  margin-bottom: 0.35rem;
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel__count {
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.help {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin-bottom: 1.1rem;
+}
+
+/* --- Fil des etapes -------------------------------------------------------- */
+
+.stepper {
+  list-style: none;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+  padding: 0;
+}
+
+.stepper__item {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.stepper__btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    background 0.18s var(--ease),
+    color 0.18s var(--ease),
+    border-color 0.18s var(--ease);
+}
+
+.stepper__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.stepper__item.is-done .stepper__btn {
+  color: var(--accent-dark);
+  border-color: var(--accent-soft);
+  background: var(--accent-soft);
+}
+
+.stepper__item.is-current .stepper__btn {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.stepper__num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.07);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.stepper__item.is-current .stepper__num {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stepper__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Sur un ecran etroit, le mot compte plus que la pastille : l'etat courant et
+ * les etapes faites restent lisibles a la couleur du bouton.
+ */
+@media (max-width: 30rem) {
+  .stepper__num {
+    display: none;
+  }
+
+  .stepper__btn {
+    font-size: 0.78rem;
+    padding: 0.55rem 0.3rem;
+  }
+}
+
+/* --- Palettes -------------------------------------------------------------- */
+
+.palettes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 34rem) {
+  .palettes {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.palette {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+.palette:hover {
+  border-color: var(--ink-faint);
+}
+
+.palette.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+.palette__chips {
+  display: flex;
+  height: 1.6rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.palette__chips span {
+  flex: 1 1 0;
+}
+
+.palette__name {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.palette.is-on .palette__name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Occasions ------------------------------------------------------------- */
+
+/* Quinze occasions a plat seraient illisibles : on les range par rubrique. */
+.occasion-groups {
+  display: grid;
+  gap: 1rem;
+}
+
+.occasion-group__title {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.45rem;
+}
+
+.occasions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 30rem) {
+  .occasions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.occasion {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: center;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+.occasion:hover {
+  border-color: var(--ink-faint);
+}
+
+.occasion.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+.occasion__icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.occasion__name {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.occasion.is-on .occasion__name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Polices --------------------------------------------------------------- */
+
+.fonts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.font-choice {
+  display: grid;
+  gap: 0.15rem;
+  justify-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+.font-choice:hover {
+  border-color: var(--ink-faint);
+}
+
+.font-choice.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+.font-choice__sample {
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.font-choice__name {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.font-choice.is-on .font-choice__name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Styles d'ouverture ---------------------------------------------------- */
+
+.openings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.opening {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  padding: 0.65rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+.opening:hover {
+  border-color: var(--ink-faint);
+}
+
+.opening.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+/* Petite vignette dessinee en CSS : deux volets, disposes selon le style. */
+.opening__glyph {
+  position: relative;
+  display: block;
+  width: 2.6rem;
+  height: 1.8rem;
+  border-radius: 5px;
+  background: var(--paper-warm);
+  overflow: hidden;
+  margin-bottom: 0.15rem;
+}
+
+.opening__glyph i {
+  position: absolute;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.opening__glyph--voile i {
+  inset: 0;
+}
+
+.opening__glyph--voile i:last-child {
+  inset: 0.4rem;
+  opacity: 0.75;
+  border-radius: 3px;
+}
+
+.opening__glyph--rideau i {
+  top: 0;
+  bottom: 0;
+  width: 42%;
+}
+
+.opening__glyph--rideau i:first-child {
+  left: 0;
+}
+
+.opening__glyph--rideau i:last-child {
+  right: 0;
+}
+
+.opening__glyph--enveloppe i:first-child {
+  left: 0;
+  right: 0;
+  top: 45%;
+  bottom: 0;
+}
+
+.opening__glyph--enveloppe i:last-child {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 45%;
+  opacity: 0.8;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.opening__name {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.opening.is-on .opening__name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.opening__hint {
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  line-height: 1.25;
+}
+
+input[type="datetime-local"] {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+}
+
+input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(176, 83, 60, 0.13);
+}
+
+/* --- QR code --------------------------------------------------------------- */
+
+.qr {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: left;
+}
+
+.qr__code {
+  flex: 0 0 auto;
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.qr__code svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qr__side {
+  min-width: 0;
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.qr__help {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+@media (max-width: 26rem) {
+  .qr {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .qr__code {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+
+/* --- Etape 3 : reglages + apercu vivant ------------------------------------ */
+
+.step3 {
+  display: grid;
+  gap: 1rem;
+}
+
+.step3__main {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/*
+ * L'apercu est un vrai GiftView mis a l'echelle. Le `transform` du conteneur
+ * cree un bloc englobant : la barre de confirmation, en position fixed, reste
+ * donc enfermee dans le cadre au lieu de s'echapper sur toute la fenetre.
+ */
+.mini {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.mini__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.mini__frame {
+  position: relative;
+  width: 300px;
+  max-width: 100%;
+  height: 190px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.mini__scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 390px;
+  height: 682px;
+  transform: scale(0.7692);
+  transform-origin: top left;
+}
+
+@media (min-width: 62rem) {
+  .step3 {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .step3__main {
+    order: -1;
+  }
+
+  .step3__side {
+    position: sticky;
+    top: 1rem;
+  }
+
+  .mini__frame {
+    height: 525px;
+  }
+}
+
+/* --- Champs ---------------------------------------------------------------- */
+
+.field {
+  display: block;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.field:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.field__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+
+.field__help {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-bottom: 0.4rem;
+  line-height: 1.4;
+}
+
+input[type="text"],
+input[type="url"],
+textarea {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.62rem 0.75rem;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+input[type="text"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: #bcb0a5;
+}
+
+input[type="text"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(176, 83, 60, 0.13);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 3.4rem;
+  line-height: 1.5;
+}
+
+.counter {
+  position: absolute;
+  right: 0.1rem;
+  top: 0;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter.is-near {
+  color: var(--accent);
+}
+
+.inline {
+  display: flex;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+.inline input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inline .btn--sm {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+label.btn {
+  cursor: pointer;
+}
+
+label.btn.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.check input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.check {
+  align-items: flex-start;
+}
+
+.check span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.check em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  line-height: 1.35;
+}
+
+.mini__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: var(--paper);
+  gap: 0.15rem;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.42rem 1.05rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition:
+    background 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.segmented button.is-on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.slug-input {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding-left: 0.75rem;
+  overflow: hidden;
+}
+
+.slug-input span {
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.slug-input input {
+  border: 0;
+  border-radius: 0;
+  padding-left: 0.1rem;
+}
+
+.slug-input input:focus {
+  box-shadow: none;
+}
+
+/* --- Options facultatives -------------------------------------------------- */
+
+/*
+ * Les reglages facultatifs se replient derriere leur case : le panneau reste
+ * lisible, et seul ce que le donneur active occupe de la place.
+ */
+.options {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.options .check {
+  margin-top: 0;
+}
+
+.options__hint {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.options__hint code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+  word-break: break-all;
+}
+
+.optional__body {
+  margin: 0.55rem 0 0.2rem 1.6rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--accent-soft);
+}
+
+.optional__body .field:first-of-type {
+  margin-top: 0;
+}
+
+@media (max-width: 30rem) {
+  .optional__body {
+    margin-left: 0.4rem;
+    padding-left: 0.7rem;
+  }
+}
+
+/* --- Lignes de cadeaux ----------------------------------------------------- */
+
+.rows {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: var(--paper);
+}
+
+.row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.row__index {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.row__tools {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.icon-btn {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    background 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--paper-warm);
+  color: var(--ink);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.icon-btn--danger:hover:not(:disabled) {
+  background: rgba(156, 53, 53, 0.08);
+  color: var(--danger);
+  border-color: rgba(156, 53, 53, 0.3);
+}
+
+.row__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 40rem) {
+  .row__grid {
+    grid-template-columns: 8.5rem 1fr;
+  }
+}
+
+/* Cible de collage : focalisable au clavier, pour que Ctrl+V ait ou atterrir. */
+.row__preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line);
+  background: linear-gradient(150deg, var(--paper-warm), #ece0cf);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition:
+    border-color 0.16s var(--ease),
+    box-shadow 0.16s var(--ease);
+}
+
+.row__preview:hover,
+.row__preview:focus-visible {
+  border-color: var(--accent);
+  border-style: solid;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(176, 83, 60, 0.13);
+}
+
+.row__preview.is-busy {
+  opacity: 0.6;
+}
+
+.row__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.row__preview span {
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 0 0.5rem;
+  line-height: 1.3;
+}
+
+.row__fields {
+  min-width: 0;
+}
+
+.row__fields .notice {
+  margin-top: 0.8rem;
+}
+
+/* --- Actions --------------------------------------------------------------- */
+
+.editor__actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--paper) 65%, rgba(250, 246, 240, 0));
+  z-index: 10;
+}
+
+.editor__nav {
+  display: flex;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.editor__nav .btn {
+  background: var(--card);
+}
+
+.editor__actions > .btn {
+  flex: 1 1 12rem;
+}
+
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, rgba(176, 83, 60, 0.09), transparent 62%),
+    radial-gradient(90% 55% at 100% 0%, rgba(200, 165, 110, 0.12), transparent 55%);
+}
+
+.preview-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.preview-ribbon__exit {
+  border: 1px solid rgba(250, 246, 240, 0.4);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.7rem;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.preview-ribbon__exit:hover {
+  background: rgba(250, 246, 240, 0.16);
+}
+
+/* --- Écran des liens après création ---------------------------------------- */
+
+.link-box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 1rem 1.1rem;
+  margin-top: 0.85rem;
+  text-align: left;
+}
+
+.link-box__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+}
+
+.link-box__help {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-top: 0.15rem;
+  line-height: 1.45;
+}
+
+.link-box__value {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+
+.link-box__value code {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.link-box--admin {
+  border-color: rgba(176, 132, 40, 0.4);
+  background: rgba(176, 132, 40, 0.05);
+}
+
+.reply-quote {
+  margin: 1rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--accent-soft);
+  background: var(--paper);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.reply-quote p {
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* --- Carte a imprimer ------------------------------------------------------ */
+
+.print-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  gap: 1.25rem;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  align-content: center;
+}
+
+.print-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 34rem;
+  text-align: center;
+}
+
+.print-bar p {
+  flex: 1 1 14rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+/* A6 : la moitie d'une A5, le quart d'une A4. Se plie en deux. */
+.card-print {
+  position: relative;
+  width: 105mm;
+  height: 148mm;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  background-image:
+    radial-gradient(120% 80% at 50% 0%, var(--glow-a, rgba(176, 83, 60, 0.09)), transparent 65%);
+  color: var(--ink);
+  box-shadow: 0 18px 44px -20px rgba(52, 38, 28, 0.4);
+}
+
+.card-print__inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 10mm 9mm;
+  text-align: center;
+}
+
+.card-print__to {
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 13pt;
+  color: var(--accent-dark);
+}
+
+.card-print__intro {
+  font-size: 7pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.card-print__title {
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 16pt;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin-bottom: 0.4rem;
+}
+
+.card-print__qr {
+  width: 38mm;
+  height: 38mm;
+  padding: 2.5mm;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.card-print__qr svg,
+.card-print__qr > div {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.card-print__qr-empty {
+  width: 100%;
+  height: 100%;
+  background: var(--paper-warm);
+  border-radius: 3px;
+}
+
+.card-print__cta {
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.card-print__signature {
+  margin-top: 0.5rem;
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 10pt;
+  color: var(--ink-soft);
+}
+
+/*
+ * A l'impression, il ne reste que la carte : ni commandes, ni ombre, ni marge
+ * de page. `print-color-adjust` force le navigateur a imprimer les aplats de
+ * couleur, qu'il supprime par defaut pour economiser l'encre.
+ */
+@media print {
+  @page {
+    size: A6;
+    margin: 0;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .print-bar {
+    display: none;
+  }
+
+  .print-page {
+    min-height: 0;
+    padding: 0;
+    display: block;
+  }
+
+  .card-print {
+    width: 105mm;
+    height: 148mm;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* --- Vue admin ------------------------------------------------------------- */
+
+.status {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.status__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+
+.status__row:last-child {
+  border-bottom: 0;
+}
+
+.status__row dt {
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.status__row dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 550;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pill--waiting {
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+}
+
+.pill--chosen {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.pill--expired {
+  background: rgba(156, 53, 53, 0.09);
+  color: var(--danger);
+}

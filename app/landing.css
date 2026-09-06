@@ -1,0 +1,293 @@
+/* ---------------------------------------------------------------------------
+   Page d'accueil : présente l'outil et invite à composer. Le formulaire vit
+   sur /creer, la page-cadeau sur /[slug].
+   --------------------------------------------------------------------------- */
+
+.landing {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 7vw, 4rem) clamp(1rem, 5vw, 2rem) clamp(3rem, 9vw, 5rem);
+}
+
+.btn--auto {
+  width: auto;
+  padding: 0 1.9rem;
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  margin-bottom: 1.1rem;
+}
+
+.back-link:hover {
+  color: var(--accent-dark);
+}
+
+/* --- Accroche -------------------------------------------------------------- */
+
+.lp-hero {
+  text-align: center;
+  padding-bottom: clamp(2.5rem, 8vw, 4rem);
+}
+
+.lp-hero h1 {
+  font-size: clamp(2.4rem, 10vw, 4.2rem);
+  letter-spacing: -0.03em;
+}
+
+.lp-sub {
+  margin: 1.2rem auto 0;
+  max-width: 33rem;
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 2.6vw, 1.1rem);
+  text-wrap: pretty;
+}
+
+.lp-cta {
+  margin-top: 2rem;
+}
+
+.lp-fine {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  text-wrap: pretty;
+}
+
+/* --- Démonstration --------------------------------------------------------- */
+
+.lp-demo {
+  display: grid;
+  gap: clamp(2rem, 6vw, 3.5rem);
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: clamp(2.5rem, 8vw, 4rem);
+}
+
+@media (min-width: 46rem) {
+  .lp-demo {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.lp-demo__text h2 {
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
+}
+
+.lp-demo__text p {
+  margin-top: 0.9rem;
+  color: var(--ink-soft);
+  max-width: 26rem;
+  text-wrap: pretty;
+}
+
+.lp-phone {
+  justify-self: center;
+  width: 250px;
+  border: 9px solid #29241f;
+  border-radius: 34px;
+  background: var(--paper);
+  box-shadow: 0 22px 50px -22px rgba(52, 38, 28, 0.5);
+  overflow: hidden;
+}
+
+.lp-phone__screen {
+  padding: 1.4rem 0.95rem 1.1rem;
+  text-align: center;
+  background-image: radial-gradient(120% 60% at 50% 0%, rgba(176, 83, 60, 0.12), transparent 65%);
+}
+
+.lp-phone .eyebrow {
+  font-size: 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.lp-phone__title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.15rem;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.lp-phone__cards {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0.9rem;
+}
+
+.lp-phone__card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.lp-phone__card.is-picked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent) inset;
+}
+
+.lp-phone__thumb {
+  display: block;
+  height: 52px;
+}
+
+.lp-phone__thumb--a {
+  background: linear-gradient(140deg, #e7dccb, #cdb9a0);
+}
+
+.lp-phone__thumb--b {
+  background: linear-gradient(140deg, #dcc6b4, #b98f74);
+}
+
+.lp-phone__label {
+  display: block;
+  padding: 0.45rem 0.55rem 0.55rem;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.lp-phone__check {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6rem;
+  display: grid;
+  place-items: center;
+}
+
+.lp-phone__button {
+  display: block;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.5rem;
+}
+
+/* --- Étapes ---------------------------------------------------------------- */
+
+.lp-steps {
+  border-top: 1px solid var(--line);
+  margin-top: clamp(2.5rem, 8vw, 4rem);
+  padding-top: clamp(2.5rem, 8vw, 4rem);
+}
+
+.lp-steps > h2 {
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
+  text-align: center;
+  margin-bottom: clamp(1.75rem, 5vw, 2.5rem);
+}
+
+.lp-steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 46rem) {
+  .lp-steps ol {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.lp-steps li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.4rem 1.35rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.lp-step__num {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+}
+
+.lp-steps h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.45rem;
+}
+
+.lp-steps li p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-wrap: pretty;
+}
+
+/* --- Réassurance ----------------------------------------------------------- */
+
+.lp-notes {
+  display: grid;
+  gap: 1.6rem;
+  margin-top: clamp(2.5rem, 8vw, 4rem);
+  padding-top: clamp(2.5rem, 8vw, 4rem);
+  border-top: 1px solid var(--line);
+}
+
+@media (min-width: 46rem) {
+  .lp-notes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+.lp-notes h3 {
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.lp-notes p {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  text-wrap: pretty;
+}
+
+/* --- Rappel final ---------------------------------------------------------- */
+
+.lp-final {
+  text-align: center;
+  margin-top: clamp(2.5rem, 8vw, 4rem);
+  padding-top: clamp(2.5rem, 8vw, 4rem);
+  border-top: 1px solid var(--line);
+}
+
+.lp-final h2 {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+.lp-final > p {
+  margin: 0.9rem auto 1.75rem;
+  max-width: 28rem;
+  color: var(--ink-soft);
+}
+
+.lp-final .lp-fine {
+  margin: 1.25rem auto 0;
+  max-width: 30rem;
+}
