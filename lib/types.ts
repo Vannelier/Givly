@@ -45,6 +45,8 @@ export type GiftPage = {
   reveal_at: string | null;
   /** Mot laisse par le receveur avec son choix. */
   reply_message: string;
+  /** Texte affiche par WhatsApp et consorts. Vide = le message d'accueil. */
+  link_title: string;
   welcome_message: string;
   thank_you_message: string;
   cover_image_url: string | null;

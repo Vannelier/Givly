@@ -15,6 +15,7 @@ export type AdminSnapshot = {
   name: string;
   intro_message: string;
   signature: string;
+  link_title: string;
   recipient_name: string;
   header_image_url: string | null;
   reveal_at: string | null;
@@ -49,6 +50,7 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
     name: page.name,
     intro_message: page.intro_message,
     signature: page.signature,
+    link_title: page.link_title,
     recipient_name: page.recipient_name,
     header_image_url: page.header_image_url,
     reveal_at: page.reveal_at,

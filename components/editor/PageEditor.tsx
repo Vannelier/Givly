@@ -30,6 +30,7 @@ export type EditorInitial = {
   name: string;
   intro_message: string;
   signature: string;
+  link_title: string;
   recipient_name: string;
   header_image_url: string | null;
   reveal_at: string | null;
@@ -124,20 +125,20 @@ export default function PageEditor(props: Props) {
   const [motif, setMotif] = useState(initial.theme.motif !== false);
   const [opening, setOpeningStyle] = useState<OpeningId>(openingById(initial.theme.opening).id);
   const [replyOn, setReplyOn] = useState(initial.theme.reply === true);
+  const [linkTitle, setLinkTitle] = useState(initial.link_title);
   const [sealEnabled, setSealEnabled] = useState(initial.theme.cover !== false);
   // Remonte GiftView pour rejouer l'ouverture sans recharger la page.
   const [replay, setReplay] = useState(0);
   const [items, setItems] = useState<DraftItem[]>(() => toDraftItems(initial.items));
 
-  const [slug, setSlug] = useState(initial.slug ?? "");
-
   // Un repli est ouvert d'emblee si le champ porte deja une valeur : en edition,
   // rien de ce qui a ete rempli ne doit se cacher.
-  const [slugCustom, setSlugCustom] = useState(false);
   const [introOn, setIntroOn] = useState(Boolean(initial.intro_message));
   const [signatureOn, setSignatureOn] = useState(Boolean(initial.signature));
   const [headerOn, setHeaderOn] = useState(Boolean(initial.header_image_url));
-  const [coverImgOn, setCoverImgOn] = useState(Boolean(initial.cover_image_url));
+  const [linkOn, setLinkOn] = useState(
+    Boolean(initial.link_title) || Boolean(initial.cover_image_url),
+  );
   const [revealOn, setRevealOn] = useState(Boolean(initial.reveal_at));
 
   const [preview, setPreview] = useState(false);
@@ -162,7 +163,9 @@ export default function PageEditor(props: Props) {
 
   // Le nom de la carte alimente l'adresse du lien tant que le donneur n'y a pas touché.
   const autoSlug = useMemo(() => slugify(name) || "cadeau", [name]);
-  const effectiveSlug = mode === "create" ? (slugCustom ? slug : autoSlug) : (initial.slug ?? "");
+  // L'adresse decoule du nom, sans reglage : le donneur ne s'en soucie pas, et
+  // le serveur resout tout seul une eventuelle collision.
+  const effectiveSlug = mode === "create" ? autoSlug : (initial.slug ?? "");
 
   function goTo(target: StepNumber) {
     setError(null);
@@ -367,6 +370,7 @@ export default function PageEditor(props: Props) {
       intro_message: intro.trim(),
       signature: signature.trim(),
       recipient_name: recipient.trim(),
+      link_title: linkTitle.trim(),
       header_image_url: header.trim() || null,
       reveal_at: revealAt ? new Date(revealAt).toISOString() : null,
       welcome_message: welcome.trim(),
@@ -531,34 +535,9 @@ export default function PageEditor(props: Props) {
           </Field>
 
           {props.mode === "create" ? (
-            <div className="options">
-              <p className="options__hint">
-                Adresse du lien : <code>{props.baseUrlLabel}/{effectiveSlug}</code>
-              </p>
-              <Optional
-                label="Personnaliser l&apos;adresse du lien"
-                help="Sinon elle découle du nom de la carte."
-                checked={slugCustom}
-                onChange={(on) => {
-                  setSlugCustom(on);
-                  setSlug(on ? autoSlug : "");
-                }}
-              >
-                <Field label="Adresse publique" help="Minuscules, chiffres et tirets, de 3 à 60 caractères.">
-                  <div className="slug-input">
-                    <span>{props.baseUrlLabel}/</span>
-                    <input
-                      type="text"
-                      value={slug}
-                      aria-label="Adresse publique de la page"
-                      spellCheck={false}
-                      autoCapitalize="none"
-                      onChange={(e) => setSlug(slugify(e.target.value))}
-                    />
-                  </div>
-                </Field>
-              </Optional>
-            </div>
+            <p className="options__hint">
+              Adresse du lien : <code>{props.baseUrlLabel}/{effectiveSlug}</code>
+            </p>
           ) : (
             <Field label="Adresse du lien" help="Fixe : le lien que tu as déjà envoyé continue de fonctionner.">
               <p className="readonly-value">
@@ -1031,15 +1010,33 @@ export default function PageEditor(props: Props) {
                 </Optional>
 
                 <Optional
-                  label="Choisir l&apos;image d&apos;aperçu du lien"
-                  help="Ce que montrent WhatsApp et les SMS. À défaut, l&apos;image du premier cadeau."
-                  checked={coverImgOn}
+                  label="Soigner l&apos;aperçu du lien"
+                  help="Ce que montrent WhatsApp, Signal et les SMS quand tu colles le lien."
+                  checked={linkOn}
                   onChange={(on) => {
-                    setCoverImgOn(on);
-                    if (!on) setCover("");
+                    setLinkOn(on);
+                    if (!on) {
+                      setLinkTitle("");
+                      setCover("");
+                    }
                   }}
                 >
-                  <Field label="Image d&apos;aperçu du lien">
+                  <Field
+                    label="Texte affiché"
+                    help="Le titre cliquable de l&apos;aperçu. À défaut, le message d&apos;accueil."
+                  >
+                    <input
+                      type="text"
+                      value={linkTitle}
+                      aria-label="Texte affiché dans l'aperçu du lien"
+                      maxLength={LIMITS.linkTitle}
+                      placeholder={welcome.trim() || current.welcomeHint}
+                      onChange={(e) => setLinkTitle(e.target.value)}
+                    />
+                    <Counter value={linkTitle} max={LIMITS.linkTitle} />
+                  </Field>
+
+                  <Field label="Image affichée" help="À défaut, l&apos;image du premier cadeau.">
                     <input
                       type="url"
                       inputMode="url"

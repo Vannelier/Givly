@@ -6,12 +6,16 @@
  */
 import assert from "node:assert/strict";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
+import { sslFor, toQuery } from "../lib/db";
 import {
+  DEFAULT_FONT_ID,
   DEFAULT_OCCASION_ID,
   DEFAULT_OPENING_ID,
+  FONTS,
   OCCASIONS,
   OCCASION_GROUPS,
   OPENINGS,
+  fontById,
   occasionById,
 } from "../lib/occasions";
 import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
@@ -640,6 +644,84 @@ test("la rubrique sans titre ne contient que l'occasion neutre", () => {
 
 test("aucune rubrique n'est vide", () => {
   for (const g of OCCASION_GROUPS) assert.ok(g.items.length > 0, String(g.label));
+});
+
+
+// --- Titre d'apercu de lien, slug, pilote Postgres --------------------------
+
+test("le texte d'apercu du lien est facultatif mais borne", () => {
+  assert.equal(validateCreate(validBody).link_title, "");
+  assert.equal(
+    validateCreate({ ...validBody, link_title: "Un cadeau t'attend" }).link_title,
+    "Un cadeau t'attend",
+  );
+  throwsValidation(
+    () => validateCreate({ ...validBody, link_title: "x".repeat(81) }),
+    "link_title",
+  );
+});
+
+test("validatePatch accepte de vider le texte d'apercu", () => {
+  assert.deepEqual(validatePatch({ link_title: "" }), { link_title: "" });
+});
+
+test("suggestVariant enchaine des adresses libres et distinctes", () => {
+  const base = "noel-de-sophie";
+  const variantes = [2, 3, 4].map((n) => suggestVariant(base, n));
+  assert.deepEqual(variantes, ["noel-de-sophie-2", "noel-de-sophie-3", "noel-de-sophie-4"]);
+  assert.equal(new Set(variantes).size, 3);
+  for (const v of variantes) assert.equal(slugError(v), null, v);
+});
+
+test("sslFor : TLS pour les hotes distants, rien en local ou reseau interne", () => {
+  assert.deepEqual(sslFor("postgres://u:p@ep-truc.eu-central-1.aws.neon.tech/db"), {
+    rejectUnauthorized: false,
+  });
+  assert.deepEqual(sslFor("postgres://u:p@monorail.proxy.rlwy.net:1234/railway"), {
+    rejectUnauthorized: false,
+  });
+  assert.equal(sslFor("postgres://u:p@postgres.railway.internal:5432/railway"), undefined);
+  assert.equal(sslFor("postgres://u:p@localhost:5432/givly"), undefined);
+  assert.equal(sslFor("pas une url"), undefined);
+});
+
+test("chaque police a un identifiant et une variable CSS uniques", () => {
+  const ids = FONTS.map((f) => f.id);
+  const vars = FONTS.map((f) => f.cssVar);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(new Set(vars).size, vars.length);
+  for (const f of FONTS) assert.match(f.cssVar, /^var\(--font-[a-z]+\)$/, f.id);
+});
+
+test("une police inconnue retombe sur la police par defaut", () => {
+  assert.equal(fontById("comic-sans").id, DEFAULT_FONT_ID);
+  assert.equal(fontById(undefined).id, DEFAULT_FONT_ID);
+  assert.equal(fontById("calligraphie").id, "calligraphie");
+});
+
+
+test("toQuery transforme le gabarit en requete parametree", () => {
+  const q = toQuery(["SELECT * FROM t WHERE a = ", " AND b = ", ""], ["x", 2]);
+  assert.equal(q.text, "SELECT * FROM t WHERE a = $1 AND b = $2");
+  assert.deepEqual(q.values, ["x", 2]);
+});
+
+test("toQuery preserve les suffixes de type colles au parametre", () => {
+  // `${id}::uuid` et `${json}::jsonb` sont utilises partout dans les routes.
+  const q = toQuery(["UPDATE t SET j = ", "::jsonb WHERE id = ", "::uuid"], ["{}", "abc"]);
+  assert.equal(q.text, "UPDATE t SET j = $1::jsonb WHERE id = $2::uuid");
+});
+
+test("toQuery gere une requete sans parametre", () => {
+  const q = toQuery(["SELECT 1"], []);
+  assert.equal(q.text, "SELECT 1");
+  assert.deepEqual(q.values, []);
+});
+
+test("toQuery n'insere jamais la valeur dans le texte", () => {
+  const q = toQuery(["SELECT * FROM t WHERE s = ", ""], ["'; DROP TABLE gift_pages; --"]);
+  assert.equal(q.text, "SELECT * FROM t WHERE s = $1");
+  assert.ok(!q.text.includes("DROP"));
 });
 
 // --- Rapport ---------------------------------------------------------------

@@ -11,6 +11,7 @@ const EMPTY: EditorInitial = {
   name: "",
   intro_message: "",
   signature: "",
+  link_title: "",
   recipient_name: "",
   header_image_url: null,
   reveal_at: null,

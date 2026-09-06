@@ -51,6 +51,7 @@ export async function PATCH(req: Request, { params }: Params) {
     const signature = patch.signature ?? page.signature;
     const recipient = patch.recipient_name ?? page.recipient_name;
     const revealAt = "reveal_at" in patch ? patch.reveal_at ?? null : page.reveal_at;
+    const linkTitle = patch.link_title ?? page.link_title;
     const welcome = patch.welcome_message ?? page.welcome_message;
     const thanks = patch.thank_you_message ?? page.thank_you_message;
     const theme = patch.theme ?? page.theme;
@@ -65,6 +66,7 @@ export async function PATCH(req: Request, { params }: Params) {
              recipient_name    = ${recipient},
              header_image_url  = ${header},
              reveal_at         = ${revealAt},
+             link_title        = ${linkTitle},
              welcome_message   = ${welcome},
              thank_you_message = ${thanks},
              cover_image_url   = ${cover},
@@ -90,6 +92,7 @@ export async function PATCH(req: Request, { params }: Params) {
         recipient_name: updated.recipient_name,
         header_image_url: updated.header_image_url,
         reveal_at: updated.reveal_at,
+        link_title: updated.link_title,
         welcome_message: updated.welcome_message,
         thank_you_message: updated.thank_you_message,
         cover_image_url: updated.cover_image_url,

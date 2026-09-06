@@ -1,13 +1,17 @@
 /**
- * Applique db/schema.sql (et db/seed.sql avec --seed) sur la base pointee par
- * POSTGRES_URL_NON_POOLING (a defaut POSTGRES_URL).
+ * Applique db/schema.sql (et db/seed.sql avec --seed) sur la base pointée par
+ * POSTGRES_URL_NON_POOLING (à défaut POSTGRES_URL).
  *
  *   npm run db:migrate
  *   npm run db:migrate -- --seed
+ *
+ * Sur Railway : `railway run npm run db:migrate` depuis un projet lié, pour que
+ * les variables de l'environnement distant soient injectées.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createClient } from "@vercel/postgres";
+import { Client } from "pg";
+import { sslFor } from "../lib/db";
 
 function loadEnvFile(name: string) {
   try {
@@ -35,14 +39,21 @@ if (!connectionString) {
 
 const files = ["db/schema.sql", ...(process.argv.includes("--seed") ? ["db/seed.sql"] : [])];
 
-const client = createClient({ connectionString });
+const client = new Client({ connectionString, ssl: sslFor(connectionString) });
 await client.connect();
 try {
+  const { rows } = await client.query("select current_database() as base, version() as v");
+  process.stdout.write(`base : ${rows[0].base}\n`);
+
   for (const file of files) {
     process.stdout.write(`> ${file}\n`);
     await client.query(readFileSync(resolve(process.cwd(), file), "utf8"));
   }
-  process.stdout.write("Migration terminee.\n");
+
+  const { rows: cols } = await client.query(
+    "select count(*)::int as n from information_schema.columns where table_name = 'gift_pages'",
+  );
+  process.stdout.write(`Migration terminée. gift_pages : ${cols[0].n} colonnes.\n`);
 } finally {
   await client.end();
 }

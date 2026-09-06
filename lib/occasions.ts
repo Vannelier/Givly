@@ -245,14 +245,25 @@ export function isOccasionId(id: unknown): id is OccasionId {
 
 // --- Polices ---------------------------------------------------------------
 
-export type FontId = "elegant" | "net" | "manuscrit";
+export type FontId =
+  | "elegant"
+  | "classique"
+  | "delicat"
+  | "net"
+  | "rond"
+  | "manuscrit"
+  | "calligraphie";
 
 export type FontChoice = { id: FontId; name: string; cssVar: string; sample: string };
 
 export const FONTS: FontChoice[] = [
   { id: "elegant", name: "Élégant", cssVar: "var(--font-display)", sample: "Aa" },
+  { id: "classique", name: "Classique", cssVar: "var(--font-classic)", sample: "Aa" },
+  { id: "delicat", name: "Délicat", cssVar: "var(--font-delicate)", sample: "Aa" },
   { id: "net", name: "Net", cssVar: "var(--font-sans)", sample: "Aa" },
+  { id: "rond", name: "Rond", cssVar: "var(--font-round)", sample: "Aa" },
   { id: "manuscrit", name: "Manuscrit", cssVar: "var(--font-script)", sample: "Aa" },
+  { id: "calligraphie", name: "Calligraphie", cssVar: "var(--font-calligraphy)", sample: "Aa" },
 ];
 
 export const DEFAULT_FONT_ID: FontId = "elegant";

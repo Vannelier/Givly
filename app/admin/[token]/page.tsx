@@ -28,6 +28,7 @@ export default async function AdminRoute({ params }: Props) {
     name: page.name,
     intro_message: page.intro_message,
     signature: page.signature,
+    link_title: page.link_title,
     recipient_name: page.recipient_name,
     header_image_url: page.header_image_url,
     reveal_at: page.reveal_at,

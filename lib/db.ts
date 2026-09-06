@@ -1,32 +1,111 @@
 /**
  * Unique point de contact avec Postgres.
  *
- * `@vercel/postgres` lit POSTGRES_URL / POSTGRES_URL_NON_POOLING tout seul.
- * Le paquet est deprecie au profit du driver Neon : si un jour il faut migrer,
- * c'est ce fichier — et lui seul — qui change (meme API de template tague).
+ * Pilote `pg` standard, et non `@vercel/postgres` : ce dernier ne parle qu'à
+ * Neon et refuse toute autre chaîne de connexion avec `invalid_connection_string`.
+ * `pg` accepte les deux — Neon comme Railway, Supabase ou un Postgres local —
+ * ce qui laisse le choix de l'hébergeur ouvert.
+ *
+ * `sql` est un gabarit tagué : les valeurs interpolées deviennent des paramètres
+ * $1, $2… donc rien n'est concaténé dans la requête.
  */
-import { sql } from "@vercel/postgres";
+import { Pool, type PoolClient } from "pg";
 import type { GiftPage, Item, Theme } from "./types";
 import { DEFAULT_THEME } from "./types";
-
-export { sql };
 
 export class DbNotConfiguredError extends Error {
   constructor() {
     super(
-      "POSTGRES_URL est absent. Renseigne les variables Vercel Postgres (voir .env.example), " +
+      "POSTGRES_URL est absent. Renseigne la chaîne de connexion (voir .env.example), " +
         "puis applique le schema avec `npm run db:migrate`.",
     );
     this.name = "DbNotConfiguredError";
   }
 }
 
-/** Distingue « base non configuree » d'une vraie panne : le message n'est pas le meme. */
-function assertConfigured() {
-  if (!process.env.POSTGRES_URL && !process.env.POSTGRES_URL_NON_POOLING) {
-    throw new DbNotConfiguredError();
+export function connectionString(): string {
+  const url = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+  if (!url) throw new DbNotConfiguredError();
+  return url;
+}
+
+/**
+ * Neon et le proxy public de Railway exigent TLS ; le réseau interne de Railway
+ * et un Postgres local ne le proposent pas. On choisit d'après l'hôte plutôt que
+ * d'imposer un réglage qui casserait la moitié des cas.
+ */
+export function sslFor(url: string): { rejectUnauthorized: boolean } | undefined {
+  try {
+    const host = new URL(url).hostname;
+    const interne =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host.endsWith(".internal") ||
+      host.endsWith(".local");
+    return interne ? undefined : { rejectUnauthorized: false };
+  } catch {
+    return undefined;
   }
 }
+
+let pool: Pool | null = null;
+
+function getPool(): Pool {
+  if (!pool) {
+    const url = connectionString();
+    pool = new Pool({
+      connectionString: url,
+      ssl: sslFor(url),
+      max: 5,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
+    });
+    // Sans ce garde, une erreur sur une connexion au repos fait tomber le process.
+    pool.on("error", (err) => console.error("[givly] pool postgres", err.message));
+  }
+  return pool;
+}
+
+export type QueryResult = { rows: Record<string, unknown>[]; rowCount: number };
+
+/**
+ * Traduit le gabarit tague en requete parametree. Extrait pour etre testable
+ * sans base : une erreur de numerotation des $n casserait toutes les requetes.
+ */
+export function toQuery(
+  strings: ReadonlyArray<string>,
+  values: unknown[],
+): { text: string; values: unknown[] } {
+  const text = strings.reduce(
+    (acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ""),
+    "",
+  );
+  return { text, values };
+}
+
+export async function sql(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<QueryResult> {
+  const { text } = toQuery(strings, values);
+  const res = await getPool().query(text, values);
+  return { rows: res.rows as Record<string, unknown>[], rowCount: res.rowCount ?? 0 };
+}
+
+/** Une connexion dédiée, pour les scripts qui enchaînent plusieurs instructions. */
+export async function withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    return await fn(client);
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lecture des lignes
+// ---------------------------------------------------------------------------
 
 type Row = Record<string, unknown>;
 
@@ -42,6 +121,7 @@ export function rowToPage(row: Row): GiftPage {
     header_image_url: (row.header_image_url as string | null) ?? null,
     reveal_at: row.reveal_at ? toIso(row.reveal_at) : null,
     reply_message: String(row.reply_message ?? ""),
+    link_title: String(row.link_title ?? ""),
     welcome_message: String(row.welcome_message ?? ""),
     thank_you_message: String(row.thank_you_message ?? ""),
     cover_image_url: (row.cover_image_url as string | null) ?? null,
@@ -68,6 +148,12 @@ function normaliseTheme(value: unknown): Theme {
   return {
     layout: raw.layout === "list" ? "list" : "grid",
     palette: raw.palette,
+    occasion: raw.occasion,
+    font: raw.font,
+    motif: raw.motif,
+    cover: raw.cover,
+    opening: raw.opening,
+    reply: raw.reply,
   };
 }
 
@@ -94,25 +180,25 @@ function safeParse(value: string): unknown {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Accès
+// ---------------------------------------------------------------------------
+
 export async function findBySlug(slug: string): Promise<GiftPage | null> {
-  assertConfigured();
   const { rows } = await sql`SELECT * FROM gift_pages WHERE slug = ${slug} LIMIT 1`;
-  return rows[0] ? rowToPage(rows[0] as Row) : null;
+  return rows[0] ? rowToPage(rows[0]) : null;
 }
 
 export async function findByAdminToken(token: string): Promise<GiftPage | null> {
-  assertConfigured();
   const { rows } = await sql`SELECT * FROM gift_pages WHERE admin_token = ${token} LIMIT 1`;
-  return rows[0] ? rowToPage(rows[0] as Row) : null;
+  return rows[0] ? rowToPage(rows[0]) : null;
 }
 
 export async function slugExists(slug: string): Promise<boolean> {
-  assertConfigured();
   const { rows } = await sql`SELECT 1 FROM gift_pages WHERE slug = ${slug} LIMIT 1`;
   return rows.length > 0;
 }
 
 export async function incrementViewCount(id: string): Promise<void> {
-  assertConfigured();
   await sql`UPDATE gift_pages SET view_count = view_count + 1 WHERE id = ${id}::uuid`;
 }

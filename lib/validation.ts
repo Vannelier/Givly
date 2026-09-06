@@ -154,6 +154,7 @@ export type PageInput = {
   recipient_name: string;
   header_image_url: string | null;
   reveal_at: string | null;
+  link_title: string;
   welcome_message: string;
   thank_you_message: string;
   cover_image_url: string | null;
@@ -177,6 +178,7 @@ export function validatePageFields(o: Record<string, unknown>): PageInput {
     recipient_name: text(o.recipient_name, "recipient_name", LIMITS.recipient),
     header_image_url: optionalUrl(o.header_image_url, "header_image_url"),
     reveal_at: optionalDate(o.reveal_at, "reveal_at"),
+    link_title: text(o.link_title, "link_title", LIMITS.linkTitle),
     welcome_message: text(o.welcome_message, "welcome_message", LIMITS.message, { required: true }),
     thank_you_message: text(o.thank_you_message, "thank_you_message", LIMITS.message, {
       required: true,
@@ -201,6 +203,7 @@ export function validatePatch(body: unknown): Partial<PageInput> {
     out.header_image_url = optionalUrl(o.header_image_url, "header_image_url");
   }
   if ("reveal_at" in o) out.reveal_at = optionalDate(o.reveal_at, "reveal_at");
+  if ("link_title" in o) out.link_title = text(o.link_title, "link_title", LIMITS.linkTitle);
   if ("welcome_message" in o) {
     out.welcome_message = text(o.welcome_message, "welcome_message", LIMITS.message, {
       required: true,

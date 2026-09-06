@@ -22,8 +22,15 @@ export async function POST(req: Request) {
       );
     }
 
-    if (await slugExists(input.slug)) {
-      return slugTaken(input.slug);
+    // L'adresse n'est plus modifiable depuis le formulaire : une collision doit
+    // donc se resoudre toute seule, sinon plus personne ne peut la corriger.
+    const slug = await freeSlug(input.slug);
+    if (!slug) {
+      return fail(
+        "Trop de cartes portent déjà ce nom. Change le nom de la carte.",
+        409,
+        "name",
+      );
     }
 
     const [
@@ -48,19 +55,21 @@ export async function POST(req: Request) {
       inserted = await sql`
         INSERT INTO gift_pages
           (slug, admin_token, name, intro_message, signature, recipient_name,
-           header_image_url, reveal_at, welcome_message, thank_you_message,
+           header_image_url, reveal_at, link_title, welcome_message, thank_you_message,
            cover_image_url, theme, items, plan, expires_at)
         VALUES
-          (${input.slug}, ${admin_token}, ${input.name}, ${input.intro_message}, ${input.signature},
-           ${input.recipient_name}, ${header_image_url}, ${input.reveal_at},
+          (${slug}, ${admin_token}, ${input.name}, ${input.intro_message}, ${input.signature},
+           ${input.recipient_name}, ${header_image_url}, ${input.reveal_at}, ${input.link_title},
            ${input.welcome_message}, ${input.thank_you_message}, ${cover_image_url},
            ${JSON.stringify(input.theme)}::jsonb,
            ${JSON.stringify(items)}::jsonb, 'free', ${expiresAt})
         RETURNING *
       `;
     } catch (err) {
-      // Collision gagnée par une création concurrente entre le check et l'INSERT.
-      if (isUniqueViolation(err)) return slugTaken(input.slug);
+      // Collision gagnee par une creation concurrente entre le test et l'INSERT.
+      if (isUniqueViolation(err)) {
+        return fail("Réessaie : une autre carte vient de prendre cette adresse.", 409, "name");
+      }
       throw err;
     }
 
@@ -80,20 +89,11 @@ export async function POST(req: Request) {
   }
 }
 
-async function slugTaken(slug: string) {
-  const suggestion = await firstFreeVariant(slug);
-  return fail(
-    suggestion
-      ? `L'adresse « ${slug} » est déjà prise. « ${suggestion} » est libre.`
-      : `L'adresse « ${slug} » est déjà prise.`,
-    409,
-    "slug",
-  );
-}
-
-async function firstFreeVariant(slug: string): Promise<string | null> {
-  for (let n = 2; n <= 9; n++) {
-    const candidate = suggestVariant(slug, n);
+/** Le slug demande, ou la premiere variante libre : `noel-de-sophie-2`, `-3`... */
+async function freeSlug(base: string): Promise<string | null> {
+  if (!(await slugExists(base))) return base;
+  for (let n = 2; n <= 40; n++) {
+    const candidate = suggestVariant(base, n);
     if (!(await slugExists(candidate))) return candidate;
   }
   return null;

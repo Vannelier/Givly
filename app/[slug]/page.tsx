@@ -18,7 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await findBySlug(slug).catch(() => null);
   if (!page) return { title: "Page introuvable" };
 
-  const title = page.welcome_message || "Un cadeau pour toi";
+  // Le donneur peut choisir ce que WhatsApp affiche, sans toucher au titre de la page.
+  const title = page.link_title.trim() || page.welcome_message || "Un cadeau pour toi";
   const image = page.cover_image_url ?? page.items.find((i) => i.image_url)?.image_url ?? null;
   const url = publicUrlFor(page.slug);
 

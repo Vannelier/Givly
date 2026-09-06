@@ -12,8 +12,9 @@ confirme. Le donneur retrouve le choix dans sa vue admin, puis commande lui-mêm
 
 ## Stack
 
-- Next.js 15 (App Router, TypeScript), déployé sur Vercel
-- Vercel Postgres — table unique `gift_pages`
+- Next.js 15 (App Router, TypeScript)
+- Postgres via le pilote `pg` — table unique `gift_pages`, n'importe quel
+  hébergeur convient (Railway, Neon, Supabase, local)
 - Vercel Blob — toutes les images d'items y sont recopiées
 - `node-html-parser` pour lire les métadonnées Open Graph (pas de navigateur headless)
 - `qrcode` pour le QR code du lien public
@@ -107,7 +108,7 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `lib/extract.ts` | lecture des métadonnées OG, best-effort |
 | `lib/blob.ts` | recopie des images vers Vercel Blob |
 | `lib/validation.ts` | validation des entrées, avant toute écriture |
-| `lib/db.ts` | **seul** point de contact avec Postgres |
+| `lib/db.ts` | **seul** point de contact avec Postgres (pilote `pg`, gabarit paramétré) |
 
 ### Pages
 
@@ -143,8 +144,9 @@ Les slugs `admin`, `api`, `creer`, `_next`, `favicon.ico`, `robots.txt`, `sitema
 | **Message de remerciement** | étape 3 | Après la confirmation du choix. |
 | **Signature** | étape 3 | Une ligne en bas de page. Facultative. |
 | **Palette** | étape 3 | Sept palettes. Réglée par l'occasion, modifiable ensuite. |
-| **Police du titre** | étape 3 | Élégant (Fraunces), Net (Inter), Manuscrit (Caveat). |
+| **Police du titre** | étape 3 | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
 | **Décor** | étape 3 | Le motif de l'occasion, désactivable. |
+| **Aperçu du lien** | étape 3 | Le texte cliquable et l'image que montrent WhatsApp et les SMS. |
 | **Ouverture** | étape 3 | Le voile à lever, en trois styles : voile, rideau, enveloppe. Désactivable. |
 | **Mot du receveur** | étape 3 | Un champ de réponse libre. Désactivé par défaut. |
 | **Photo d'en-tête** | étape 3 | Une photo large en haut de la carte. |
@@ -274,34 +276,45 @@ donc aucun ne peut mentir.
   donc les valeurs que ces clamps prendraient à 390 px.
 - **L'aperçu plein écran**, accessible depuis n'importe quelle étape.
 
-## Héberger ailleurs que sur Vercel
+## Déployer
 
-`@vercel/postgres` **ne parle qu'à Neon**. Testé : avec une chaîne de connexion Postgres
-standard — celle de Railway, par exemple — le chemin de requête de l'application refuse
-d'emblée :
+L'application ne dépend d'aucun hébergeur en particulier.
 
+| variable | rôle |
+|---|---|
+| `POSTGRES_URL` | chaîne de connexion Postgres |
+| `POSTGRES_URL_NON_POOLING` | connexion directe pour la migration ; souvent la même |
+| `NEXT_PUBLIC_BASE_URL` | base absolue des liens, QR codes et balises Open Graph |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob ; absent, les images vont dans `.media/` |
+| `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 30) |
+
+Deux pièges, tous deux silencieux :
+
+**`NEXT_PUBLIC_BASE_URL` doit exister dès la phase de build.** Le préfixe
+`NEXT_PUBLIC_` fait que Next inline la valeur à ce moment-là. Absente, elle retombe
+sur `http://localhost:3000` et **tous les liens distribués pointent vers localhost** —
+le site a l'air de marcher et donne des liens morts.
+
+**La migration ne part pas toute seule.** Ni `build` ni `start` ne l'appellent :
+
+```bash
+npm run db:migrate
 ```
-VercelPostgresError - 'invalid_connection_string': This connection string is meant to be
-used with a direct connection. Make sure to use a pooled connection string.
-```
 
-Deux issues, au choix :
+Sur Railway : `railway run npm run db:migrate` depuis un projet lié, pour hériter des
+variables distantes.
 
-1. **Garder Neon pour la base** (offre gratuite, joignable de partout) et n'héberger que
-   l'application ailleurs. Aucun changement de code.
-2. **Basculer sur le pilote `pg`.** `lib/db.ts` est le seul point de contact avec Postgres,
-   précisément pour que ce remplacement tienne dans un fichier.
-
-Même remarque pour les images : hors Vercel, le repli disque de `lib/mediaStore.ts` n'est
-durable que si un volume persistant est monté. Sinon, `.media/` disparaît au redéploiement —
-il faut Vercel Blob, ou un stockage objet équivalent.
+**Les images**, enfin : sans `BLOB_READ_WRITE_TOKEN`, le repli écrit dans `.media/`.
+Ce dossier n'est durable que si un volume persistant est monté ; sinon les images
+disparaissent au redéploiement suivant.
 
 ## L'assistant de composition
 
 Création et édition passent par le même composant, en trois étapes :
 
-1. **La carte** — le nom que tu lui donnes (jamais montré au receveur) et, en création,
-   l'adresse du lien qui en découle.
+1. **La carte** — le nom que tu lui donnes (jamais montré au receveur) et le prénom de la
+   personne. L'adresse du lien en découle, sans réglage : personne ne s'en soucie, et le
+   serveur résout tout seul une collision en ajoutant `-2`, `-3`…
 2. **Les cadeaux** — de 2 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
 3. **La présentation** — occasion, messages, signature, palette, police, décor, disposition,
    image d'aperçu du lien. Avec un aperçu en direct à côté des réglages.

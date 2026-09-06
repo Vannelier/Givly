@@ -6,6 +6,7 @@ export const LIMITS = {
   signature: 80,
   message: 280,
   reply: 280,
+  linkTitle: 80,
   itemLabel: 80,
   itemNote: 200,
   itemsMin: 1,
