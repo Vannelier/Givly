@@ -295,14 +295,16 @@ Deux pièges, tous deux silencieux :
 sur `http://localhost:3000` et **tous les liens distribués pointent vers localhost** —
 le site a l'air de marcher et donne des liens morts.
 
-**La migration ne part pas toute seule.** Ni `build` ni `start` ne l'appellent :
+**Le schéma s'applique au démarrage.** `npm start` lance `scripts/boot.mjs` avant Next :
+`db/schema.sql` est idempotent, le rejouer à chaque démarrage ne coûte rien et évite
+d'avoir à lancer une migration à la main depuis son poste — ce qui, sur Railway,
+supposerait d'exposer la base publiquement.
 
-```bash
-npm run db:migrate
-```
+L'étape ne bloque jamais le démarrage : base injoignable, l'application se lance quand
+même et répond 503 avec un message explicite. Refuser de démarrer ferait boucler
+l'hébergeur sans rien expliquer.
 
-Sur Railway : `railway run npm run db:migrate` depuis un projet lié, pour hériter des
-variables distantes.
+`npm run db:migrate` reste disponible pour l'appliquer manuellement.
 
 **Les images**, enfin : sans `BLOB_READ_WRITE_TOKEN`, le repli écrit dans `.media/`.
 Ce dossier n'est durable que si un volume persistant est monté ; sinon les images

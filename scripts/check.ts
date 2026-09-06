@@ -7,6 +7,8 @@
 import assert from "node:assert/strict";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
+// @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
+import { sslFor as bootSslFor } from "./boot.mjs";
 import {
   DEFAULT_FONT_ID,
   DEFAULT_OCCASION_ID,
@@ -29,7 +31,12 @@ const failures: string[] = [];
 
 function test(name: string, fn: () => void) {
   try {
-    fn();
+    const out = fn() as unknown;
+    // Une fonction asynchrone renverrait une promesse, ses echecs seraient avales
+    // et le test passerait toujours. On refuse explicitement.
+    if (out && typeof (out as Promise<unknown>).then === "function") {
+      throw new Error("test asynchrone : le harnais est synchrone");
+    }
     passed++;
   } catch (err) {
     failures.push(`${name}\n    ${(err as Error).message.split("\n")[0]}`);
@@ -722,6 +729,21 @@ test("toQuery n'insere jamais la valeur dans le texte", () => {
   const q = toQuery(["SELECT * FROM t WHERE s = ", ""], ["'; DROP TABLE gift_pages; --"]);
   assert.equal(q.text, "SELECT * FROM t WHERE s = $1");
   assert.ok(!q.text.includes("DROP"));
+});
+
+
+test("boot.mjs et lib/db.ts decident du TLS de la meme maniere", () => {
+  // Duplication assumee (l'un est bundle par Next, l'autre non) : ce test evite
+  // qu'elles divergent en silence.
+  for (const url of [
+    "postgres://u:p@ep-x.eu-central-1.aws.neon.tech/db",
+    "postgres://u:p@monorail.proxy.rlwy.net:1234/railway",
+    "postgres://u:p@postgres.railway.internal:5432/railway",
+    "postgres://u:p@localhost:5432/givly",
+    "pas une url",
+  ]) {
+    assert.deepEqual(bootSslFor(url), sslFor(url), url);
+  }
 });
 
 // --- Rapport ---------------------------------------------------------------
