@@ -2,7 +2,7 @@
 
 Composer une petite page-cadeau, envoyer un lien, laisser la personne choisir.
 
-Le donneur rassemble 2 à 10 propositions (produits de n'importe quel marchand, activités),
+Le donneur rassemble jusqu'à 10 propositions (produits de n'importe quel marchand, activités),
 obtient un lien public et un lien d'administration secret. Le receveur ouvre le lien, choisit,
 confirme. Le donneur retrouve le choix dans sa vue admin, puis commande lui-même.
 
@@ -15,7 +15,8 @@ confirme. Le donneur retrouve le choix dans sa vue admin, puis commande lui-mêm
 - Next.js 15 (App Router, TypeScript)
 - Postgres via le pilote `pg` — table unique `gift_pages`, n'importe quel
   hébergeur convient (Railway, Neon, Supabase, local)
-- Vercel Blob — toutes les images d'items y sont recopiées
+- Vercel Blob pour les images — avec un repli sur un dossier local en développement
+- `sharp` pour réduire toute image en entrant
 - `node-html-parser` pour lire les métadonnées Open Graph (pas de navigateur headless)
 - `qrcode` pour le QR code du lien public
 
@@ -23,26 +24,30 @@ confirme. Le donneur retrouve le choix dans sa vue admin, puis commande lui-mêm
 
 ### 1. Provisionner les services
 
-Depuis le dashboard Vercel du projet : ajouter l'intégration **Postgres** et l'intégration **Blob**.
-Elles injectent `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_PRISMA_URL` et
-`BLOB_READ_WRITE_TOKEN`. Ne pas coder ces valeurs en dur.
+**Il faut un Postgres.** N'importe lequel : Railway, Neon, Supabase, ou une instance locale — le
+pilote est `pg`, rien n'est spécifique à un hébergeur.
+
+**Vercel Blob est facultatif en développement.** Sans `BLOB_READ_WRITE_TOKEN`, les images atterrissent
+dans un dossier `.media/` local. En production c'est une autre affaire : voir « Le stockage des
+images ».
+
+Sur Vercel, les intégrations **Postgres** et **Blob** injectent ces variables toutes seules. Ailleurs,
+il faut les poser à la main.
 
 ### 2. Variables d'environnement
 
-Copier `.env.example` vers `.env.local`, puis récupérer les valeurs Vercel :
-
-```bash
-npx vercel env pull .env.local
-```
+Copier `.env.example` vers `.env.local` et le remplir. Sur Vercel, `npx vercel env pull .env.local`
+récupère les valeurs du projet.
 
 | variable | rôle |
 |---|---|
 | `POSTGRES_URL` | connexion poolée (lecture/écriture applicative) |
 | `POSTGRES_URL_NON_POOLING` | connexion directe, utilisée par la migration |
-| `POSTGRES_PRISMA_URL` | fournie par Vercel, non utilisée ici |
-| `BLOB_READ_WRITE_TOKEN` | écriture Vercel Blob |
-| `NEXT_PUBLIC_BASE_URL` | base absolue des liens et des balises Open Graph |
+| `POSTGRES_PRISMA_URL` | injectée par Vercel ; le code ne la lit jamais |
+| `BLOB_READ_WRITE_TOKEN` | écriture Vercel Blob ; absent, repli sur `.media/` |
+| `NEXT_PUBLIC_BASE_URL` | base absolue des liens, balises Open Graph, `robots.txt` et sitemap |
 | `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 30) |
+| `RATE_LIMIT_DISABLED` | `1` coupe les quotas. Développement seulement — voir « Les routes anonymes » |
 
 ### 3. Créer le schéma
 
@@ -53,16 +58,24 @@ npm run db:migrate
 Ajouter `-- --seed` pour insérer une page de démonstration (`/pour-toi-demo`).
 Le script est idempotent : le rejouer ne casse rien.
 
+Cette étape n'est nécessaire **qu'en développement** : `npm run dev` ne lance pas `scripts/boot.mjs`,
+alors que `npm start` — la commande de production — applique le schéma à chaque démarrage. Voir
+« Déployer ».
+
 ### 4. Lancer
 
 ```bash
 npm run dev
 ```
 
-> Il n'y a pas de mode « sans base ». `@vercel/postgres` parle à Neon, pas à un Postgres local :
-> le développement se fait contre la base Vercel/Neon du projet, ce qui est le flux Vercel normal.
-> Sans `POSTGRES_URL`, les routes répondent 503 avec un message explicite ; le formulaire de
-> création et l'aperçu, eux, fonctionnent quand même.
+> **Un Postgres local convient parfaitement.** Le pilote `pg` parle à n'importe quelle instance, et
+> `sslFor()` désactive TLS pour `localhost`, `127.0.0.1` et les hôtes en `.internal` / `.local`.
+> Cette note disait le contraire tant que le projet utilisait `@vercel/postgres` ; ce n'est plus le
+> cas depuis le passage à `pg`.
+>
+> Sans `POSTGRES_URL`, rien n'est bloqué au démarrage : les routes qui touchent la base répondent
+> 503 avec un message explicite, tandis que le formulaire de création, l'aperçu en direct et
+> l'aperçu plein écran fonctionnent normalement — ils ne lisent rien.
 
 ## Scripts
 
@@ -70,7 +83,7 @@ npm run dev
 |---|---|
 | `npm run dev` | serveur de développement |
 | `npm run build` | build de production |
-| `npm run check` | vérifications de la logique pure (validation, slugs, extraction, expiration) — aucune base requise |
+| `npm run check` | vérifications de la logique pure : validation, slugs, extraction, expiration, quotas, réduction d'images — aucune base requise |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:migrate` | applique `db/schema.sql` (`-- --seed` pour la page de démo) |
 | `npm run brand` | régénère le favicon, les icônes et le SVG de la marque |
@@ -96,7 +109,7 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `app/page.tsx` | page d'accueil : présente l'outil et renvoie vers `/creer` |
 | `app/creer/page.tsx` | assistant de création, en deux étapes |
 | `app/[slug]/page.tsx` | page-cadeau publique (SSR + `generateMetadata` pour l'aperçu de lien) |
-| `app/admin/[token]/page.tsx` | vue admin : état, choix, `view_count`, édition, suppression |
+| `app/admin/[token]/page.tsx` | vue admin : cadeau choisi, liens, édition, clôture |
 | `components/GiftView.tsx` | le rendu que voit le receveur — **le même** composant sert à l'aperçu |
 | `components/editor/PageEditor.tsx` | assistant partagé création / édition |
 | `lib/palettes.ts` | les huit palettes ; seul leur identifiant est stocké |
@@ -111,6 +124,10 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `lib/extract.ts` | lecture des métadonnées OG, best-effort |
 | `lib/blob.ts` | recopie des images vers Vercel Blob |
 | `lib/validation.ts` | validation des entrées, avant toute écriture |
+| `lib/rateLimit.ts` | quotas des routes anonymes ; logique pure, horloge injectable |
+| `lib/site.ts` | **identité de l'éditeur** — le seul fichier à remplir pour les mentions légales |
+| `components/TextPage.tsx` | coquille commune aux pages de texte |
+| `components/SiteFooter.tsx` | pied de page et liens légaux |
 | `lib/db.ts` | **seul** point de contact avec Postgres (pilote `pg`, gabarit paramétré) |
 
 ### Pages
@@ -119,8 +136,13 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 |---|---|
 | `/` | accueil — invite à composer |
 | `/creer` | formulaire de création |
-| `/[slug]` | page-cadeau publique |
-| `/admin/[token]` | vue admin |
+| `/questions` | questions fréquentes — la page faite pour être trouvée |
+| `/contact` | comment nous joindre |
+| `/confidentialite` | politique de confidentialité |
+| `/conditions` | conditions d'utilisation |
+| `/mentions-legales` | éditeur et hébergeur — `noindex` |
+| `/[slug]` | page-cadeau publique — `noindex` |
+| `/admin/[token]` | vue admin — `noindex` |
 
 Les slugs `admin`, `api`, `creer`, `_next`, `icon`, `apple-icon`, `opengraph-image`,
 `twitter-image`, `favicon.ico`, `robots.txt`, `sitemap.xml` et `manifest.webmanifest` sont
@@ -135,13 +157,16 @@ façon pas former un slug ; ils restent listés pour que la liste dise ce qui es
 
 | route | effet |
 |---|---|
-| `POST /api/extract` | `{ url }` → `{ ok, title?, image?, siteName? }`. Ne jette jamais. |
+| `POST /api/extract` | `{ url }` → `{ ok: true, image, title?, siteName? }` ou `{ ok: false, reason }`. Ne jette jamais. |
 | `POST /api/upload` | image (repli manuel) → Vercel Blob → `{ url }` |
 | `POST /api/pages` | crée la page (aucun champ de texte obligatoire) → `{ slug, publicUrl, adminUrl, expiresAt, warnings }` |
 | `PATCH /api/admin/[token]` | édite la page ; 409 si verrouillée ou expirée |
 | `DELETE /api/admin/[token]` | supprime la page |
 | `POST /api/pages/[slug]/choose` | `{ itemId }` → enregistre le choix et verrouille |
 | `POST /api/pages/[slug]/reply` | `{ reply }` → attache le mot du receveur, après le choix ; 409 hors fenêtre ou si un mot existe déjà |
+
+**Toutes ces routes peuvent répondre `429`** avec un en-tête `Retry-After` et un `{ error }` en
+français, avant toute validation — voir « Les routes anonymes et leurs quotas ».
 
 ## Ce qui est personnalisable
 
@@ -443,6 +468,106 @@ récupération échoue, l'image se compose avec la police intégrée plutôt que
 Les pages-cadeau, elles, gardent leur propre aperçu, composé à partir de l'image du premier cadeau
 (voir `app/[slug]/page.tsx`). Une carte sans aucune image retombe sur la bannière du site.
 
+## Les routes anonymes et leurs quotas
+
+Aucun compte, aucun paiement, aucune adresse : rien n'identifie qui appelle l'API. Les routes
+ouvertes coûtent pourtant — une ligne en base, des images stockées trente jours, des requêtes
+sortantes. `lib/rateLimit.ts` leur pose un quota par adresse.
+
+| route | quota | pourquoi ce seuil |
+|---|---|---|
+| `POST /api/pages` | 10 / 10 min | la plus coûteuse : insertion, recopie d'images, stockage |
+| — plafond global | 100 / 10 min | tient même si l'abus est réparti sur beaucoup d'adresses |
+| `POST /api/upload` | 30 / 10 min | plusieurs images par carte, donc plus permissif |
+| `POST /api/extract` | 40 / 10 min | fait sortir une requête vers une URL fournie par un inconnu |
+| `choose` et `reply` | 30 / 10 min | verrouillées métier, mais énumérables |
+| `PATCH`/`DELETE` admin | 60 / 10 min | le jeton est déjà infalsifiable ; évite le martèlement |
+
+**Seau à jetons, pas fenêtre fixe.** Une fenêtre fixe laisse passer deux fois le quota à cheval sur
+sa frontière, puis repart brutalement à zéro. Ici le crédit se reconstitue en continu : une rafale
+courte passe, la moyenne tient. Refuser ne recharge pas le compteur — sinon marteler la route
+repousserait indéfiniment le moment où le crédit revient.
+
+**Le quota passe avant tout le reste** dans chaque handler : avant la validation, avant la lecture
+du corps, avant la base. Refuser doit coûter moins cher que servir.
+
+**La table des compteurs est bornée** (20 000 entrées). Sans ce plafond, elle serait elle-même un
+vecteur : il suffirait de faire tourner l'adresse source pour la faire enfler sans fin. Le balayage
+jette d'abord les compteurs revenus à plein — ils ne disent rien qu'un compteur neuf ne dirait —
+puis les plus anciens, jamais les plus actifs.
+
+Ce que ça n'est pas, en toute franchise :
+
+- **Le compte est par instance.** Deux instances derrière un répartiteur doublent le quota réel.
+  Acceptable ici : les seuils sont larges pour un usage normal, serrés pour un abus.
+- **Un redémarrage remet tout à zéro.** C'est aussi pourquoi le plafond global existe.
+- **`x-forwarded-for` est falsifiable** si rien ne le réécrit. Le code suppose l'application servie
+  **derrière le proxy de l'hébergeur**, qui pose l'en-tête lui-même ; les en-têtes propres à une
+  plateforme (`cf-connecting-ip`, `x-vercel-forwarded-for`, `x-real-ip`) passent en premier.
+  Exposer le serveur Node directement à Internet rendrait la limitation contournable d'un en-tête.
+- **Ça ne remplace pas un captcha** le jour où l'abus devient ciblé plutôt qu'opportuniste.
+
+En développement il n'y a pas de proxy : toutes les requêtes locales partagent le compteur
+`sans-adresse`, et dix créations d'affilée suffisent à se bloquer soi-même. `RATE_LIMIT_DISABLED=1`
+dans `.env.local` coupe le mécanisme — jamais en production.
+
+**Le pire scénario n'est pas le contournement, c'est le partage.** Déployé derrière un hébergeur qui
+ne pose aucun de ces en-têtes, tout le trafic tombe dans le même compteur `sans-adresse` : dix
+créations toutes personnes confondues, et le site refuse tout le monde. C'est un blocage silencieux
+et total, bien plus visible qu'un abus passé au travers. **À vérifier une fois déployé** — créer
+deux cartes de suite depuis deux réseaux différents suffit à savoir.
+
+## Être trouvé sur Google
+
+Une page-cadeau ne doit jamais être indexée — c'est du courrier privé. Ce qui doit l'être, c'est
+l'outil : l'accueil, le formulaire, et surtout `/questions`.
+
+**Ce qui est en place**
+
+- `robots.txt` et `sitemap.xml` générés depuis `NEXT_PUBLIC_BASE_URL`. Le sitemap ne liste que les
+  six pages publiques ; y inscrire les cartes reviendrait à publier la liste des liens envoyés.
+- **Une adresse canonique par page** (`alternates.canonical`), pour qu'une même page atteinte par
+  deux chemins ne se fasse pas concurrence à elle-même.
+- **Des titres qui portent ce qu'on cherche, pas ce qu'on est.** « Givly — offre le choix » ne se
+  trouve qu'en tapant « Givly », c'est-à-dire en connaissant déjà le site. L'accueil annonce donc
+  « Offrir en laissant choisir le cadeau ». Tous les titres tiennent sous 60 signes, toutes les
+  descriptions sous 160 — au-delà, Google coupe.
+- **Données structurées** : `WebApplication` sur l'accueil, avec un `offers` à zéro qui est la façon
+  normalisée de dire « gratuit » ; `FAQPage` sur `/questions`.
+- **Les pages légales sont liées depuis le pied de page.** Une page seulement déclarée dans le
+  sitemap, sans lien depuis une page indexée, n'existe pour aucun moteur.
+- `/questions` **est l'actif principal.** Ses réponses emploient les mots que les gens tapent —
+  « offrir un cadeau au choix », « laisser choisir son cadeau » — plutôt que le vocabulaire interne
+  du projet. Le texte affiché et le balisage `FAQPage` sont produits par le même tableau : Google
+  exige qu'ils coïncident, et deux listes tenues en parallèle auraient divergé.
+
+**Ce qu'il ne faut pas en attendre**
+
+- **Le balisage `FAQPage` n'affichera pas d'accordéon dans les résultats.** Depuis 2023, Google
+  réserve ce résultat enrichi aux sites gouvernementaux et de santé. Il reste utile à la
+  compréhension de la page, mais ce sont les réponses elles-mêmes qui feront venir du monde.
+- **Rien de tout ceci ne crée de la notoriété.** Un site sans liens entrants met des mois à sortir
+  sur des requêtes disputées. Le référencement technique enlève les obstacles ; il ne remplace pas
+  le fait d'être cité ailleurs.
+- **`NEXT_PUBLIC_BASE_URL` doit être juste au build**, sinon le sitemap et les adresses canoniques
+  pointent vers `localhost` — et tout ce qui précède ne sert à rien.
+
+**À faire une fois en ligne** : déclarer le site dans Google Search Console et Bing Webmaster Tools,
+et y soumettre le sitemap. Sans cela, l'indexation peut prendre des semaines.
+
+## Les mentions légales
+
+`lib/site.ts` rassemble l'identité de l'éditeur : nom, adresse, contact, hébergeur. Les pages
+`/mentions-legales`, `/confidentialite` et `/contact` la lisent toutes.
+
+**Les valeurs livrées sont des espaces réservés.** Une mention légale engage celui qui la publie :
+elle doit porter une identité réelle, et personne d'autre que lui ne peut la renseigner. Tant
+qu'un champ vaut `À REMPLIR`, la page l'affiche en rouge comme manquant plutôt que d'inventer —
+un trou visible vaut mieux qu'une fausse déclaration.
+
+Le champ `statut` (`particulier` ou `societe`) commande les mentions supplémentaires : numéro
+d'entreprise et TVA n'apparaissent que pour une société.
+
 ## Déployer
 
 L'application ne dépend d'aucun hébergeur en particulier.
@@ -481,7 +606,8 @@ disparaissent au redéploiement suivant.
 
 Création et édition passent par le même composant, en deux étapes :
 
-1. **Les cadeaux** — de 2 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
+1. **Les cadeaux** — de 1 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
+   Le minimum est bien **un** : voir « Le cadeau unique ».
 2. **La présentation** — l'occasion, puis un cadre par écran que traverse la personne qui reçoit
    (**Intro**, **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté
    des réglages, sur écran large.
@@ -564,6 +690,11 @@ toutes les deux.
 **`view_count` ne compte que les pages actives.** Ni les affichages d'une page expirée, ni ceux
 d'une page déjà choisie : le compteur mesure l'attente d'un choix, pas le trafic.
 
+Il est incrémenté et transmis à la vue admin, mais **plus affiché nulle part** depuis que celle-ci a
+été allégée : le nombre de consultations disait peu de chose et encombrait ce qu'on vient vraiment
+y chercher. La colonne et la règle de comptage restent en place — c'est de la donnée dormante,
+pas une fonctionnalité vivante.
+
 **Le slug et l'`admin_token` ne changent jamais.** Un lien déjà envoyé continue de fonctionner après
 n'importe quelle édition.
 
@@ -583,9 +714,17 @@ n'importe quelle édition.
 
 ## Limites connues
 
-- **Création anonyme non limitée.** `POST /api/pages` et `POST /api/upload` sont des vecteurs de
-  spam (création massive, téléversements). Assumé au MVP ; un rate-limit par IP et/ou un captcha
-  sont à prévoir avant toute exposition publique sérieuse.
+- **La limitation de débit se compte par instance et ne survit pas au redémarrage.** Voir la
+  section dédiée : c'est un choix assumé, pas un oubli. Un abus vraiment ciblé demandera un
+  captcha, que rien ne prépare aujourd'hui.
+- **Aucun test ne touche une route, une base ou un navigateur.** `npm run check` ne vérifie que de
+  la logique pure — validation, slugs, extraction, quotas, réduction d'images. Les handlers HTTP,
+  les requêtes SQL et le rendu ne sont couverts par rien d'automatisé : ils se vérifient à la main.
+  C'est la lacune la plus large du projet.
+- **Les fichiers de la marque sont du produit de build versionné.** `npm run brand` les régénère,
+  mais rien n'oblige à le lancer : modifier la géométrie dans `scripts/brand.mjs` sans régénérer
+  laisse le favicon et les icônes en désaccord avec leur source, et aucune vérification ne le
+  signalera.
 - **Le slug public est devinable.** Ne rien mettre de sensible dans une page-cadeau.
 - **Le mot du receveur n'est plus lié à l'auteur du choix.** Il part dans une seconde requête ; qui
   détient le lien peut donc l'écrire à sa place, tant que la carte n'en porte pas déjà un et que
@@ -593,9 +732,6 @@ n'importe quelle édition.
   la confirmation, et le même modèle de confiance que le choix lui-même : le lien fait foi.
 - **`admin_token` est la seule protection admin.** 32 octets aléatoires, transmis dans l'URL :
   qui a le lien a les droits.
-- **`@vercel/postgres` est déprécié** (Vercel Postgres a migré vers Neon). Il fonctionne toujours et
-  lit les variables `POSTGRES_*` sans configuration. Le jour où il faut migrer vers le driver Neon,
-  `lib/db.ts` est le seul fichier à toucher — l'API de template tagué est la même.
 - **`/api/extract` fait des requêtes sortantes depuis le serveur** vers une URL fournie par un
   visiteur anonyme. Les hôtes internes évidents (localhost, plages privées) sont filtrés sans
   résolution DNS : cela couvre les cas courants, pas un attaquant déterminé.
