@@ -5,6 +5,7 @@
  *   npm run check
  */
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
@@ -33,6 +34,7 @@ import { LIMITS } from "../lib/limits";
 import sharp from "sharp";
 import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
 import { ValidationError, validateCreate, validatePatch, validateTheme } from "../lib/validation";
+import { QUOTAS, adresseClient, creerLimiteur } from "../lib/rateLimit";
 
 let passed = 0;
 const failures: string[] = [];
@@ -84,6 +86,26 @@ test("slugError refuse trop court, majuscules, tirets aux bords et réservés", 
   assert.ok(slugError("a".repeat(61)));
   for (const reserved of RESERVED_SLUGS) assert.ok(slugError(reserved), reserved);
   assert.equal(slugError("pour-toi-2026"), null);
+});
+
+/*
+ * Le test au-dessus verifie que tout ce qui est declare reserve est bien refuse.
+ * Celui-ci verifie l'inverse, qui est le vrai risque : ajouter une page sous
+ * `app/` sans l'inscrire dans la liste. Une carte pourrait alors prendre son
+ * adresse, et la page deviendrait inatteignable — en silence.
+ */
+test("toute page du site occupe un slug reserve", () => {
+  const pages = readdirSync("app", { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    // Segments dynamiques et groupes de routes ne sont pas des adresses fixes ;
+    // `api` a son propre prefixe, deja reserve.
+    .filter((n) => !n.startsWith("[") && !n.startsWith("(") && n !== "api");
+
+  assert.ok(pages.length > 0, "aucun dossier de page trouve");
+  for (const nom of pages) {
+    assert.ok(RESERVED_SLUGS.has(nom), `/${nom} manque dans RESERVED_SLUGS`);
+  }
 });
 
 test("suggestVariant reste dans la limite de longueur", () => {
@@ -901,6 +923,114 @@ test("l'effet ne depend pas du voile : il survit a cover false", () => {
   const t = validateTheme({ cover: false, effect: "neige" });
   assert.equal(t.cover, false);
   assert.equal(t.effect, "neige");
+});
+
+// --- Limitation de debit ---------------------------------------------------
+
+/*
+ * L'horloge est injectee : ces verifications ne dorment pas, elles avancent le
+ * temps a la main. Un test de debit qui attend vraiment dix minutes ne serait
+ * jamais lance.
+ */
+const QUOTA_TEST = { limite: 3, fenetreMs: 3000 };
+
+test("le quota laisse passer jusqu'a la limite, puis refuse", () => {
+  const lim = creerLimiteur();
+  for (let i = 0; i < QUOTA_TEST.limite; i++) {
+    assert.equal(lim.consomme(QUOTA_TEST, "a", 0).ok, true, `passage ${i + 1}`);
+  }
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 0).ok, false);
+});
+
+test("le credit se reconstitue avec le temps", () => {
+  const lim = creerLimiteur();
+  for (let i = 0; i < QUOTA_TEST.limite; i++) lim.consomme(QUOTA_TEST, "a", 0);
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 0).ok, false);
+
+  // Un tiers de la fenetre rend exactement un jeton.
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 1000).ok, true);
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 1000).ok, false);
+});
+
+test("le credit ne depasse jamais la limite, meme apres une longue pause", () => {
+  const lim = creerLimiteur();
+  lim.consomme(QUOTA_TEST, "a", 0);
+  const bienPlusTard = QUOTA_TEST.fenetreMs * 100;
+  for (let i = 0; i < QUOTA_TEST.limite; i++) {
+    assert.equal(lim.consomme(QUOTA_TEST, "a", bienPlusTard).ok, true);
+  }
+  assert.equal(lim.consomme(QUOTA_TEST, "a", bienPlusTard).ok, false);
+});
+
+test("attendre le delai annonce debloque effectivement", () => {
+  const lim = creerLimiteur();
+  for (let i = 0; i < QUOTA_TEST.limite; i++) lim.consomme(QUOTA_TEST, "a", 0);
+  const refus = lim.consomme(QUOTA_TEST, "a", 0);
+  assert.equal(refus.ok, false);
+  assert.ok(!refus.ok && refus.retryAfterS >= 1);
+  assert.ok(!refus.ok && lim.consomme(QUOTA_TEST, "a", refus.retryAfterS * 1000).ok);
+});
+
+test("marteler la route ne repousse pas la recharge", () => {
+  const lim = creerLimiteur();
+  for (let i = 0; i < QUOTA_TEST.limite; i++) lim.consomme(QUOTA_TEST, "a", 0);
+  // Cent refus entre 0 et 999 ms ne doivent pas decaler le retour du credit.
+  for (let t = 0; t < 1000; t += 10) lim.consomme(QUOTA_TEST, "a", t);
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 1000).ok, true);
+});
+
+test("deux cles ont des compteurs independants", () => {
+  const lim = creerLimiteur();
+  for (let i = 0; i < QUOTA_TEST.limite; i++) lim.consomme(QUOTA_TEST, "a", 0);
+  assert.equal(lim.consomme(QUOTA_TEST, "a", 0).ok, false);
+  assert.equal(lim.consomme(QUOTA_TEST, "b", 0).ok, true);
+});
+
+test("la table des compteurs reste bornee malgre des cles qui tournent", () => {
+  // Le vecteur : faire tourner l'adresse source pour faire enfler la memoire.
+  const lim = creerLimiteur(50);
+  for (let i = 0; i < 5000; i++) lim.consomme(QUOTA_TEST, `ip-${i}`, i);
+  assert.ok(lim.taille() <= 50, `${lim.taille()} entrees`);
+});
+
+test("l'eviction ne rend pas son credit a une cle active", () => {
+  const lim = creerLimiteur(50);
+  for (let i = 0; i < QUOTA_TEST.limite; i++) lim.consomme(QUOTA_TEST, "abuseur", 0);
+  // L'abuseur reste le plus recemment vu tant qu'il insiste : le balayage jette
+  // les compteurs pleins et les plus anciens, pas lui.
+  for (let i = 0; i < 500; i++) {
+    lim.consomme(QUOTA_TEST, `bruit-${i}`, 1);
+    lim.consomme(QUOTA_TEST, "abuseur", 1);
+  }
+  assert.equal(lim.consomme(QUOTA_TEST, "abuseur", 1).ok, false);
+});
+
+test("les quotas reels sont coherents", () => {
+  for (const [nom, q] of Object.entries(QUOTAS)) {
+    assert.ok(q.limite > 0, nom);
+    assert.ok(q.fenetreMs > 0, nom);
+  }
+  // Le plafond global doit laisser passer plusieurs personnes distinctes,
+  // sinon le premier venu ferme la creation a tout le monde.
+  assert.ok(QUOTAS.creationGlobale.limite >= QUOTAS.creation.limite * 5);
+});
+
+test("adresseClient prefere les en-tetes poses par l'hebergeur", () => {
+  const req = new Request("https://exemple.test", {
+    headers: { "cf-connecting-ip": "9.9.9.9", "x-forwarded-for": "1.1.1.1, 2.2.2.2" },
+  });
+  assert.equal(adresseClient(req), "9.9.9.9");
+});
+
+test("adresseClient retient le premier maillon de x-forwarded-for", () => {
+  const req = new Request("https://exemple.test", {
+    headers: { "x-forwarded-for": "  1.1.1.1 , 2.2.2.2 " },
+  });
+  assert.equal(adresseClient(req), "1.1.1.1");
+});
+
+test("adresseClient a un repli quand aucun en-tete n'est pose", () => {
+  assert.equal(adresseClient(new Request("https://exemple.test")), "sans-adresse");
 });
 
 // --- Reduction des images --------------------------------------------------

@@ -1,7 +1,8 @@
 import { rowToPage, slugExists, sql } from "@/lib/db";
 import { mirrorCover, mirrorItemImages, type ImageWarning } from "@/lib/blob";
 import { adminUrlFor, freePageTtlDays, publicUrlFor } from "@/lib/env";
-import { fail, handleError, json, readJson } from "@/lib/http";
+import { fail, handleError, json, readJson, tropDeRequetes } from "@/lib/http";
+import { QUOTAS } from "@/lib/rateLimit";
 import { newAdminToken } from "@/lib/ids";
 import { suggestVariant } from "@/lib/slug";
 import { validateCreate } from "@/lib/validation";
@@ -11,6 +12,15 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
+    // La route la plus couteuse du site : une insertion, la recopie des images
+    // vers le stockage, et une page qui vivra trente jours. Deux garde-fous —
+    // un par adresse, et un plafond global qui tient meme si l'abus est reparti
+    // sur beaucoup d'adresses.
+    const trop =
+      tropDeRequetes(req, QUOTAS.creation, "creation") ??
+      tropDeRequetes(req, QUOTAS.creationGlobale, "creation-globale", "tous");
+    if (trop) return trop;
+
     const input = validateCreate(await readJson(req));
 
     // Une carte qui se revele apres son expiration ne s'ouvrirait jamais.

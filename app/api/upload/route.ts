@@ -1,5 +1,6 @@
 import { storageAvailable, storageUnavailableMessage, storeImage } from "@/lib/mediaStore";
-import { fail, handleError, json } from "@/lib/http";
+import { fail, handleError, json, tropDeRequetes } from "@/lib/http";
+import { QUOTAS } from "@/lib/rateLimit";
 import { ALLOWED_IMAGE_TYPES, LIMITS } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,10 @@ export const maxDuration = 30;
  */
 export async function POST(req: Request) {
   try {
+    // Avant tout le reste : refuser tot evite de lire un corps de 5 Mo pour rien.
+    const trop = tropDeRequetes(req, QUOTAS.televersement, "televersement");
+    if (trop) return trop;
+
     if (!storageAvailable()) {
       return fail(storageUnavailableMessage(), 503);
     }

@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { DbNotConfiguredError } from "./db";
+import {
+  adresseClient,
+  consomme,
+  limitationDesactivee,
+  type Quota,
+} from "./rateLimit";
 import { ValidationError } from "./validation";
 
 export function json<T>(body: T, status = 200) {
@@ -13,6 +19,40 @@ export function fail(message: string, status: number, field?: string) {
 /** 404 muet : ne jamais révéler l'existence d'une page derrière un token admin. */
 export function notFoundJson() {
   return fail("Introuvable.", 404);
+}
+
+/**
+ * Applique un quota à la requête. Renvoie une réponse 429 quand il est dépassé,
+ * `null` quand la route peut continuer — de sorte qu'un appel se lise en une
+ * ligne en tête de handler :
+ *
+ *     const trop = tropDeRequetes(req, QUOTAS.creation);
+ *     if (trop) return trop;
+ *
+ * `Retry-After` est renseigné : c'est ce que lisent les clients bien élevés, et
+ * ça évite qu'un navigateur reboucle immédiatement.
+ *
+ * `portee` sépare les compteurs de deux routes qui partagent un même quota, et
+ * sert aussi à poser un plafond global en passant une clé constante.
+ */
+export function tropDeRequetes(
+  req: Request,
+  quota: Quota,
+  portee: string,
+  cle = adresseClient(req),
+): NextResponse | null {
+  if (limitationDesactivee()) return null;
+
+  const verdict = consomme(quota, `${portee}:${cle}`);
+  if (verdict.ok) return null;
+
+  return NextResponse.json(
+    {
+      error:
+        "Trop de requêtes en peu de temps. Reprends dans quelques minutes — c'est une protection contre les abus, pas contre toi.",
+    },
+    { status: 429, headers: { "Retry-After": String(verdict.retryAfterS) } },
+  );
 }
 
 export async function readJson(req: Request): Promise<unknown> {

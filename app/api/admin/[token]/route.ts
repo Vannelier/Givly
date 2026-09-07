@@ -1,6 +1,7 @@
 import { findByAdminToken, rowToPage, sql } from "@/lib/db";
 import { mirrorCover, mirrorItemImages, type ImageWarning } from "@/lib/blob";
-import { fail, handleError, json, notFoundJson, readJson } from "@/lib/http";
+import { fail, handleError, json, notFoundJson, readJson, tropDeRequetes } from "@/lib/http";
+import { QUOTAS } from "@/lib/rateLimit";
 import { isExpired, isLocked } from "@/lib/types";
 import { validatePatch } from "@/lib/validation";
 
@@ -11,6 +12,12 @@ type Params = { params: Promise<{ token: string }> };
 
 export async function PATCH(req: Request, { params }: Params) {
   try {
+    // Le jeton fait trente-deux octets aleatoires : il n'est pas devinable. Le
+    // quota ne protege donc pas le secret, il empeche de marteler la base avec
+    // des jetons au hasard.
+    const trop = tropDeRequetes(req, QUOTAS.admin, "admin");
+    if (trop) return trop;
+
     const { token } = await params;
     const page = await findByAdminToken(token);
     if (!page) return notFoundJson();
@@ -118,8 +125,11 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 }
 
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
   try {
+    const trop = tropDeRequetes(req, QUOTAS.admin, "admin");
+    if (trop) return trop;
+
     const { token } = await params;
     const { rowCount } = await sql`DELETE FROM gift_pages WHERE admin_token = ${token}`;
     if (rowCount === 0) return notFoundJson();

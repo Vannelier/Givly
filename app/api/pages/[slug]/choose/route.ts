@@ -1,5 +1,6 @@
 import { findBySlug, sql } from "@/lib/db";
-import { fail, handleError, json, readJson } from "@/lib/http";
+import { fail, handleError, json, readJson, tropDeRequetes } from "@/lib/http";
+import { QUOTAS } from "@/lib/rateLimit";
 import { isExpired, isLocked, isSealed } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,11 @@ type Params = { params: Promise<{ slug: string }> };
 
 export async function POST(req: Request, { params }: Params) {
   try {
+    // Le verrou metier empeche deja de choisir deux fois. Le quota, lui, ferme
+    // l'enumeration : sans lui, cette route dit gratuitement quels slugs existent.
+    const trop = tropDeRequetes(req, QUOTAS.reponse, "choix");
+    if (trop) return trop;
+
     const { slug } = await params;
     const body = (await readJson(req)) as { itemId?: unknown };
     const itemId = typeof body?.itemId === "string" ? body.itemId : null;

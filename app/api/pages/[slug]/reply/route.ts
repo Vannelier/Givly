@@ -1,5 +1,6 @@
 import { findBySlug, sql } from "@/lib/db";
-import { fail, handleError, json, readJson } from "@/lib/http";
+import { fail, handleError, json, readJson, tropDeRequetes } from "@/lib/http";
+import { QUOTAS } from "@/lib/rateLimit";
 import { LIMITS } from "@/lib/limits";
 import { REPLY_WINDOW_MS, isExpired, isLocked, replyWindowOpen } from "@/lib/types";
 
@@ -18,6 +19,9 @@ type Params = { params: Promise<{ slug: string }> };
  */
 export async function POST(req: Request, { params }: Params) {
   try {
+    const trop = tropDeRequetes(req, QUOTAS.reponse, "mot");
+    if (trop) return trop;
+
     const { slug } = await params;
     const body = (await readJson(req)) as { reply?: unknown };
     const reply = typeof body?.reply === "string" ? body.reply.trim() : "";
