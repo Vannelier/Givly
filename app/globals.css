@@ -404,8 +404,21 @@ select {
   align-items: stretch;
 }
 
+/*
+ * `isolation` enferme l'empilement interne de la vignette.
+ *
+ * `position: relative` seul ne cree pas de contexte d'empilement : le `z-index: 1`
+ * de l'image nette remontait donc au niveau de la carte, ou il passait devant la
+ * pastille de validation — restee a `auto`, soit zero. Le ✓ disparaissait
+ * derriere la photo des qu'un cadeau etait retenu.
+ *
+ * Isoler plutot que surencherir sur le z-index de la pastille : la superposition
+ * image nette / copie floutee ne regarde qu'elle-meme, et rien de ce qui sera
+ * ajoute dans la vignette ne pourra plus en sortir.
+ */
 .thumb {
   position: relative;
+  isolation: isolate;
   aspect-ratio: 4 / 3;
   background: linear-gradient(150deg, var(--thumb-a, var(--paper-warm)), var(--thumb-b, #e9dcca));
   overflow: hidden;
