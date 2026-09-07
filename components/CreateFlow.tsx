@@ -40,8 +40,7 @@ export default function CreateFlow({ baseUrlLabel }: { baseUrlLabel: string }) {
         <h1>Compose ta page-cadeau</h1>
         <p>
           Deux à dix idées, un message, et c&apos;est prêt. Le bouton « Aperçu » te montre à tout
-          moment ce que verra la personne — rien n&apos;est enregistré tant que tu n&apos;as pas créé
-          la page.
+          moment ce que verra la personne.
         </p>
       </header>
 
