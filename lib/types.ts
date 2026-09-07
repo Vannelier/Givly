@@ -15,6 +15,8 @@ export type Theme = {
   reply?: boolean;
   /** Maniere dont le voile se leve. */
   opening?: string;
+  /** Effet joue sur la page decouverte, independant de l'ouverture. */
+  effect?: string;
 };
 
 export type Item = {

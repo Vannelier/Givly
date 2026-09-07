@@ -10,17 +10,21 @@ import { sslFor, toQuery } from "../lib/db";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
 import { sslFor as bootSslFor } from "./boot.mjs";
 import {
+  DEFAULT_EFFECT_ID,
   DEFAULT_FONT_ID,
   DEFAULT_OCCASION_ID,
   DEFAULT_OPENING_ID,
+  EFFECTS,
   FONTS,
   ITEMS_MESSAGE_HINT,
   ITEMS_TITLE_HINT,
   OCCASIONS,
   OCCASION_GROUPS,
   OPENINGS,
+  effectById,
   fontById,
   occasionById,
+  openingById,
 } from "../lib/occasions";
 import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
@@ -28,7 +32,7 @@ import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from 
 import { LIMITS } from "../lib/limits";
 import sharp from "sharp";
 import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
-import { ValidationError, validateCreate, validatePatch } from "../lib/validation";
+import { ValidationError, validateCreate, validatePatch, validateTheme } from "../lib/validation";
 
 let passed = 0;
 const failures: string[] = [];
@@ -843,6 +847,60 @@ test("la borne exacte de la fenetre reste recevable", () => {
   const now = new Date("2026-03-01T12:00:00Z");
   const pile = new Date(now.getTime() - REPLY_WINDOW_MS).toISOString();
   assert.equal(replyWindowOpen({ chosen_at: pile }, now), true);
+});
+
+// --- Ouvertures et effets --------------------------------------------------
+
+test("chaque ouverture a un identifiant unique, un nom et une description", () => {
+  const ids = OPENINGS.map((o) => o.id);
+  assert.equal(new Set(ids).size, ids.length, "identifiants dupliques");
+  for (const o of OPENINGS) {
+    assert.ok(o.name.trim().length > 0, `nom vide : ${o.id}`);
+    assert.ok(o.hint.trim().length > 0, `description vide : ${o.id}`);
+  }
+});
+
+test("chaque effet a un identifiant unique, un nom et une description", () => {
+  const ids = EFFECTS.map((e) => e.id);
+  assert.equal(new Set(ids).size, ids.length, "identifiants dupliques");
+  for (const e of EFFECTS) {
+    assert.ok(e.name.trim().length > 0, `nom vide : ${e.id}`);
+    assert.ok(e.hint.trim().length > 0, `description vide : ${e.id}`);
+  }
+});
+
+test("les valeurs par defaut d'ouverture et d'effet existent bien", () => {
+  assert.equal(openingById(DEFAULT_OPENING_ID).id, DEFAULT_OPENING_ID);
+  assert.equal(effectById(DEFAULT_EFFECT_ID).id, DEFAULT_EFFECT_ID);
+});
+
+test("un identifiant inconnu retombe sur la valeur par defaut", () => {
+  assert.equal(openingById("rideau-de-fer").id, DEFAULT_OPENING_ID);
+  assert.equal(effectById("feux-d-artifice").id, DEFAULT_EFFECT_ID);
+  assert.equal(openingById(null).id, DEFAULT_OPENING_ID);
+  assert.equal(effectById(undefined).id, DEFAULT_EFFECT_ID);
+});
+
+test("l'effet propose par chaque occasion existe", () => {
+  for (const o of OCCASIONS) {
+    assert.equal(effectById(o.effect).id, o.effect, `effet inconnu : ${o.id}`);
+  }
+});
+
+test("validateTheme ne garde qu'une ouverture et un effet connus", () => {
+  const ok = validateTheme({ opening: "enveloppe", effect: "confettis" });
+  assert.equal(ok.opening, "enveloppe");
+  assert.equal(ok.effect, "confettis");
+
+  const ko = validateTheme({ opening: "<script>", effect: { toString: () => "neige" } });
+  assert.equal(ko.opening, DEFAULT_OPENING_ID);
+  assert.equal(ko.effect, DEFAULT_EFFECT_ID);
+});
+
+test("l'effet ne depend pas du voile : il survit a cover false", () => {
+  const t = validateTheme({ cover: false, effect: "neige" });
+  assert.equal(t.cover, false);
+  assert.equal(t.effect, "neige");
 });
 
 // --- Reduction des images --------------------------------------------------

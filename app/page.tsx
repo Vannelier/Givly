@@ -86,10 +86,11 @@ export default function LandingPage() {
           </li>
           <li>
             <span className="lp-step__num">2</span>
-            <h3>Tu envoies le lien</h3>
+            <h3>Tu offres la carte</h3>
             <p>
-              Dans WhatsApp ou un SMS, il s&apos;affiche avec ton message et une image. Ou glisse son
-              QR code imprimé dans une vraie carte.
+              Collé dans WhatsApp, le lien s&apos;ouvre comme une carte : ton message, une image, son
+              prénom. Ou imprime le QR code, glisse-le dans une enveloppe, et regarde-la l&apos;ouvrir
+              devant toi.
             </p>
           </li>
           <li>
@@ -103,39 +104,56 @@ export default function LandingPage() {
         </ol>
       </section>
 
-      {/* --- Ce qui fait que c'est un cadeau, et pas un formulaire. --- */}
-      <section className="lp-craft" aria-labelledby="lp-craft-title">
-        <div className="lp-craft__head">
-          <h2 id="lp-craft-title">Une carte, pas un sondage</h2>
-          <p>
-            Ce qui s&apos;ouvre en face doit ressembler à un cadeau. Alors tout est habillé, et rien
-            n&apos;est à remplir.
-          </p>
-        </div>
+      {/*
+        Ce que le donneur y gagne, pas ce que l'outil sait faire. Une liste de
+        reglages — palettes, polices, occasions — decrivait le produit sans
+        jamais dire pourquoi on s'en servirait.
+
+        Titres en <p> et non en <h3> : la section n'a plus de titre, et des h3
+        sans h2 se rattacheraient au « Trois etapes » precedent.
+      */}
+      <section className="lp-craft">
         <ul className="lp-craft__grid">
           <li>
-            <h3>15 occasions prêtes</h3>
-            <p>Anniversaire, Noël, naissance, départ… chacune pose son décor, ses couleurs et ses mots.</p>
+            <p className="lp-craft__title">Tu ne demandes rien</p>
+            <p>
+              « Tu veux quoi ? » met l&apos;autre au travail et dissout la surprise. Ici, tu as déjà
+              cherché : il ne reste qu&apos;à désigner.
+            </p>
           </li>
           <li>
-            <h3>8 palettes, 7 écritures</h3>
-            <p>De la terracotta chaude à l&apos;encre sobre, du manuscrit à la calligraphie.</p>
+            <p className="lp-craft__title">Personne ne passe commande</p>
+            <p>
+              Piocher dans une liste de souhaits revient à cocher une ligne. Chaque proposition vient
+              de toi — ça se voit.
+            </p>
           </li>
           <li>
-            <h3>Une ouverture mise en scène</h3>
-            <p>Un voile, un rideau ou une enveloppe se lève avant les cadeaux, un par un.</p>
+            <p className="lp-craft__title">Aucun prix affiché</p>
+            <p>
+              Elle choisit ce qui lui plaît, sans calculer ce qu&apos;elle te coûte. Le malaise du
+              montant n&apos;existe pas.
+            </p>
           </li>
           <li>
-            <h3>Une date d&apos;ouverture</h3>
-            <p>Envoie le lien à l&apos;avance : la page reste scellée, avec un compte à rebours, jusqu&apos;au jour dit.</p>
+            <p className="lp-craft__title">La surprise tient</p>
+            <p>
+              Elle ne sait pas ce que tu as réuni avant d&apos;ouvrir. Et la carte peut rester scellée
+              jusqu&apos;au jour dit.
+            </p>
           </li>
           <li>
-            <h3>Aucun prix affiché</h3>
-            <p>On choisit ce qui fait plaisir, pas ce qui coûte le moins cher.</p>
+            <p className="lp-craft__title">Rien à remplir en face</p>
+            <p>
+              Un décor, une écriture, des mots pour l&apos;occasion. Un seul geste à faire : choisir.
+            </p>
           </li>
           <li>
-            <h3>Un mot en retour</h3>
-            <p>Un mot peut accompagner le choix. Tu le retrouves dans ta vue privée.</p>
+            <p className="lp-craft__title">Un mot te revient</p>
+            <p>
+              Elle peut glisser un merci avec son choix. Tu le retrouves dans ta vue privée, avec le
+              cadeau retenu.
+            </p>
           </li>
         </ul>
       </section>
@@ -143,15 +161,15 @@ export default function LandingPage() {
       {/* --- Objections, une ligne chacune. --- */}
       <section className="lp-notes">
         <div>
-          <h3>Rien à payer ici</h3>
+          <p className="lp-notes__title">Rien à payer ici</p>
           <p>Aucun paiement ne transite par Givly. Tu achètes le cadeau comme tu l&apos;aurais fait sans.</p>
         </div>
         <div>
-          <h3>Aucune donnée demandée</h3>
+          <p className="lp-notes__title">Aucune donnée demandée</p>
           <p>Pas de compte, et en face, rien à saisir d&apos;autre que son choix. Ni nom, ni adresse, ni e-mail.</p>
         </div>
         <div>
-          <h3>Modifiable jusqu&apos;au choix</h3>
+          <p className="lp-notes__title">Modifiable jusqu&apos;au choix</p>
           <p>Tant que personne n&apos;a confirmé, tu corriges tout. Les liens déjà envoyés continuent de marcher.</p>
         </div>
       </section>

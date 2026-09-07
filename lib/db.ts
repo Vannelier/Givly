@@ -157,6 +157,7 @@ function normaliseTheme(value: unknown): Theme {
     motif: raw.motif,
     cover: raw.cover,
     opening: raw.opening,
+    effect: raw.effect,
     reply: raw.reply,
   };
 }

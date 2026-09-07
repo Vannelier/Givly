@@ -11,14 +11,17 @@ import {
 } from "@/components/editor/imageFile";
 import { LIMITS } from "@/lib/limits";
 import {
+  EFFECTS,
   FONTS,
   ITEMS_MESSAGE_HINT,
   ITEMS_TITLE_HINT,
   OCCASION_GROUPS,
   OPENINGS,
+  effectById,
   fontById,
   occasionById,
   openingById,
+  type EffectId,
   type FontId,
   type OccasionId,
   type OpeningId,
@@ -75,6 +78,15 @@ type DraftItem = {
  * et le prenom du receveur. Le nom vit desormais avec l'adresse du lien, le
  * prenom en tete du cadre « Intro » — la ou il s'affiche sur la carte.
  */
+/** Pictogrammes du selecteur d'effet. Jamais affiches sur la page-cadeau. */
+const EFFECT_GLYPHS: Record<EffectId, string> = {
+  aucun: "◦",
+  confettis: "✻",
+  petales: "❀",
+  etincelles: "✦",
+  neige: "❄",
+};
+
 const STEPS = [
   { n: 1, title: "Les cadeaux", short: "Cadeaux" },
   { n: 2, title: "La présentation", short: "Présentation" },
@@ -138,6 +150,7 @@ export default function PageEditor(props: Props) {
   const [font, setFont] = useState<FontId>(fontById(initial.theme.font).id);
   const [motif, setMotif] = useState(initial.theme.motif !== false);
   const [opening, setOpeningStyle] = useState<OpeningId>(openingById(initial.theme.opening).id);
+  const [effect, setEffect] = useState<EffectId>(effectById(initial.theme.effect).id);
   const [replyOn, setReplyOn] = useState(initial.theme.reply === true);
   const [linkTitle, setLinkTitle] = useState(initial.link_title);
   const [sealEnabled, setSealEnabled] = useState(initial.theme.cover !== false);
@@ -350,6 +363,7 @@ export default function PageEditor(props: Props) {
     motif: current.motif !== "none" && motif,
     cover: sealEnabled,
     opening,
+    effect,
     reply: replyOn,
   };
 
@@ -364,6 +378,8 @@ export default function PageEditor(props: Props) {
     setOccasion(id);
     setPalette(next.palette);
     setMotif(next.motif !== "none");
+    // L'effet suit l'occasion tant que le donneur n'en a pas choisi un autre.
+    setEffect((cur) => (cur === previous.effect ? next.effect : cur));
     setIntro((cur) => (cur.trim() === previous.intro ? "" : cur));
   }
 
@@ -1120,6 +1136,30 @@ export default function PageEditor(props: Props) {
                   >
                     Liste
                   </button>
+                </div>
+              </Field>
+
+              <Field
+                label="Effet"
+                help="Ce qui tombe sur la page une fois découverte. Une seule fois, pas en boucle."
+              >
+                <div className="effects" role="radiogroup" aria-label="Effet">
+                  {EFFECTS.map((e) => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={effect === e.id}
+                      className={`effect${effect === e.id ? " is-on" : ""}`}
+                      onClick={() => setEffect(e.id)}
+                    >
+                      <span className="effect__glyph" aria-hidden="true">
+                        {EFFECT_GLYPHS[e.id]}
+                      </span>
+                      <span className="effect__name">{e.name}</span>
+                      <span className="effect__hint">{e.hint}</span>
+                    </button>
+                  ))}
                 </div>
               </Field>
 

@@ -414,6 +414,15 @@
   right: 0;
 }
 
+.opening__glyph--volets i {
+  left: 0;
+  right: 0;
+  height: 40%;
+}
+
+.opening__glyph--volets i:first-child { top: 0; }
+.opening__glyph--volets i:last-child { bottom: 0; }
+
 .opening__glyph--enveloppe i:first-child {
   left: 0;
   right: 0;
@@ -428,6 +437,86 @@
   height: 45%;
   opacity: 0.8;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.opening__glyph--couvercle i:first-child {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  opacity: 0.35;
+}
+
+.opening__glyph--couvercle i:last-child {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 38%;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.75;
+}
+
+.opening__glyph--halo i:first-child {
+  inset: 0;
+  opacity: 0.28;
+}
+
+.opening__glyph--halo i:last-child {
+  left: 50%;
+  top: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: -0.45rem 0 0 -0.45rem;
+  border-radius: 999px;
+  opacity: 0.85;
+}
+
+/* --- Effets ---------------------------------------------------------------- */
+
+/* Meme grille que les ouvertures : ce sont deux reglages de meme nature. */
+.effects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.effect {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.4rem 0.55rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+}
+
+.effect.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.effect__glyph {
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: var(--accent);
+}
+
+.effect__name {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.effect.is-on .effect__name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.effect__hint {
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  line-height: 1.25;
 }
 
 .opening__name {

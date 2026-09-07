@@ -49,6 +49,13 @@ export default function GiftCover({
     >
       <span className="cover__panel cover__panel--a" />
       <span className="cover__panel cover__panel--b" />
+      {/*
+        Le rabat de l'enveloppe. Les deux panneaux ne suffisaient pas : ils
+        portent le fond opaque, et l'enveloppe a besoin en plus d'une piece
+        triangulaire qui bascule seule. Les autres ouvertures le laissent
+        invisible.
+      */}
+      <span className="cover__flap" />
       <GiftMotif kind={motif} />
 
       <div className="cover__inner">
