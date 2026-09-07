@@ -99,11 +99,10 @@ export default function LandingPage() {
 
       {/* --- Le mécanisme. Une phrase par étape, pas plus. --- */}
       <section className="lp-steps">
-        <h2>Trois étapes, une seule fois</h2>
         <ol>
           <li>
             <span className="lp-step__num">1</span>
-            <h3>Tu réunis les idées</h3>
+            <h2>Tu réunis les idées</h2>
             <p>
               Colle l&apos;adresse d&apos;un produit : le titre et la photo se remplissent le plus
               souvent tout seuls. Sinon, une photo depuis ton téléphone suffit.
@@ -111,7 +110,7 @@ export default function LandingPage() {
           </li>
           <li>
             <span className="lp-step__num">2</span>
-            <h3>Tu offres la carte</h3>
+            <h2>Tu offres la carte</h2>
             <p>
               Collé dans WhatsApp, le lien s&apos;ouvre comme une carte : ton message, une image, son
               prénom. Ou imprime le QR code, glisse-le dans une enveloppe, et regarde-la l&apos;ouvrir
@@ -120,7 +119,7 @@ export default function LandingPage() {
           </li>
           <li>
             <span className="lp-step__num">3</span>
-            <h3>Tu découvres le choix</h3>
+            <h2>Tu découvres le choix</h2>
             <p>
               Un second lien, secret, n&apos;est qu&apos;à toi : il te dit ce qui a été choisi, et
               quand. À toi de commander.
@@ -134,8 +133,8 @@ export default function LandingPage() {
         reglages — palettes, polices, occasions — decrivait le produit sans
         jamais dire pourquoi on s'en servirait.
 
-        Titres en <p> et non en <h3> : la section n'a plus de titre, et des h3
-        sans h2 se rattacheraient au « Trois etapes » precedent.
+        Titres en <p> et non en titres de niveau : la section n'a pas de titre
+        propre, et un h3 ici se rattacherait a la derniere etape ci-dessus.
       */}
       <section className="lp-craft">
         <ul className="lp-craft__grid">
@@ -201,13 +200,13 @@ export default function LandingPage() {
 
       <section className="lp-final">
         <h2>On compose ta carte ?</h2>
-        <p>Deux idées suffisent pour commencer, dix au maximum. Tout reste modifiable ensuite.</p>
+        <p>Deux idées cadeaux suffisent pour commencer, dix au maximum. Tout reste modifiable ensuite.</p>
         <Link className="btn btn--auto" href="/creer">
           Composer ma page-cadeau
         </Link>
       </section>
 
-      <SiteFooter note="Une page reste en ligne 30 jours si personne ne choisit. Garde ton lien d'administration : c'est le seul moyen d'y revenir." />
+      <SiteFooter note="Une page reste en ligne 30 jours. Garde bien ton lien d'administration pour voir le cadeau désiré par la personne qui reçoit ta page-cadeau." />
     </main>
   );
 }

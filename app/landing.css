@@ -221,12 +221,12 @@
 
 /* --- Étapes ---------------------------------------------------------------- */
 
-.lp-steps > h2 {
-  font-size: clamp(1.5rem, 4.5vw, 2rem);
-  text-align: center;
-  margin-bottom: clamp(1.75rem, 5vw, 2.5rem);
-}
-
+/*
+ * La section n'a plus de titre : les trois cartes se lisent seules, et « Trois
+ * etapes, une seule fois » ne faisait que nommer ce qu'on voyait deja. Les
+ * titres d'etape sont donc des h2 — sans quoi ils sauteraient un niveau sous le
+ * h1 de la page.
+ */
 .lp-steps ol {
   list-style: none;
   margin: 0;
@@ -263,7 +263,7 @@
   margin-bottom: 0.9rem;
 }
 
-.lp-steps h3 {
+.lp-steps li h2 {
   font-size: 1.1rem;
   margin-bottom: 0.45rem;
 }
