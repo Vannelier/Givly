@@ -85,7 +85,7 @@ const QUESTIONS: { q: string; r: string[] }[] = [
   {
     q: "En quoi est-ce différent d'une liste de souhaits ?",
     r: [
-      "Une liste de souhaits, c'est la personne qui l'écrit et toi qui piochons dedans. Ici c'est l'inverse : tu proposes, elle choisit. La surprise reste de ton côté, l'envie du sien.",
+      "Sur une liste de souhaits, c'est elle qui écrit ce qu'elle veut, et toi qui y pioches. Ici, c'est toi qui proposes et elle qui choisit.",
       "Et contrairement à une liste de mariage ou une cagnotte, rien n'est encaissé ici : Givly ne touche jamais à l'argent.",
     ],
   },

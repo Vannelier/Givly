@@ -97,27 +97,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* --- Le concept, expliqué par contraste : c'est le raccourci le plus court. --- */}
-      <section className="lp-pitch" aria-labelledby="lp-pitch-title">
-        <h2 id="lp-pitch-title">L&apos;inverse d&apos;une liste de souhaits.</h2>
-        <div className="lp-pitch__grid">
-          <div className="lp-pitch__col">
-            <p className="lp-pitch__tag">Le cadeau deviné</p>
-            <p>Tu choisis seul, tu croises les doigts. Et parfois, ça finit au fond d&apos;un placard.</p>
-          </div>
-          <div className="lp-pitch__col">
-            <p className="lp-pitch__tag">La liste de souhaits</p>
-            <p>On te dit quoi acheter, tu paies. Il ne reste plus grand-chose de toi dedans.</p>
-          </div>
-          <div className="lp-pitch__col is-highlight">
-            <p className="lp-pitch__tag">Givly</p>
-            <p>
-              Tu proposes, l&apos;autre tranche. Ton attention reste entière, et le cadeau tombe juste.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* --- Le mécanisme. Une phrase par étape, pas plus. --- */}
       <section className="lp-steps">
         <h2>Trois étapes, une seule fois</h2>
