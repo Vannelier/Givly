@@ -315,7 +315,8 @@ serveur pour ça.
 Deux aperçus, un seul composant — `GiftView` sert à la fois la page réelle et les deux aperçus,
 donc aucun ne peut mentir.
 
-- **L'aperçu en direct**, à l'étape « La présentation » : une réduction du rendu réel, qui réagit à chaque réglage.
+- **L'aperçu en direct**, à l'étape « La présentation » : une réduction du rendu réel, qui réagit
+  à chaque réglage. **Au-delà de 62 rem seulement** — voir « L'assistant de composition ».
   Colonne collante à partir de 62 rem, bandeau en haut de l'étape en dessous. Il est mis à l'échelle
   par `transform: scale()` — ce qui crée au passage un bloc englobant, si bien que la barre de
   confirmation et le voile, en `position: fixed`, restent enfermés dans le cadre au lieu de
@@ -399,7 +400,22 @@ Création et édition passent par le même composant, en deux étapes :
 1. **Les cadeaux** — de 2 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
 2. **La présentation** — l'occasion, puis un cadre par écran que traverse la personne qui reçoit
    (**Intro**, **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté
-   des réglages.
+   des réglages, sur écran large.
+
+**L'aperçu en direct n'existe qu'au-delà de 62 rem.** Son cadre mesure 300 × 525 px pour une
+page-cadeau réduite à la même hauteur : au téléphone, en colonne unique, il n'en montrait qu'une
+tranche coupée en haut comme en bas, et s'installait avant les réglages — le formulaire commençait
+donc sous la ligne de flottaison. Il est masqué en dessous, et le bouton **Aperçu** de la barre
+d'action ouvre le même rendu en plein écran, là où il a la place d'être lisible. Le masquage est en
+CSS et non en JavaScript : lire la largeur de la fenêtre pendant le rendu ferait diverger
+l'hydratation.
+
+**L'ordre d'une ligne de cadeau change avec la largeur.** Elle est faite de trois zones nommées —
+`source`, `preview`, `fields` — placées par `grid-template-areas` et non par l'ordre du DOM. En
+colonne unique, l'adresse du produit passe **avant** la vignette : c'est le geste qui remplit tout
+le reste, il n'a pas à attendre derrière un cadre de collage vide. Ce cadre se réduit d'ailleurs à
+une bande tant qu'aucune image n'y est tombée, pour ne pas repousser le titre hors de l'écran. Au
+large, la vignette reprend sa colonne à gauche et enjambe les deux rangées.
 
 **« La carte » n'a pas survécu comme étape.** Elle ne portait que deux champs : le nom interne et le
 prénom du receveur. Le prénom a rejoint le cadre **Intro**, là où il s'affiche ; le nom a rejoint le
