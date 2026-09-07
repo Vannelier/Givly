@@ -73,6 +73,7 @@ npm run dev
 | `npm run check` | vérifications de la logique pure (validation, slugs, extraction, expiration) — aucune base requise |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:migrate` | applique `db/schema.sql` (`-- --seed` pour la page de démo) |
+| `npm run brand` | régénère le favicon, les icônes et le SVG de la marque |
 
 ## En cas de pépin
 
@@ -103,6 +104,8 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `components/GiftMotif.tsx` | décors SVG des occasions |
 | `components/GiftCover.tsx` | voile d'ouverture et compte à rebours |
 | `components/QrCard.tsx` | QR code du lien public |
+| `scripts/brand.mjs` | fabrique la marque : `app/icon.svg`, `app/favicon.ico`, les PNG |
+| `app/opengraph-image.tsx` | la bannière de partage du site (1200 × 630) |
 | `components/PrintableCard.tsx` | carte A6 à imprimer, aux couleurs du thème |
 | `lib/mediaStore.ts` | où atterrissent les images : Vercel Blob, ou disque en développement |
 | `lib/extract.ts` | lecture des métadonnées OG, best-effort |
@@ -119,8 +122,14 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `/[slug]` | page-cadeau publique |
 | `/admin/[token]` | vue admin |
 
-Les slugs `admin`, `api`, `creer`, `_next`, `favicon.ico`, `robots.txt`, `sitemap.xml` et
-`opengraph-image` sont réservés : `/[slug]` les traite en 404 sans requête en base.
+Les slugs `admin`, `api`, `creer`, `_next`, `icon`, `apple-icon`, `opengraph-image`,
+`twitter-image`, `favicon.ico`, `robots.txt`, `sitemap.xml` et `manifest.webmanifest` sont
+réservés : `/[slug]` les traite en 404 sans requête en base. Les noms à points ne peuvent de toute
+façon pas former un slug ; ils restent listés pour que la liste dise ce qui est pris.
+
+`/robots.txt` laisse explorer les pages-cadeau — c'est en les lisant qu'un robot voit leur
+`noindex` — mais interdit `/admin/` : un jeton d'administration n'a rien à faire dans un index.
+`/sitemap.xml` ne déclare que l'accueil et `/creer`, jamais les cartes.
 
 ### API
 
@@ -281,6 +290,38 @@ donc aucun ne peut mentir.
   sur le cadre. Les tailles en `clamp(… vw …)` y devenaient énormes ; `.gift-root--embedded` fige
   donc les valeurs que ces clamps prendraient à 390 px.
 - **L'aperçu plein écran**, accessible depuis n'importe quelle étape.
+
+## La marque, le favicon et la bannière
+
+`npm run brand` fabrique tout à partir d'une seule description géométrique, en tête de
+`scripts/brand.mjs` : le SVG en est écrit, et le rasteriseur redessine exactement les mêmes formes.
+Deux fichiers dessinés à la main auraient dérivé l'un de l'autre au premier ajustement. Les
+fichiers produits sont versionnés — le build ne les régénère pas.
+
+| fichier | pour qui |
+|---|---|
+| `app/icon.svg` | les navigateurs récents, net à toute taille |
+| `app/favicon.ico` | 16, 32 et 48 px — Bing et les clients qui vont chercher `/favicon.ico` sans lire le `<link>` |
+| `app/apple-icon.png` | iOS, 180 px, carré plein (le système arrondit lui-même) |
+| `public/icon-192.png`, `public/icon-512.png` | le manifeste, et Google, qui veut un carré multiple de 48 |
+| `public/icon-maskable-512.png` | Android, qui rogne jusqu'à 20 % de chaque bord |
+
+Le `.ico` embarque des bitmaps bruts et non des PNG : il n'existe justement que pour les clients
+anciens, et leur servir un format qu'ils pourraient ne pas décoder le viderait de son intérêt.
+
+Le dessin — un paquet cadeau, couvercle et nœud — est dimensionné pour tenir à **16 px**, la taille
+réelle d'un favicon dans un onglet. D'où des boucles pleines plutôt qu'évidées : un trou d'un pixel
+n'aurait fait que salir la forme. Une première version en plein cadre, deux rubans qui se croisent,
+a été abandonnée : réduite, elle se lisait comme une croix.
+
+**La bannière** (`app/opengraph-image.tsx`) est ce que montrent Google, Bing et les messageries
+quand on colle un lien du site. Elle est fabriquée à la construction, pas à la volée : rien n'y
+dépend de la requête. Les polices viennent de Google Fonts en TTF — annoncé comme un vieux client,
+le service renvoie du TTF au lieu du WOFF2, seul format que sache lire le moteur de rendu. Si la
+récupération échoue, l'image se compose avec la police intégrée plutôt que de ne pas exister.
+
+Les pages-cadeau, elles, gardent leur propre aperçu, composé à partir de l'image du premier cadeau
+(voir `app/[slug]/page.tsx`). Une carte sans aucune image retombe sur la bannière du site.
 
 ## Déployer
 
