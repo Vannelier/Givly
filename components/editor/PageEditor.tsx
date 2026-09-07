@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import GiftView from "@/components/GiftView";
+import GiftView, { type PreviewScreen } from "@/components/GiftView";
 import {
   ACCEPTED_IMAGE_TYPES,
   imageFromClipboard,
@@ -156,6 +156,12 @@ export default function PageEditor(props: Props) {
   const [sealEnabled, setSealEnabled] = useState(initial.theme.cover !== false);
   // Remonte GiftView pour rejouer l'ouverture sans recharger la page.
   const [replay, setReplay] = useState(0);
+  /*
+   * Quel ecran l'apercu doit montrer. Regler le titre de l'ecran des cadeaux
+   * pendant que l'apercu affiche encore le voile revenait a travailler a
+   * l'aveugle : l'apercu suit donc le cadre qu'on est en train de modifier.
+   */
+  const [ecranApercu, setEcranApercu] = useState<PreviewScreen>("intro");
   const [items, setItems] = useState<DraftItem[]>(() => toDraftItems(initial.items));
 
   // Un repli est ouvert d'emblee si le champ porte deja une valeur : en edition,
@@ -552,7 +558,12 @@ export default function PageEditor(props: Props) {
             Fermer
           </button>
         </div>
-        <GiftView page={previewPage} mode="preview" onExitPreview={() => setPreview(false)} />
+        <GiftView
+          page={previewPage}
+          mode="preview"
+          previewScreen={ecranApercu}
+          onExitPreview={() => setPreview(false)}
+        />
       </div>
     );
   }
@@ -800,7 +811,13 @@ export default function PageEditor(props: Props) {
               </div>
               <div className="mini__frame">
                 <div className="mini__scale">
-                  <GiftView key={replay} page={previewPage} mode="preview" variant="embedded" />
+                  <GiftView
+                    key={replay}
+                    page={previewPage}
+                    mode="preview"
+                    variant="embedded"
+                    previewScreen={ecranApercu}
+                  />
                 </div>
               </div>
             </div>
@@ -842,16 +859,19 @@ export default function PageEditor(props: Props) {
             {/* Les trois cadres suivants suivent l'ordre des écrans que traverse la
                 personne qui reçoit : ce qu'elle voit en arrivant, les cadeaux, puis
                 l'écran qui suit son choix. */}
-            <section className="panel">
+            <section
+              className="panel"
+              onFocusCapture={() => setEcranApercu("intro")}
+              onClickCapture={() => setEcranApercu("intro")}
+            >
               <h2>Intro</h2>
               <p className="help">
-                Le premier écran : ce qui s&apos;affiche avant les cadeaux, sur le voile
-                d&apos;ouverture.
+                Le premier écran : ce qui s&apos;affiche avant les cadeaux.
               </p>
 
               <Field
                 label="Prénom de la personne"
-                help="Facultatif. Affiché tout en haut : « Pour Sophie »."
+                help="Facultatif. Affiché tout en haut."
               >
                 <input
                   type="text"
@@ -983,21 +1003,21 @@ export default function PageEditor(props: Props) {
                     if (!on) setHeader("");
                   }}
                 >
-                  <Field label="Photo d&apos;en-tête">
-                    <input
-                      type="url"
-                      inputMode="url"
-                      value={header}
-                      aria-label="Photo d'en-tête"
-                      placeholder="https://…/photo.jpg"
-                      onChange={(e) => setHeader(e.target.value)}
-                    />
-                  </Field>
+                  <ImageField
+                    label="Photo d'en-tête"
+                    ariaLabel="Photo d'en-tête"
+                    value={header}
+                    onChange={setHeader}
+                  />
                 </Optional>
               </div>
             </section>
 
-            <section className="panel">
+            <section
+              className="panel"
+              onFocusCapture={() => setEcranApercu("cadeaux")}
+              onClickCapture={() => setEcranApercu("cadeaux")}
+            >
               <h2>Cadeaux</h2>
               <p className="help">
                 L&apos;écran qui suit l&apos;ouverture. Ses mots lui appartiennent : répéter ceux du
@@ -1041,7 +1061,11 @@ export default function PageEditor(props: Props) {
               </Field>
             </section>
 
-            <section className="panel">
+            <section
+              className="panel"
+              onFocusCapture={() => setEcranApercu("choix")}
+              onClickCapture={() => setEcranApercu("choix")}
+            >
               <h2>Choix</h2>
               <p className="help">Le dernier écran, une fois le cadeau confirmé.</p>
 
@@ -1060,12 +1084,12 @@ export default function PageEditor(props: Props) {
               <div className="options">
                 <Optional
                   label="Proposer de laisser un mot"
-                  help="Un bouton sur cet écran, après le choix. Inutile si tu fais scanner le QR devant la personne."
+                  help="Laisse l&apos;opportunité à la personne de te répondre directement après avoir fait son choix."
                   checked={replyOn}
                   onChange={setReplyOn}
                 >
                   <p className="help" style={{ marginBottom: 0 }}>
-                    Le mot apparaîtra dans ta vue d&apos;administration, avec le choix.
+                    Le mot apparaîtra dans ta vue d&apos;administration.
                   </p>
                 </Optional>
               </div>
@@ -1193,10 +1217,7 @@ export default function PageEditor(props: Props) {
                 </Field>
               )}
 
-              <Field
-                label="Nom de la carte"
-                help="Facultatif, jamais montré. Il sert à t&apos;y retrouver et fabrique l&apos;adresse du lien."
-              >
+              <Field label="Nom de la carte">
                 <input
                   type="text"
                   value={name}
@@ -1236,16 +1257,12 @@ export default function PageEditor(props: Props) {
                     <Counter value={linkTitle} max={LIMITS.linkTitle} />
                   </Field>
 
-                  <Field label="Image affichée" help="À défaut, l&apos;image du premier cadeau.">
-                    <input
-                      type="url"
-                      inputMode="url"
-                      value={cover}
-                      aria-label="Image d'aperçu du lien"
-                      placeholder="https://…/photo.jpg"
-                      onChange={(e) => setCover(e.target.value)}
-                    />
-                  </Field>
+                  <ImageField
+                    label="Image affichée"
+                    ariaLabel="Image d'aperçu du lien"
+                    value={cover}
+                    onChange={setCover}
+                  />
                 </Optional>
               </div>
             </section>
@@ -1375,6 +1392,117 @@ function Optional({
         </span>
       </label>
       {checked && <div className="optional__body">{children}</div>}
+    </div>
+  );
+}
+
+/**
+ * Un champ d'image autonome : adresse, televersement et collage.
+ *
+ * La photo d'en-tete et l'image d'apercu du lien n'acceptaient qu'une adresse
+ * tapee, alors qu'une ligne de cadeau accepte depuis toujours un Ctrl+V. C'etait
+ * le seul endroit du formulaire ou une capture d'ecran ne passait pas — et rien
+ * ne le disait.
+ *
+ * Il porte son propre etat d'envoi plutot que de le remonter : rien d'autre dans
+ * le formulaire n'a besoin de savoir qu'un televersement est en cours.
+ */
+function ImageField({
+  label,
+  help,
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  label: string;
+  help?: string;
+  value: string;
+  onChange: (url: string) => void;
+  ariaLabel: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
+
+  async function envoyer(file: File | null) {
+    if (!file) return;
+    setBusy(true);
+    setHint(null);
+    const result = await uploadImage(file);
+    setBusy(false);
+    if (result.ok) onChange(result.url);
+    else setHint(result.error);
+  }
+
+  function coller(event: React.ClipboardEvent) {
+    if (busy) return;
+
+    const file = imageFromClipboard(event.clipboardData);
+    if (file) {
+      event.preventDefault();
+      void envoyer(file);
+      return;
+    }
+
+    // Le texte colle dans un champ de saisie lui appartient : on n'y touche pas.
+    const cible = event.target as HTMLElement | null;
+    if (cible && (cible.tagName === "INPUT" || cible.tagName === "TEXTAREA")) return;
+
+    const url = imageUrlFromClipboard(event.clipboardData);
+    if (url) {
+      event.preventDefault();
+      onChange(url);
+      setHint("Adresse d'image collée.");
+    }
+  }
+
+  return (
+    <div onPaste={coller}>
+      <Field label={label} help={help}>
+        <div className="image-field">
+          {/* Focalisable au clavier, pour que Ctrl+V ait ou atterrir. */}
+          <div
+            className={`image-field__cible${busy ? " is-busy" : ""}`}
+            tabIndex={0}
+            role="button"
+            aria-label={`Coller une image pour : ${label}`}
+            onPaste={coller}
+          >
+            {value ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={value} alt="" />
+            ) : (
+              <span>{busy ? "envoi…" : "colle une image ici"}</span>
+            )}
+          </div>
+
+          <div className="image-field__reglages">
+            <div className="inline">
+              <input
+                type="url"
+                inputMode="url"
+                value={value}
+                aria-label={ariaLabel}
+                placeholder="https://…/photo.jpg"
+                onChange={(e) => onChange(e.target.value)}
+              />
+              <label className={`btn btn--ghost btn--sm${busy ? " is-disabled" : ""}`}>
+                {busy ? "…" : "Téléverser"}
+                <input
+                  type="file"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  hidden
+                  disabled={busy}
+                  onChange={(e) => {
+                    void envoyer(e.target.files?.[0] ?? null);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+        {hint && <p className="notice notice--info">{hint}</p>}
+      </Field>
     </div>
   );
 }

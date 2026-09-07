@@ -19,9 +19,17 @@ import type { Item, PublicPage } from "@/lib/types";
 
 type Mode = "live" | "preview";
 
+/** Ecran que l'apercu doit montrer, pour suivre le cadre en cours d'edition. */
+export type PreviewScreen = "intro" | "cadeaux" | "choix";
+
 type Props = {
   page: PublicPage;
   mode?: Mode;
+  /**
+   * Apercu uniquement : force l'ecran affiche. Le formulaire s'en sert pour que
+   * l'apercu montre l'ecran qu'on est en train de regler.
+   */
+  previewScreen?: PreviewScreen;
   /** "embedded" : rendu dans un cadre reduit (apercu miniature), pas plein ecran. */
   variant?: "full" | "embedded";
   /** Aperçu : quitter et revenir au formulaire. */
@@ -58,6 +66,7 @@ function prefersReducedMotion(): boolean {
 export default function GiftView({
   page,
   mode = "live",
+  previewScreen,
   variant = "full",
   onExitPreview,
 }: Props) {
@@ -152,6 +161,44 @@ export default function GiftView({
     setClosing(false);
     setOpened(!coverEnabled);
   }, [coverEnabled]);
+
+  /*
+   * L'apercu suit le cadre qu'on modifie.
+   *
+   * Regler le titre de l'ecran des cadeaux pendant que l'apercu affiche encore
+   * le voile revenait a travailler a l'aveugle. Le passage au cadre « Cadeaux »
+   * leve donc le voile — avec son animation, pas d'un coup sec : c'est aussi ce
+   * que le donneur veut verifier.
+   *
+   * N'agit qu'en apercu : sur la vraie page, c'est le receveur qui ouvre.
+   */
+  useEffect(() => {
+    if (mode !== "preview" || !previewScreen) return;
+
+    if (previewScreen === "choix") {
+      // L'ecran de confirmation n'a de sens qu'avec un cadeau retenu ; sans
+      // selection il serait vide, alors qu'on vient justement le regler.
+      setSelectedId((actuel) => actuel ?? page.items[0]?.id ?? null);
+      setPhase("done");
+      return;
+    }
+
+    setPhase("choosing");
+
+    if (previewScreen === "intro") {
+      setClosing(false);
+      setOpened(!coverEnabled);
+      return;
+    }
+
+    // « Cadeaux » : rien a faire si le voile est deja leve — le rejouer a chaque
+    // clic dans le cadre rendrait le reglage penible.
+    if (!opened && !closing) openCover();
+    // `opened` et `closing` sont volontairement hors des dependances : les
+    // inclure relancerait cet effet au milieu de l'ouverture qu'il vient de
+    // declencher.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewScreen, mode, coverEnabled, page.items]);
 
   // Tant que le voile est la, la page derriere ne doit pas defiler.
   //
