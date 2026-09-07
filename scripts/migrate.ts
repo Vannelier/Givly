@@ -39,21 +39,38 @@ if (!connectionString) {
 
 const files = ["db/schema.sql", ...(process.argv.includes("--seed") ? ["db/seed.sql"] : [])];
 
-const client = new Client({ connectionString, ssl: sslFor(connectionString) });
-await client.connect();
-try {
-  const { rows } = await client.query("select current_database() as base, version() as v");
-  process.stdout.write(`base : ${rows[0].base}\n`);
+/*
+ * Tout passe par une fonction plutot que par du `await` au niveau du module.
+ *
+ * `package.json` ne declare pas `"type": "module"`, donc tsx transpile ce
+ * fichier .ts en CommonJS, ou le `await` de premier niveau n'existe pas : le
+ * script echouait a la transformation, avant meme d'avoir lu la configuration.
+ * C'est pour la meme raison que scripts/boot.mjs porte l'extension .mjs.
+ */
+async function main(url: string) {
+  const client = new Client({ connectionString: url, ssl: sslFor(url) });
+  await client.connect();
+  try {
+    const { rows } = await client.query("select current_database() as base, version() as v");
+    process.stdout.write(`base : ${rows[0].base}\n`);
 
-  for (const file of files) {
-    process.stdout.write(`> ${file}\n`);
-    await client.query(readFileSync(resolve(process.cwd(), file), "utf8"));
+    for (const file of files) {
+      process.stdout.write(`> ${file}\n`);
+      await client.query(readFileSync(resolve(process.cwd(), file), "utf8"));
+    }
+
+    const { rows: cols } = await client.query(
+      "select count(*)::int as n from information_schema.columns where table_name = 'gift_pages'",
+    );
+    process.stdout.write(`Migration terminée. gift_pages : ${cols[0].n} colonnes.\n`);
+  } finally {
+    await client.end();
   }
-
-  const { rows: cols } = await client.query(
-    "select count(*)::int as n from information_schema.columns where table_name = 'gift_pages'",
-  );
-  process.stdout.write(`Migration terminée. gift_pages : ${cols[0].n} colonnes.\n`);
-} finally {
-  await client.end();
 }
+
+// L'adresse est passée en argument : le contrôle ci-dessus a déjà écarté le cas
+// `undefined`, mais cette garantie ne franchit pas la frontière d'une fonction.
+main(connectionString).catch((err) => {
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+});
