@@ -41,13 +41,15 @@ type Phase = "choosing" | "submitting" | "done" | "locked";
 type ReplyPhase = "idle" | "writing" | "sending" | "sent";
 
 /**
- * Rythme de la revelation. Ces trois valeurs doublent `--reveal-delay`,
- * `--reveal-step` et la duree de fermeture du voile, declarees dans globals.css :
- * le mouvement appartient au CSS, mais la barre de confirmation a besoin de
- * savoir quand le dernier cadeau a fini d'apparaitre pour monter apres lui.
- * Modifier l'un sans l'autre desynchronise l'entree.
+ * Rythme de la revelation. Ces valeurs doublent celles de globals.css : le
+ * mouvement appartient au CSS, mais la barre de confirmation a besoin de savoir
+ * quand le dernier cadeau a fini d'apparaitre pour monter apres lui. Modifier
+ * l'un sans l'autre desynchronise l'entree.
+ *
+ * Tout se compte a partir du retrait du voile, pas du clic : c'est `COVER_CLOSE_MS`
+ * qui separe les deux, et l'entree du titre occupe l'intervalle suivant.
  */
-const REVEAL_DELAY_MS = 1500;
+const REVEAL_APRES_TITRE_MS = 1200;
 const REVEAL_STEP_MS = 260;
 const COVER_CLOSE_MS = 950;
 
@@ -150,10 +152,11 @@ export default function GiftView({
       setBarIn(true);
       return;
     }
-    const last = REVEAL_DELAY_MS + Math.max(0, page.items.length - 1) * REVEAL_STEP_MS;
+    const depart = (coverEnabled ? COVER_CLOSE_MS : 0) + REVEAL_APRES_TITRE_MS;
+    const last = depart + Math.max(0, page.items.length - 1) * REVEAL_STEP_MS;
     const id = setTimeout(() => setBarIn(true), last);
     return () => clearTimeout(id);
-  }, [revealing, page.items.length]);
+  }, [revealing, coverEnabled, page.items.length]);
 
   // `useState` ne lit sa valeur initiale qu'au montage. Sans cette synchro, couper
   // le voile depuis le formulaire ne changeait rien a l'apercu deja affiche.
@@ -290,6 +293,12 @@ export default function GiftView({
   const skin = {
     ...paletteStyle(page.theme.palette),
     "--font-title": fontById(page.theme.font).cssVar,
+    /*
+     * Le point zero de la mise en scene : l'instant ou le voile a fini de se
+     * retirer. Sans voile, il n'y a rien a attendre. Le CSS en deduit l'entree du
+     * titre puis l'arrivee des cadeaux.
+     */
+    "--ouverture-delai": coverEnabled ? `${COVER_CLOSE_MS}ms` : "0ms",
   } as React.CSSProperties;
   const rootClass = `gift-root${variant === "embedded" ? " gift-root--embedded" : ""}`;
   const motif = page.theme.motif === false ? "none" : occasion.motif;

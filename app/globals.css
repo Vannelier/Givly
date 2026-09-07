@@ -121,7 +121,14 @@ select {
  * doivent donc rester d'accord (voir REVEAL_DELAY_MS / REVEAL_STEP_MS).
  */
 .gift-root {
-  --reveal-delay: 1500ms;
+  /*
+   * Tout se compte a partir du moment ou le voile a fini de se retirer, pas du
+   * clic. `--ouverture-delai` vaut la duree de fermeture du voile quand il y en
+   * a un, zero sinon : GiftView le pose en style en ligne. Sans lui, la moitie
+   * de l'entree du titre se jouait derriere le voile, donc invisible.
+   */
+  --ouverture-delai: 0ms;
+  --reveal-delay: calc(var(--ouverture-delai) + 1200ms);
   --reveal-step: 260ms;
   --reveal-duration: 700ms;
   position: relative;
@@ -196,13 +203,22 @@ select {
  * vit sur le voile. Sans voile, les deux se suivent.
  */
 .gift-head,
+.gift-items-head {
+  text-align: center;
+  margin-bottom: clamp(1.75rem, 6vw, 2.75rem);
+}
+
 /*
  * Le titre de l'ecran des cadeaux entre par le milieu de l'ecran.
  *
- * Il grandit avec un rebond la ou l'oeil arrive apres l'ouverture, puis remonte
- * a sa place et laisse les cadeaux se poser derriere lui. Le voir apparaitre
- * deja range en haut ne racontait rien : l'ecran s'ouvrait sur un texte fixe et
- * une grille vide.
+ * Il apparait au centre, grandit sur place, puis remonte a sa place et laisse
+ * les cadeaux se poser apres lui. Le voir apparaitre deja range en haut ne
+ * racontait rien : l'ecran s'ouvrait sur un texte fixe et une grille vide.
+ *
+ * L'entree attend que le voile ait fini de se retirer (`--ouverture-delai`).
+ * Lancee des le clic, elle se jouait pour moitie derriere le voile : quand
+ * celui-ci disparaissait, le titre avait deja fait les deux tiers du chemin et
+ * il ne restait qu'une fin de course a voir.
  *
  * `--titre-montee` porte la distance jusqu'au centre. En `vh` sur la vraie page,
  * mais en pixels dans l'apercu miniature : les unites de fenetre s'y mesurent
@@ -212,10 +228,8 @@ select {
  * et le titre garde sa place reservee pendant tout le trajet.
  */
 .gift-items-head {
-  --titre-montee: 32vh;
-  --titre-duree: 1.35s;
-  text-align: center;
-  margin-bottom: clamp(1.75rem, 6vw, 2.75rem);
+  --titre-montee: 30vh;
+  --titre-duree: 1.2s;
 }
 
 /* Avant la revelation, le titre est cache derriere le voile : rien a peindre. */
@@ -230,22 +244,26 @@ select {
  */
 .gift-items-head.is-revealed {
   opacity: 1;
-  animation: titre-entree var(--titre-duree) var(--ease) both;
+  animation: titre-entree var(--titre-duree) var(--ease) var(--ouverture-delai) both;
+  /*
+   * Sans promotion, le navigateur re-rasterise le texte a chaque image de
+   * l'agrandissement — c'est de la que venait l'a-coup. Sur sa propre couche, le
+   * compositeur se contente de le transformer.
+   */
+  will-change: transform, opacity;
 }
 
 @keyframes titre-entree {
   0% {
     opacity: 0;
-    transform: translateY(var(--titre-montee)) scale(0.62);
+    transform: translateY(var(--titre-montee)) scale(0.72);
   }
-  /* Le depassement : c'est lui qui donne le rebond. */
-  30% {
+  /* Arrive a taille pleine, toujours au centre. */
+  42% {
     opacity: 1;
-    transform: translateY(var(--titre-montee)) scale(1.14);
+    transform: translateY(var(--titre-montee)) scale(1);
   }
-  44% {
-    transform: translateY(var(--titre-montee)) scale(0.97);
-  }
+  /* Un temps d'arret : c'est le moment ou on le lit. */
   56% {
     transform: translateY(var(--titre-montee)) scale(1);
   }
