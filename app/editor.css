@@ -24,6 +24,27 @@
   gap: 1rem;
 }
 
+/*
+ * Les messages du formulaire vivent en tete, juste sous les puces d'etape : la
+ * page remonte quand quelque chose bloque, et une bulle placee pres du bouton
+ * d'enregistrement serait restee hors de l'ecran. La courte entree signale
+ * qu'elle vient d'apparaitre, sinon on la rate en arrivant en haut.
+ */
+.editor__notice {
+  animation: notice-in 0.3s var(--ease) both;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .panel {
   background: var(--card);
   border: 1px solid var(--line);

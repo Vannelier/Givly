@@ -155,12 +155,17 @@ test("validateCreate refuse un message trop long", () => {
   );
 });
 
-test("validateCreate refuse un message vide", () => {
-  throwsValidation(() => validateCreate({ ...validBody, thank_you_message: "   " }), "thank_you_message");
+test("validateCreate accepte un message vide", () => {
+  // Plus aucun champ de texte n'est obligatoire : le formulaire remplit lui-meme
+  // le vide avec la suggestion qu'il affichait en placeholder.
+  const out = validateCreate({ ...validBody, thank_you_message: "   ", welcome_message: "" });
+  assert.equal(out.thank_you_message, "");
+  assert.equal(out.welcome_message, "");
 });
 
-test("validateCreate refuse un label vide ou trop long", () => {
-  throwsValidation(() => validateCreate({ ...validBody, items: [{ label: "" }, validItems[1]] }));
+test("validateCreate remplace un label vide et refuse un label trop long", () => {
+  const out = validateCreate({ ...validBody, items: [{ label: "" }, validItems[1]] });
+  assert.equal(out.items[0].label, "Sans titre");
   throwsValidation(
     () => validateCreate({ ...validBody, items: [{ label: "x".repeat(81) }, validItems[1]] }),
   );
@@ -401,11 +406,13 @@ test("canonicaliseUrl laisse passer une URL non analysable", () => {
 
 // --- Nom de la carte et palettes -------------------------------------------
 
-test("validateCreate exige un nom de carte", () => {
+test("validateCreate accepte une carte sans nom", () => {
+  // Le nom n'est plus obligatoire cote serveur : le formulaire en compose un a
+  // partir de l'occasion et du prenom quand le donneur laisse le champ vide.
   const { name, ...sansNom } = validBody;
   void name;
-  throwsValidation(() => validateCreate(sansNom), "name");
-  throwsValidation(() => validateCreate({ ...validBody, name: "   " }), "name");
+  assert.equal(validateCreate(sansNom).name, "");
+  assert.equal(validateCreate({ ...validBody, name: "   " }).name, "");
 });
 
 test("validateCreate refuse un nom trop long", () => {

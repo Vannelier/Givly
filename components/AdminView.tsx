@@ -86,67 +86,8 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
         <h1>{page.locked ? "Le choix est fait" : "En attente d'un choix"}</h1>
       </header>
 
-      <section className="panel">
-        <h2>État</h2>
-        <dl className="status">
-          <div className="status__row">
-            <dt>Statut</dt>
-            <dd>
-              {page.expired ? (
-                <span className="pill pill--expired">Expirée</span>
-              ) : page.sealed ? (
-                <span className="pill pill--waiting">Scellée</span>
-              ) : page.locked ? (
-                <span className="pill pill--chosen">Choix enregistré</span>
-              ) : (
-                <span className="pill pill--waiting">En attente</span>
-              )}
-            </dd>
-          </div>
-          <div className="status__row">
-            <dt>Consultations</dt>
-            <dd>{page.view_count}</dd>
-          </div>
-          {page.reveal_at && (
-            <div className="status__row">
-              <dt>{page.sealed ? "S'ouvre le" : "Ouverte depuis le"}</dt>
-              <dd>{formatDateTime(page.reveal_at)}</dd>
-            </div>
-          )}
-          <div className="status__row">
-            <dt>Créée le</dt>
-            <dd>{formatDateTime(page.created_at)}</dd>
-          </div>
-          <div className="status__row">
-            <dt>Dernière modification</dt>
-            <dd>{formatDateTime(page.updated_at)}</dd>
-          </div>
-          <div className="status__row">
-            <dt>{page.locked ? "Choix fait le" : "Expire le"}</dt>
-            <dd>
-              {page.locked
-                ? formatDateTime(page.chosen_at)
-                : page.expires_at
-                  ? formatDateTime(page.expires_at)
-                  : "n'expire pas"}
-            </dd>
-          </div>
-        </dl>
-
-        <div className="link-box">
-          <span className="link-box__label">Lien à envoyer</span>
-          <CopyLine value={page.publicUrl} />
-        </div>
-
-        <QrCard url={page.publicUrl} />
-
-        <div className="btn-row" style={{ marginTop: "0.85rem" }}>
-          <Link className="btn btn--ghost btn--sm" href={`/admin/${token}/imprimer`}>
-            Carte à imprimer
-          </Link>
-        </div>
-      </section>
-
+      {/* Le cadeau choisi passe avant les liens : c'est ce qu'on vient chercher
+          ici une fois le choix fait, et les liens n'ont plus grand-chose à dire. */}
       {chosen && (
         <section className="panel">
           <h2>Cadeau choisi</h2>
@@ -172,7 +113,33 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
         </section>
       )}
 
-      {editable ? (
+      <section className="panel">
+        <h2>Partager la carte</h2>
+
+        {/* Seule date conservée : une carte scellée ne s'ouvre pas encore, et rien
+            d'autre sur cette page ne le dirait. */}
+        {page.reveal_at && (
+          <p className="help">
+            {page.sealed ? "S'ouvre le " : "Ouverte depuis le "}
+            {formatDateTime(page.reveal_at)}.
+          </p>
+        )}
+
+        <div className="link-box">
+          <span className="link-box__label">Lien à envoyer</span>
+          <CopyLine value={page.publicUrl} />
+        </div>
+
+        <QrCard url={page.publicUrl} />
+
+        <div className="btn-row" style={{ marginTop: "0.85rem" }}>
+          <Link className="btn btn--ghost btn--sm" href={`/admin/${token}/imprimer`}>
+            Carte à imprimer
+          </Link>
+        </div>
+      </section>
+
+      {editable && (
         <>
           <section className="panel" style={{ paddingBottom: "0.6rem" }}>
             <h2>Modifier la page</h2>
@@ -182,21 +149,16 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
           </section>
           <PageEditor mode="edit" initial={initial} adminToken={token} slug={page.slug} />
         </>
-      ) : (
-        <section className="panel">
-          <h2>Modification impossible</h2>
-          <p className="help" style={{ marginBottom: 0 }}>
-            {page.locked
-              ? "Le choix a été fait : la page est figée sur ce choix. Tu peux encore la supprimer."
-              : "La page a expiré : elle n'est plus modifiable. Tu peux encore la supprimer."}
-          </p>
-        </section>
       )}
 
+      {/* Une fois le choix fait, supprimer n'est plus une perte mais une fin de
+          course : on range la carte plutôt qu'on ne l'efface. */}
       <section className="panel">
-        <h2>Supprimer</h2>
+        <h2>{page.locked ? "Bien reçu ?" : "Ranger la carte"}</h2>
         <p className="help">
-          Définitif. La page et son contenu disparaissent, les deux liens cessent de fonctionner.
+          {page.locked
+            ? "Tu as noté le cadeau ? Tu peux clôturer : la page se referme pour de bon et les deux liens cessent de fonctionner."
+            : "Définitif. La page et son contenu disparaissent, les deux liens cessent de fonctionner."}
         </p>
         {error && (
           <p className="notice notice--error" role="alert" style={{ marginBottom: "0.8rem" }}>
@@ -206,7 +168,13 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
         {confirming ? (
           <div className="btn-row">
             <button type="button" className="btn btn--danger btn--sm" disabled={deleting} onClick={remove}>
-              {deleting ? "Suppression…" : "Oui, supprimer définitivement"}
+              {deleting
+                ? page.locked
+                  ? "Clôture…"
+                  : "Suppression…"
+                : page.locked
+                  ? "Oui, clôturer pour de bon"
+                  : "Oui, supprimer définitivement"}
             </button>
             <button
               type="button"
@@ -219,7 +187,7 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
           </div>
         ) : (
           <button type="button" className="btn btn--danger btn--sm" onClick={() => setConfirming(true)}>
-            Supprimer cette page
+            {page.locked ? "C'est noté, clôturer la page" : "Supprimer cette page"}
           </button>
         )}
       </section>

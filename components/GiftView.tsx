@@ -23,6 +23,24 @@ type Props = {
 type Phase = "choosing" | "submitting" | "done" | "locked";
 
 /**
+ * Rythme de la revelation. Ces trois valeurs doublent `--reveal-delay`,
+ * `--reveal-step` et la duree de fermeture du voile, declarees dans globals.css :
+ * le mouvement appartient au CSS, mais la barre de confirmation a besoin de
+ * savoir quand le dernier cadeau a fini d'apparaitre pour monter apres lui.
+ * Modifier l'un sans l'autre desynchronise l'entree.
+ */
+const REVEAL_DELAY_MS = 1500;
+const REVEAL_STEP_MS = 260;
+const COVER_CLOSE_MS = 950;
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+  );
+}
+
+/**
  * Le rendu que voit le receveur. Utilisé tel quel par /[slug] (page réelle) et
  * par l'aperçu du formulaire (mode "preview", aucune persistance) — c'est le
  * même composant des deux côtés, donc l'aperçu ne peut pas mentir.
@@ -76,6 +94,28 @@ export default function GiftView({
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
+  /**
+   * La barre de confirmation monte depuis le bas une fois le dernier cadeau
+   * installe : arriver avant eux, elle designerait un choix qui n'est pas encore
+   * a l'ecran ; ancree en bas de fenetre, elle reste ensuite sous les yeux sans
+   * qu'il faille faire defiler la page jusqu'en bas.
+   */
+  const [barIn, setBarIn] = useState(false);
+
+  useEffect(() => {
+    if (!revealing) {
+      setBarIn(false);
+      return;
+    }
+    if (prefersReducedMotion()) {
+      setBarIn(true);
+      return;
+    }
+    const last = REVEAL_DELAY_MS + Math.max(0, page.items.length - 1) * REVEAL_STEP_MS;
+    const id = setTimeout(() => setBarIn(true), last);
+    return () => clearTimeout(id);
+  }, [revealing, page.items.length]);
+
   // `useState` ne lit sa valeur initiale qu'au montage. Sans cette synchro, couper
   // le voile depuis le formulaire ne changeait rien a l'apercu deja affiche.
   useEffect(() => {
@@ -98,15 +138,12 @@ export default function GiftView({
   }, [opened, variant, mode]);
 
   function openCover() {
-    const instant =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (instant) {
+    if (prefersReducedMotion()) {
       setOpened(true);
       return;
     }
     setClosing(true);
-    timer.current = setTimeout(() => setOpened(true), 720);
+    timer.current = setTimeout(() => setOpened(true), COVER_CLOSE_MS);
   }
 
   async function confirm() {
@@ -256,7 +293,7 @@ export default function GiftView({
         </p>
       </div>
 
-      <div className="confirm-bar">
+      <div className={`confirm-bar${barIn ? "" : " confirm-bar--waiting"}`}>
         <div className="confirm-bar__inner">
           <button
             type="button"

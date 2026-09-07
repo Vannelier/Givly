@@ -161,23 +161,54 @@ export default function PageEditor(props: Props) {
     };
   }, [preview]);
 
+  const current = occasionById(occasion);
+
+  /**
+   * Plus rien n'est obligatoire : un champ laissé vide retombe sur la suggestion
+   * que le donneur avait sous les yeux en placeholder. Le nom, lui, n'a pas de
+   * placeholder utilisable tel quel — « Anniversaire de Sophie » deviendrait
+   * l'adresse de toutes les cartes anonymes — alors on le compose à partir de
+   * l'occasion et du prénom déjà saisis.
+   */
+  const effectiveName =
+    name.trim() ||
+    (() => {
+      const base = current.id === "aucune" ? "Carte cadeau" : current.name;
+      const who = recipient.trim();
+      return who ? `${base} — ${who}` : base;
+    })();
+
   // Le nom de la carte alimente l'adresse du lien tant que le donneur n'y a pas touché.
-  const autoSlug = useMemo(() => slugify(name) || "cadeau", [name]);
+  const autoSlug = useMemo(() => slugify(effectiveName) || "cadeau", [effectiveName]);
   // L'adresse decoule du nom, sans reglage : le donneur ne s'en soucie pas, et
   // le serveur resout tout seul une eventuelle collision.
   const effectiveSlug = mode === "create" ? autoSlug : (initial.slug ?? "");
+
+  function toTop() {
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function goTo(target: StepNumber) {
     setError(null);
     setStep(target);
     if (target > furthest) setFurthest(target);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    toTop();
+  }
+
+  /**
+   * Le message d'erreur vit en haut du formulaire, sous les puces d'étape : le
+   * bouton d'enregistrement est en bas d'une page longue, et une bulle affichée
+   * juste à côté de lui restait hors de l'écran une fois la page remontée.
+   */
+  function showError(message: string) {
+    setError(message);
+    toTop();
   }
 
   function next() {
     const invalid = validateStep(step);
     if (invalid) {
-      setError(invalid);
+      showError(invalid);
       return;
     }
     goTo(Math.min(3, step + 1) as StepNumber);
@@ -283,7 +314,9 @@ export default function PageEditor(props: Props) {
   }
 
   const draftItems: Item[] = items
-    .filter((it) => it.label.trim() !== "" || it.image_url.trim() !== "")
+    .filter(
+      (it) => it.label.trim() !== "" || it.image_url.trim() !== "" || it.source_url.trim() !== "",
+    )
     .map((it, index) => ({
       id: it.id ?? `draft_${index}`,
       label: it.label.trim() || "Sans titre",
@@ -292,7 +325,6 @@ export default function PageEditor(props: Props) {
       note: it.note.trim() || null,
     }));
 
-  const current = occasionById(occasion);
   const theme: Theme = {
     layout,
     palette: { id: palette },
@@ -336,10 +368,14 @@ export default function PageEditor(props: Props) {
     chosen_at: null,
   };
 
-  /** Chaque étape ne juge que ses propres champs, pour ne pas bloquer sur la suivante. */
+  /**
+   * Chaque étape ne juge que ses propres champs, pour ne pas bloquer sur la
+   * suivante. Aucun champ de texte n'est obligatoire : un champ vide prend la
+   * valeur de son placeholder au moment de l'enregistrement. Il ne reste donc
+   * que ce qui est structurel — il faut bien au moins un cadeau à choisir.
+   */
   function validateStep(which: StepNumber): string | null {
     if (which === 1) {
-      if (!name.trim()) return "Donne un nom à ta carte, ne serait-ce que pour t'y retrouver.";
       if (name.trim().length > LIMITS.name) return `Le nom dépasse ${LIMITS.name} caractères.`;
       if (mode === "create") {
         const err = slugError(effectiveSlug);
@@ -349,43 +385,54 @@ export default function PageEditor(props: Props) {
     }
 
     if (which === 2) {
-      const filled = items.filter((it) => it.label.trim() !== "");
+      const filled = filledItems();
       if (filled.length < LIMITS.itemsMin) return "Il faut au moins un cadeau.";
       if (filled.length > LIMITS.itemsMax) return `Pas plus de ${LIMITS.itemsMax} cadeaux.`;
       return null;
     }
 
-    if (!welcome.trim()) return "Le message d'accueil est obligatoire.";
-    if (welcome.trim().length > LIMITS.message) return `Le message d'accueil dépasse ${LIMITS.message} caractères.`;
-    if (!thanks.trim()) return "Le message de remerciement est obligatoire.";
+    if (welcome.trim().length > LIMITS.message) {
+      return `Le message principal dépasse ${LIMITS.message} caractères.`;
+    }
     if (thanks.trim().length > LIMITS.message) {
-      return `Le message de remerciement dépasse ${LIMITS.message} caractères.`;
+      return `Le message de fin dépasse ${LIMITS.message} caractères.`;
     }
     return null;
   }
 
+  /**
+   * Une ligne compte dès qu'elle porte quelque chose : titre, image ou adresse.
+   * Sans ça, une ligne remplie uniquement par la récupération d'image se serait
+   * évaporée en silence à l'enregistrement.
+   */
+  function filledItems() {
+    return items.filter(
+      (it) => it.label.trim() !== "" || it.image_url.trim() !== "" || it.source_url.trim() !== "",
+    );
+  }
+
   function payload() {
     return {
-      name: name.trim(),
+      name: effectiveName,
       intro_message: intro.trim(),
       signature: signature.trim(),
       recipient_name: recipient.trim(),
       link_title: linkTitle.trim(),
       header_image_url: header.trim() || null,
       reveal_at: revealAt ? new Date(revealAt).toISOString() : null,
-      welcome_message: welcome.trim(),
-      thank_you_message: thanks.trim(),
+      // Champ vide : on enregistre la suggestion affichée en placeholder, celle
+      // que le donneur avait sous les yeux et a implicitement acceptée.
+      welcome_message: welcome.trim() || current.welcomeHint,
+      thank_you_message: thanks.trim() || current.thanksHint,
       cover_image_url: cover.trim() || null,
       theme,
-      items: items
-        .filter((it) => it.label.trim() !== "")
-        .map((it) => ({
-          ...(it.id ? { id: it.id } : {}),
-          label: it.label.trim(),
-          image_url: it.image_url.trim() || null,
-          source_url: it.source_url.trim() || null,
-          note: it.note.trim() || null,
-        })),
+      items: filledItems().map((it) => ({
+        ...(it.id ? { id: it.id } : {}),
+        label: it.label.trim() || "Sans titre",
+        image_url: it.image_url.trim() || null,
+        source_url: it.source_url.trim() || null,
+        note: it.note.trim() || null,
+      })),
     };
   }
 
@@ -422,8 +469,8 @@ export default function PageEditor(props: Props) {
 
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        setError((data.error as string) ?? "L'enregistrement a échoué.");
         if ((data.field as string) === "slug") goTo(1);
+        showError((data.error as string) ?? "L'enregistrement a échoué.");
         return;
       }
 
@@ -450,7 +497,7 @@ export default function PageEditor(props: Props) {
         router.refresh();
       }
     } catch {
-      setError("Connexion perdue. Vérifie ta connexion et réessaie.");
+      showError("Connexion perdue. Vérifie ta connexion et réessaie.");
     } finally {
       setSaving(false);
     }
@@ -474,7 +521,7 @@ export default function PageEditor(props: Props) {
   }
 
   const isLast = step === 3;
-  const filledCount = items.filter((i) => i.label.trim()).length;
+  const filledCount = filledItems().length;
 
   return (
     <div className="editor">
@@ -499,6 +546,22 @@ export default function PageEditor(props: Props) {
         })}
       </ol>
 
+      {/* Les messages restent en tête du formulaire : c'est là que la page revient
+          quand quelque chose bloque, et une bulle en bas serait hors de l'écran. */}
+      {error && (
+        <p className="notice notice--error editor__notice" role="alert">
+          {error}
+        </p>
+      )}
+      {warnings.map((w) => (
+        <p className="notice notice--warn editor__notice" key={w}>
+          {w}
+        </p>
+      ))}
+      {savedAt && (
+        <p className="notice notice--info editor__notice">Modifications enregistrées à {savedAt}.</p>
+      )}
+
       {step === 1 && (
         <section className="panel">
           <h2>La carte</h2>
@@ -507,7 +570,10 @@ export default function PageEditor(props: Props) {
             montré à la personne qui reçoit.
           </p>
 
-          <Field label="Nom de la carte">
+          <Field
+            label="Nom de la carte"
+            help="Facultatif. Vide : il se compose tout seul à partir de l&apos;occasion et du prénom."
+          >
             <input
               type="text"
               value={name}
@@ -778,10 +844,13 @@ export default function PageEditor(props: Props) {
             <section className="panel">
               <h2>Les mots</h2>
 
-              <Field label="Message d&apos;accueil" help="Le titre de la page. Sert aussi à l&apos;aperçu du lien.">
+              <Field
+                label="Message principal"
+                help="Le titre de la page. Sert aussi à l&apos;aperçu du lien. Vide : la suggestion affichée est reprise."
+              >
                 <textarea
                   value={welcome}
-                  aria-label="Message d'accueil"
+                  aria-label="Message principal"
                   maxLength={LIMITS.message}
                   rows={2}
                   onChange={(e) => setWelcome(e.target.value)}
@@ -790,10 +859,13 @@ export default function PageEditor(props: Props) {
                 <Counter value={welcome} max={LIMITS.message} />
               </Field>
 
-              <Field label="Message de remerciement" help="Affiché juste après la confirmation du choix.">
+              <Field
+                label="Message de fin"
+                help="Affiché juste après la confirmation du choix. Vide : la suggestion affichée est reprise."
+              >
                 <textarea
                   value={thanks}
-                  aria-label="Message de remerciement"
+                  aria-label="Message de fin"
                   maxLength={LIMITS.message}
                   rows={2}
                   onChange={(e) => setThanks(e.target.value)}
@@ -1023,7 +1095,7 @@ export default function PageEditor(props: Props) {
                 >
                   <Field
                     label="Texte affiché"
-                    help="Le titre cliquable de l&apos;aperçu. À défaut, le message d&apos;accueil."
+                    help="Le titre cliquable de l&apos;aperçu. À défaut, le message principal."
                   >
                     <input
                       type="text"
@@ -1052,18 +1124,6 @@ export default function PageEditor(props: Props) {
           </div>
         </div>
       )}
-
-      {error && (
-        <p className="notice notice--error" role="alert">
-          {error}
-        </p>
-      )}
-      {warnings.map((w) => (
-        <p className="notice notice--warn" key={w}>
-          {w}
-        </p>
-      ))}
-      {savedAt && <p className="notice notice--info">Modifications enregistrées à {savedAt}.</p>}
 
       <div className="editor__actions">
         <div className="editor__nav">

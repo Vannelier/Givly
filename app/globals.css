@@ -101,8 +101,19 @@ select {
  * La palette est posee en variables inline sur cet element (voir lib/palettes).
  * Il peint donc son propre fond, au lieu d'heriter de celui du <body>, ce qui
  * permet a l'apercu du formulaire d'afficher exactement le meme rendu.
+ *
+ * Elle porte aussi le rythme de la revelation, en un seul endroit.
+ *
+ * `--reveal-delay` laisse le temps de lire le mot d'ouverture et le titre avant
+ * que le premier cadeau ne se montre ; `--reveal-step` est assez large pour
+ * qu'ils arrivent un par un et non en bloc. GiftView reprend ces memes valeurs
+ * pour faire monter la barre de confirmation apres le dernier cadeau — les deux
+ * doivent donc rester d'accord (voir REVEAL_DELAY_MS / REVEAL_STEP_MS).
  */
 .gift-root {
+  --reveal-delay: 1500ms;
+  --reveal-step: 260ms;
+  --reveal-duration: 700ms;
   position: relative;
   min-height: 100dvh;
   background: var(--paper);
@@ -138,8 +149,14 @@ select {
   z-index: 0;
 }
 
-.gift-root > .shell,
-.gift-root > .confirm-bar {
+/*
+ * Seule la coquille est repositionnee pour passer devant le decor : la barre de
+ * confirmation, elle, doit rester `fixed`. La regrouper ici lui imposait
+ * `position: relative` — plus specifique que sa propre regle — et le bouton
+ * retombait tout en bas du document, hors de vue tant qu'on n'avait pas fait
+ * defiler la page entiere.
+ */
+.gift-root > .shell {
   position: relative;
   z-index: 1;
 }
@@ -365,6 +382,14 @@ select {
 
 /* --- Barre de confirmation ------------------------------------------------- */
 
+/*
+ * Ancree au bas de la fenetre et non au bas du document : le receveur confirme
+ * son choix sans avoir a faire defiler la page jusqu'en bas, et le bouton reste
+ * sous les yeux pendant qu'il compare les cadeaux.
+ *
+ * Dans l'apercu miniature, le `transform` du cadre cree un bloc englobant : la
+ * barre y reste enfermee au lieu de s'echapper sur toute la fenetre.
+ */
 .confirm-bar {
   position: fixed;
   left: 0;
@@ -373,6 +398,16 @@ select {
   padding: 0.9rem clamp(1rem, 5vw, 2rem) calc(0.9rem + env(safe-area-inset-bottom));
   background: linear-gradient(to top, var(--paper) 62%, rgba(250, 246, 240, 0));
   z-index: 20;
+  transition:
+    transform 0.55s var(--ease),
+    opacity 0.4s var(--ease);
+}
+
+/* Etat de depart : la barre monte depuis le bas une fois les cadeaux installes. */
+.confirm-bar--waiting {
+  transform: translateY(135%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .confirm-bar__inner {
@@ -568,7 +603,7 @@ select {
   place-items: center;
   padding: clamp(1.5rem, 6vw, 3rem);
   perspective: 1400px;
-  animation: cover-in 0.5s var(--ease) both;
+  animation: cover-in 0.7s var(--ease) both;
 }
 
 /*
@@ -609,7 +644,7 @@ select {
 
 /* Voile : les deux panneaux s'effacent ensemble. */
 .cover--voile.is-closing .cover__panel {
-  animation: veil-out 0.68s var(--ease) both;
+  animation: veil-out 0.95s var(--ease) both;
 }
 
 @keyframes veil-out {
@@ -625,11 +660,11 @@ select {
 
 /* Rideau : les panneaux s'ecartent. */
 .cover--rideau.is-closing .cover__panel--a {
-  animation: curtain-left 0.68s var(--ease) both;
+  animation: curtain-left 0.95s var(--ease) both;
 }
 
 .cover--rideau.is-closing .cover__panel--b {
-  animation: curtain-right 0.68s var(--ease) both;
+  animation: curtain-right 0.95s var(--ease) both;
 }
 
 @keyframes curtain-left {
@@ -647,7 +682,7 @@ select {
 /* Enveloppe : les panneaux basculent vers le haut comme un rabat. */
 .cover--enveloppe.is-closing .cover__panel {
   transform-origin: top center;
-  animation: flap-up 0.68s var(--ease) both;
+  animation: flap-up 0.95s var(--ease) both;
 }
 
 @keyframes flap-up {
@@ -662,7 +697,7 @@ select {
 }
 
 .cover.is-closing .cover__inner {
-  animation: inner-out 0.4s var(--ease) both;
+  animation: inner-out 0.56s var(--ease) both;
 }
 
 @keyframes inner-out {
@@ -677,7 +712,7 @@ select {
   z-index: 1;
   max-width: 30rem;
   text-align: center;
-  animation: cover-rise 0.7s var(--ease) 0.1s both;
+  animation: cover-rise 1s var(--ease) 0.14s both;
 }
 
 @keyframes cover-rise {
@@ -786,8 +821,8 @@ select {
  */
 .items.is-revealed > li {
   opacity: 1;
-  animation: card-rise 0.5s var(--ease) both;
-  animation-delay: calc(var(--i, 0) * 70ms + 60ms);
+  animation: card-rise var(--reveal-duration) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * var(--reveal-step) + var(--reveal-delay));
 }
 
 @keyframes card-rise {

@@ -128,7 +128,7 @@ Les slugs `admin`, `api`, `creer`, `_next`, `favicon.ico`, `robots.txt`, `sitema
 |---|---|
 | `POST /api/extract` | `{ url }` → `{ ok, title?, image?, siteName? }`. Ne jette jamais. |
 | `POST /api/upload` | image (repli manuel) → Vercel Blob → `{ url }` |
-| `POST /api/pages` | crée la page (`name` obligatoire) → `{ slug, publicUrl, adminUrl, expiresAt, warnings }` |
+| `POST /api/pages` | crée la page (aucun champ de texte obligatoire) → `{ slug, publicUrl, adminUrl, expiresAt, warnings }` |
 | `PATCH /api/admin/[token]` | édite la page ; 409 si verrouillée ou expirée |
 | `DELETE /api/admin/[token]` | supprime la page |
 | `POST /api/pages/[slug]/choose` | `{ itemId }` → enregistre le choix et verrouille |
@@ -140,8 +140,8 @@ Les slugs `admin`, `api`, `creer`, `_next`, `favicon.ico`, `robots.txt`, `sitema
 | **Occasion** | étape 3 | Preset complet : palette, décor et formule d'ouverture d'un coup. Quinze occasions, rangées par rubrique. |
 | **Prénom** | étape 1 | « Pour Sophie », en tête de la carte et sur le voile. |
 | **Message d'ouverture** | étape 3 | La ligne au-dessus du titre. Vide = celle de l'occasion. |
-| **Message d'accueil** | étape 3 | Le titre de la page, et le titre de l'aperçu de lien. Laissé vide, l'aperçu montre la suggestion de l'occasion. |
-| **Message de remerciement** | étape 3 | Après la confirmation du choix. |
+| **Message principal** | étape 3 | Le titre de la page, et le titre de l'aperçu de lien. Laissé vide, la suggestion de l'occasion est enregistrée telle quelle. |
+| **Message de fin** | étape 3 | Après la confirmation du choix. Laissé vide, la suggestion de l'occasion est enregistrée telle quelle. |
 | **Signature** | étape 3 | Une ligne en bas de page. Facultative. |
 | **Palette** | étape 3 | Sept palettes. Réglée par l'occasion, modifiable ensuite. |
 | **Police du titre** | étape 3 | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
@@ -162,8 +162,14 @@ se cache.
 
 Sont repliés : l'adresse du lien (elle découle du nom), le mot d'ouverture, la signature,
 l'ouverture animée, la date de révélation, la photo d'en-tête et l'image d'aperçu du lien. Restent
-toujours visibles les champs obligatoires et les choix structurants — occasion, palette, police,
+toujours visibles les champs principaux et les choix structurants — occasion, palette, police,
 disposition.
+
+**Aucun champ de texte n'est obligatoire.** Laissé vide, un champ prend la valeur de la suggestion
+que le donneur avait sous les yeux en placeholder : le message principal et le message de fin
+reprennent la formule de l'occasion, un cadeau sans titre devient « Sans titre », et le nom de la
+carte se compose à partir de l'occasion et du prénom. Il ne reste qu'une exigence, structurelle :
+il faut au moins un cadeau à choisir.
 
 **Une occasion est un preset, pas une contrainte.** La choisir repose palette et décor, et met à jour
 le message d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un texte

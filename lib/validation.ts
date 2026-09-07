@@ -134,7 +134,9 @@ export function validateItems(value: unknown): Item[] {
   const seen = new Set<string>();
   return value.map((raw, i) => {
     const o = asObject(raw);
-    const label = text(o.label, `items.${i}.label`, LIMITS.itemLabel, { required: true });
+    // Un titre vide ne bloque plus la creation : la carte affiche un libelle de
+    // repli plutot que de refuser l'enregistrement.
+    const label = text(o.label, `items.${i}.label`, LIMITS.itemLabel) || "Sans titre";
     const note = text(o.note, `items.${i}.note`, LIMITS.itemNote) || null;
     const image_url = optionalUrl(o.image_url, `items.${i}.image_url`);
     const source_url = optionalUrl(o.source_url, `items.${i}.source_url`);
@@ -170,19 +172,22 @@ export function validateCreate(body: unknown): PageInput & { slug: string } {
   return { slug, ...validatePageFields(o) };
 }
 
+/**
+ * Aucun champ de texte n'est obligatoire : laisser un champ vide fait retomber
+ * la page sur la suggestion affichee en placeholder, cote formulaire. Le serveur
+ * ne fait donc que borner les longueurs.
+ */
 export function validatePageFields(o: Record<string, unknown>): PageInput {
   return {
-    name: text(o.name, "name", LIMITS.name, { required: true }),
+    name: text(o.name, "name", LIMITS.name),
     intro_message: text(o.intro_message, "intro_message", LIMITS.intro),
     signature: text(o.signature, "signature", LIMITS.signature),
     recipient_name: text(o.recipient_name, "recipient_name", LIMITS.recipient),
     header_image_url: optionalUrl(o.header_image_url, "header_image_url"),
     reveal_at: optionalDate(o.reveal_at, "reveal_at"),
     link_title: text(o.link_title, "link_title", LIMITS.linkTitle),
-    welcome_message: text(o.welcome_message, "welcome_message", LIMITS.message, { required: true }),
-    thank_you_message: text(o.thank_you_message, "thank_you_message", LIMITS.message, {
-      required: true,
-    }),
+    welcome_message: text(o.welcome_message, "welcome_message", LIMITS.message),
+    thank_you_message: text(o.thank_you_message, "thank_you_message", LIMITS.message),
     cover_image_url: optionalUrl(o.cover_image_url, "cover_image_url"),
     theme: validateTheme(o.theme),
     items: validateItems(o.items),
@@ -193,7 +198,7 @@ export function validatePageFields(o: Record<string, unknown>): PageInput {
 export function validatePatch(body: unknown): Partial<PageInput> {
   const o = asObject(body);
   const out: Partial<PageInput> = {};
-  if ("name" in o) out.name = text(o.name, "name", LIMITS.name, { required: true });
+  if ("name" in o) out.name = text(o.name, "name", LIMITS.name);
   if ("intro_message" in o) out.intro_message = text(o.intro_message, "intro_message", LIMITS.intro);
   if ("signature" in o) out.signature = text(o.signature, "signature", LIMITS.signature);
   if ("recipient_name" in o) {
@@ -205,14 +210,10 @@ export function validatePatch(body: unknown): Partial<PageInput> {
   if ("reveal_at" in o) out.reveal_at = optionalDate(o.reveal_at, "reveal_at");
   if ("link_title" in o) out.link_title = text(o.link_title, "link_title", LIMITS.linkTitle);
   if ("welcome_message" in o) {
-    out.welcome_message = text(o.welcome_message, "welcome_message", LIMITS.message, {
-      required: true,
-    });
+    out.welcome_message = text(o.welcome_message, "welcome_message", LIMITS.message);
   }
   if ("thank_you_message" in o) {
-    out.thank_you_message = text(o.thank_you_message, "thank_you_message", LIMITS.message, {
-      required: true,
-    });
+    out.thank_you_message = text(o.thank_you_message, "thank_you_message", LIMITS.message);
   }
   if ("cover_image_url" in o) out.cover_image_url = optionalUrl(o.cover_image_url, "cover_image_url");
   if ("theme" in o) out.theme = validateTheme(o.theme);

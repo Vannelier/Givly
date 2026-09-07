@@ -47,14 +47,6 @@ export default function CreateFlow({ baseUrlLabel }: { baseUrlLabel: string }) {
 }
 
 function Created({ result }: { result: CreateResult }) {
-  const expires = result.expiresAt
-    ? new Date(result.expiresAt).toLocaleDateString("fr-BE", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
-
   return (
     <div className="shell shell--flush">
       <div className="state fade-in" style={{ textAlign: "left" }}>
@@ -65,20 +57,16 @@ function Created({ result }: { result: CreateResult }) {
 
         <div className="link-box">
           <span className="link-box__label">Lien à envoyer</span>
-          <span className="link-box__help">
-            C&apos;est ce que reçoit la personne. Collé dans WhatsApp ou un SMS, il s&apos;affiche
-            avec ton message et une image.
-          </span>
+          <span className="link-box__help">C&apos;est ce que reçoit la personne.</span>
           <CopyLine value={result.publicUrl} />
         </div>
 
         <QrCard url={result.publicUrl} />
 
         <div className="link-box link-box--admin">
-          <span className="link-box__label">Lien d&apos;administration — garde-le</span>
+          <span className="link-box__label">Ton lien de récupération</span>
           <span className="link-box__help">
-            Il ne sera plus affiché. C&apos;est le seul moyen de voir le choix, de modifier la page
-            et de la supprimer. Enregistre-le quelque part maintenant.
+            Garde-le bien : c&apos;est le seul moyen de voir le cadeau choisi.
           </span>
           <CopyLine value={result.adminUrl} />
         </div>
@@ -91,12 +79,6 @@ function Created({ result }: { result: CreateResult }) {
               </p>
             ))}
           </div>
-        )}
-
-        {expires && (
-          <p className="notice notice--info" style={{ marginTop: "1rem" }}>
-            Sans choix, la page expire le {expires}.
-          </p>
         )}
 
         <div className="btn-row" style={{ marginTop: "1.75rem" }}>

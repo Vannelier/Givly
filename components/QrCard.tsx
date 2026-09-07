@@ -13,13 +13,22 @@ import QRCode from "qrcode";
 export default function QrCard({ url }: { url: string }) {
   const [svg, setSvg] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // Un appareil photo n'ouvre un lien que s'il en reconnaît un : il lui faut une
+  // adresse absolue, sur un hôte réellement joignable. Encodé depuis un serveur
+  // de développement, le contenu du QR est du texte que le téléphone se contente
+  // d'afficher — d'où le « copier-coller dans le navigateur ».
+  const openable = isOpenableUrl(url);
 
   useEffect(() => {
     let vivant = true;
     QRCode.toString(url, {
       type: "svg",
-      margin: 1,
-      errorCorrectionLevel: "M",
+      // Zone de silence de 4 modules : c'est ce qu'exige la norme. À 1, beaucoup
+      // d'appareils photo décodent mal et n'affichent pas la pastille « ouvrir ».
+      margin: 4,
+      // Q tolère 25 % de dégradation : le QR reste lisible imprimé, plié ou glissé
+      // derrière une carte.
+      errorCorrectionLevel: "Q",
       color: { dark: "#231f1c", light: "#ffffff" },
     })
       .then((out) => {
@@ -54,6 +63,13 @@ export default function QrCard({ url }: { url: string }) {
           Imprime-le et glisse-le dans une carte en papier : il suffit de le scanner pour ouvrir la
           page-cadeau.
         </p>
+        {!openable && (
+          <p className="notice notice--warn" style={{ marginBottom: "0.6rem" }}>
+            Ce lien pointe vers une adresse locale : les téléphones l&apos;affichent sans pouvoir
+            l&apos;ouvrir. Renseigne <code>NEXT_PUBLIC_BASE_URL</code> avec l&apos;adresse publique du
+            site.
+          </p>
+        )}
         <button
           type="button"
           className="btn btn--ghost btn--sm"
@@ -65,6 +81,21 @@ export default function QrCard({ url }: { url: string }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Une adresse qu'un appareil photo de téléphone acceptera d'ouvrir : http(s) et
+ * un hôte qui n'est pas la machine du donneur.
+ */
+function isOpenableUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    return host !== "localhost" && host !== "127.0.0.1" && host !== "[::1]" && host.includes(".");
+  } catch {
+    return false;
+  }
 }
 
 function telecharger(svg: string) {
