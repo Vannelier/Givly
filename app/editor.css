@@ -558,7 +558,7 @@ input[type="datetime-local"]:focus {
   position: relative;
   width: 300px;
   max-width: 100%;
-  height: 190px;
+  height: 525px;
   margin: 0 auto;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -576,6 +576,20 @@ input[type="datetime-local"]:focus {
   transform-origin: top left;
 }
 
+/*
+ * Au telephone, l'apercu vivant ne tient pas : son cadre fait 190 px de haut
+ * pour une page-cadeau qui en mesure 525 une fois reduite, et n'en montrait donc
+ * qu'une tranche coupee en haut comme en bas. Pire, il s'installait avant les
+ * reglages et repoussait le formulaire sous la ligne de flottaison.
+ *
+ * Il disparait donc, et le bouton « Apercu » de la barre d'action ouvre le meme
+ * rendu en plein ecran — la ou il a la place d'etre lisible. Masquage en CSS et
+ * non en JavaScript : lire la largeur au rendu ferait diverger l'hydratation.
+ */
+.compose__side {
+  display: none;
+}
+
 @media (min-width: 62rem) {
   .compose {
     grid-template-columns: minmax(0, 1fr) 320px;
@@ -587,12 +601,9 @@ input[type="datetime-local"]:focus {
   }
 
   .compose__side {
+    display: block;
     position: sticky;
     top: 1rem;
-  }
-
-  .mini__frame {
-    height: 525px;
   }
 }
 
@@ -909,20 +920,69 @@ label.btn.is-disabled {
   border-color: rgba(156, 53, 53, 0.3);
 }
 
+/*
+ * Trois zones nommees plutot qu'un ordre de DOM : au telephone, la colonne
+ * unique montre l'adresse du produit AVANT la vignette. C'est le geste qui
+ * remplit tout le reste — coller un lien recupere le titre et l'image — il doit
+ * donc etre le premier a l'ecran, pas apres un cadre de collage vide.
+ *
+ * Au-dela de 40rem, la vignette reprend sa colonne a gauche et enjambe les deux
+ * rangees ; l'adresse revient au-dessus des autres champs.
+ */
 .row__grid {
   display: grid;
   grid-template-columns: 1fr;
+  grid-template-areas:
+    "source"
+    "preview"
+    "fields";
   gap: 0.85rem;
+}
+
+.row__source {
+  grid-area: source;
+  min-width: 0;
 }
 
 @media (min-width: 40rem) {
   .row__grid {
     grid-template-columns: 8.5rem 1fr;
+    grid-template-areas:
+      "preview source"
+      "preview fields";
+  }
+}
+
+/*
+ * En colonne unique, la vignette occupe toute la largeur : son ratio 4/3 lui
+ * donnait 285 px de haut, soit un grand vide entre l'adresse du produit et le
+ * titre. Tant qu'aucune image n'y est tombee, elle se contente d'une bande —
+ * assez pour rester une cible de collage visible, sans repousser la suite hors
+ * de l'ecran. Des qu'une image arrive, le ratio revient : c'est elle qu'on
+ * regarde.
+ */
+@media (max-width: 39.999rem) {
+  .row__preview--empty {
+    /*
+     * `width` explicite : neutraliser le ratio ne suffit pas a faire tenir la
+     * boite sur toute la colonne, l'etirement d'un element de grille etant
+     * suspendu des qu'un ratio est en jeu.
+     */
+    aspect-ratio: auto;
+    width: 100%;
+    height: 6.5rem;
   }
 }
 
 /* Cible de collage : focalisable au clavier, pour que Ctrl+V ait ou atterrir. */
 .row__preview {
+  grid-area: preview;
+  /*
+   * `start` explicite : la vignette enjambe deux rangees bien plus hautes
+   * qu'elle. Un ratio d'aspect suffit en principe a neutraliser l'etirement,
+   * mais l'ecrire evite de dependre de ce detail de specification.
+   */
+  align-self: start;
   position: relative;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-sm);
@@ -964,6 +1024,7 @@ label.btn.is-disabled {
 }
 
 .row__fields {
+  grid-area: fields;
   min-width: 0;
 }
 

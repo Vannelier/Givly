@@ -639,25 +639,17 @@ export default function PageEditor(props: Props) {
                   </div>
                 </div>
 
+                {/*
+                  L'adresse du produit est sortie de `row__fields` pour devenir une
+                  case a part entiere de la grille : c'est le seul moyen de la faire
+                  passer au-dessus de la vignette au telephone, ou tout s'empile,
+                  tout en la gardant a droite de la vignette au large. L'ordre est
+                  porte par `grid-template-areas`, pas par l'ordre du DOM — qui
+                  reste celui de la lecture : on colle un lien, puis on regarde ce
+                  qui en est sorti.
+                */}
                 <div className="row__grid">
-                  <div
-                    className={`row__preview${row.busy === "upload" ? " is-busy" : ""}`}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Coller une image pour le cadeau ${index + 1}`}
-                    onPaste={(e) => handlePaste(row.key, e)}
-                  >
-                    {row.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.image_url} alt="" />
-                    ) : (
-                      <span>
-                        {row.busy === "upload" ? "envoi…" : "colle une image ici"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="row__fields">
+                  <div className="row__source">
                     <Field label="Adresse de la page produit" help="Facultatif. Jamais affichée sur la page-cadeau.">
                       <div className="inline">
                         <input
@@ -678,7 +670,28 @@ export default function PageEditor(props: Props) {
                         </button>
                       </div>
                     </Field>
+                  </div>
 
+                  <div
+                    className={`row__preview${row.image_url ? "" : " row__preview--empty"}${
+                      row.busy === "upload" ? " is-busy" : ""
+                    }`}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Coller une image pour le cadeau ${index + 1}`}
+                    onPaste={(e) => handlePaste(row.key, e)}
+                  >
+                    {row.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={row.image_url} alt="" />
+                    ) : (
+                      <span>
+                        {row.busy === "upload" ? "envoi…" : "colle une image ici"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="row__fields">
                     <Field label="Titre">
                       <input
                         type="text"
