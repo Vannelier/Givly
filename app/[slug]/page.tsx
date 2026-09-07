@@ -20,7 +20,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Le donneur peut choisir ce que WhatsApp affiche, sans toucher au titre de la page.
   const title = page.link_title.trim() || page.welcome_message || "Un cadeau pour toi";
-  const image = page.cover_image_url ?? page.items.find((i) => i.image_url)?.image_url ?? null;
+  /*
+   * Uniquement l'image choisie par le donneur, jamais celle d'un cadeau.
+   *
+   * Le repli sur le premier cadeau vendait la meche : l'apercu du lien, dans
+   * WhatsApp, affichait l'un des cadeaux avant meme que la carte soit ouverte.
+   * Sans image, l'apercu retombe sur la banniere du site (app/opengraph-image).
+   */
+  const image = page.cover_image_url;
   const url = publicUrlFor(page.slug);
 
   return {
