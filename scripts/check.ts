@@ -26,6 +26,8 @@ import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
+import sharp from "sharp";
+import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
 import { ValidationError, validateCreate, validatePatch } from "../lib/validation";
 
 let passed = 0;
@@ -843,11 +845,69 @@ test("la borne exacte de la fenetre reste recevable", () => {
   assert.equal(replyWindowOpen({ chosen_at: pile }, now), true);
 });
 
+// --- Reduction des images --------------------------------------------------
+
+/*
+ * `sharp` est natif et asynchrone, alors que ce harnais est synchrone : ces
+ * verifications tournent donc a part, juste avant le rapport.
+ */
+async function checkImages() {
+  const big = await sharp({
+    create: { width: 2400, height: 1800, channels: 3, background: { r: 200, g: 120, b: 80 } },
+  })
+    .jpeg()
+    .toBuffer();
+
+  const reduit = await shrinkImage(big, "image/jpeg");
+  const meta = await sharp(reduit.data).metadata();
+  test("une image trop grande est ramenee au cote le plus long", () => {
+    assert.equal(Math.max(meta.width ?? 0, meta.height ?? 0), MAX_IMAGE_EDGE);
+  });
+  test("la reduction preserve les proportions", () => {
+    assert.equal(meta.width, MAX_IMAGE_EDGE);
+    assert.equal(meta.height, Math.round((MAX_IMAGE_EDGE * 1800) / 2400));
+  });
+  test("la reduction preserve le format", () => {
+    assert.equal(reduit.contentType, "image/jpeg");
+    assert.equal(meta.format, "jpeg");
+  });
+  test("la reduction allege le fichier", () => {
+    assert.ok(reduit.data.length < big.length, `${reduit.data.length} >= ${big.length}`);
+  });
+
+  const petit = await sharp({
+    create: { width: 400, height: 300, channels: 3, background: { r: 10, g: 20, b: 30 } },
+  })
+    .png()
+    .toBuffer();
+  const intact = await shrinkImage(petit, "image/png");
+  test("une image deja assez petite n'est pas reencodee", () => {
+    assert.ok(intact.data.equals(petit));
+    assert.equal(intact.contentType, "image/png");
+  });
+
+  const pourri = Buffer.from("ceci n'est pas une image");
+  const repli = await shrinkImage(pourri, "image/jpeg");
+  test("une donnee illisible ressort telle quelle", () => {
+    assert.ok(repli.data.equals(pourri));
+    assert.equal(repli.contentType, "image/jpeg");
+  });
+}
+
 // --- Rapport ---------------------------------------------------------------
 
-if (failures.length > 0) {
-  console.error(`\n${failures.length} échec(s) sur ${passed + failures.length} :\n`);
-  for (const f of failures) console.error(`  ✗ ${f}`);
-  process.exit(1);
+function report() {
+  if (failures.length > 0) {
+    console.error(`\n${failures.length} échec(s) sur ${passed + failures.length} :\n`);
+    for (const f of failures) console.error(`  ✗ ${f}`);
+    process.exit(1);
+  }
+  console.log(`${passed} vérifications passées.`);
 }
-console.log(`${passed} vérifications passées.`);
+
+// `checkImages` est la seule partie asynchrone du harnais : on la chaine plutot
+// que d'attendre au niveau du module, ce qui rendrait tout le script asynchrone.
+checkImages().then(report, (err: unknown) => {
+  failures.push(`vérifications d'image\n    ${(err as Error).message}`);
+  report();
+});

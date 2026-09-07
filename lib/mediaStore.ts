@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { put } from "@vercel/blob";
 import { baseUrl } from "./env";
+import { shrinkImage } from "./image";
 
 /**
  * Où atterrissent les images.
@@ -47,10 +48,12 @@ function extensionFor(contentType: string): string {
 }
 
 export async function storeImage(
-  data: ArrayBuffer | Buffer,
-  contentType: string,
+  input: ArrayBuffer | Buffer,
+  inputType: string,
   prefix = "gift",
 ): Promise<string> {
+  // Reduite une fois ici, jamais a l'affichage : voir lib/image.ts.
+  const { data, contentType } = await shrinkImage(input, inputType);
   const extension = extensionFor(contentType);
 
   if (blobConfigured()) {
@@ -69,7 +72,7 @@ export async function storeImage(
   const safePrefix = prefix.replace(/[^a-z0-9]/gi, "").toLowerCase() || "img";
   const name = `${safePrefix}-${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${extension}`;
   await mkdir(MEDIA_DIR, { recursive: true });
-  await writeFile(path.join(MEDIA_DIR, name), Buffer.from(data as ArrayBuffer));
+  await writeFile(path.join(MEDIA_DIR, name), data);
 
   // URL absolue : la validation exige http(s), et les balises Open Graph aussi.
   return `${baseUrl()}/api/media/${name}`;

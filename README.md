@@ -211,6 +211,47 @@ les occasions qui en proposent un.
 retoucher un thème met à jour toutes les pages déjà créées, et un identifiant inconnu retombe
 proprement sur la valeur par défaut. Rien d'autre qu'un identifiant connu n'est accepté du client.
 
+## Le poids des images
+
+**Toute image est réduite en entrant, jamais à l'affichage** (`lib/image.ts`, appelé par
+`storeImage`). Côté le plus long ramené à **1 200 px**, format conservé, aucun réencodage si
+l'image est déjà assez petite — réencoder pour rien ne ferait que perdre de la qualité.
+
+La vignette d'une carte mesure 385 px en CSS, soit 1 155 sur un écran à trois pixels par point :
+au-delà de 1 200, plus rien ne se voit. Ce qui se paie, en revanche, c'est la mémoire — une image
+occupe `largeur × hauteur × 4` octets une fois décodée, **quelle que soit la taille de son
+fichier**. Mesuré sur quatre formats typiques :
+
+| source | après | fichier | bitmap décodé |
+|---|---|---|---|
+| fiche marchande 1500 × 1045 | 1200 × 836 | 790 → 242 Ko | 6,0 → 3,8 Mo |
+| photo de boutique 1500 × 1500 | 1200 × 1200 | 1131 → 346 Ko | 8,6 → 5,5 Mo |
+| **photo de téléphone 3024 × 4032** | 900 × 1200 | 6100 → 93 Ko | **46,5 → 4,1 Mo** |
+| déjà petite 800 × 600 | inchangée | 241 → 241 Ko | 1,8 → 1,8 Mo |
+
+Le troisième cas est le plus important : « une photo depuis ton téléphone suffit » est le chemin
+de repli nominal quand l'extraction échoue. Une carte de dix cadeaux remplie ainsi transportait
+60 Mo et faisait décoder près de 465 Mo de bitmaps — de quoi saturer un téléphone, qui recycle
+l'onglet bien avant.
+
+`shrinkImage` **ne jette jamais** : une image que `sharp` ne sait pas lire ressort telle quelle.
+Refuser un téléversement pour un problème de taille serait pire que stocker une image trop grande.
+
+## Ce qui est fait pour que la page-cadeau reste fluide
+
+- **Les cartes hors écran ne sont ni mises en page, ni peintes** (`content-visibility: auto` sur
+  `.items > li`, avec `contain-intrinsic-size: auto` pour que la barre de défilement ne saute pas).
+  Avec dix cadeaux portant chacun une photo affichée deux fois — l'originale et sa copie floutée —
+  seules les cartes visibles coûtent quelque chose.
+- **Pas de `background-attachment: fixed`.** Il interdit au navigateur de déplacer la couche de fond
+  au défilement, qui doit alors être repeinte à chaque image : c'est la cause de saccade la plus
+  courante au téléphone. Le dégradé étant un halo ancré en haut de page, le fixer n'apportait rien
+  de visible — et sur la page-cadeau il était de toute façon recouvert par le fond opaque de
+  `.gift-root`.
+- **Pas de `text-rendering: optimizeLegibility`.** Il force le calcul des ligatures et du crénage sur
+  tout le texte, pour un gain nul sur des polices déjà rendues correctement par défaut.
+- **Les images sont en chargement différé** (`loading="lazy"`, `decoding="async"`).
+
 ## Le stockage des images
 
 En production, Vercel Blob. **En développement, un dossier `.media/` local**, servi par

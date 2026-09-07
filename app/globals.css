@@ -38,13 +38,23 @@ body {
   background-image:
     radial-gradient(120% 70% at 50% -10%, rgba(176, 83, 60, 0.09), transparent 62%),
     radial-gradient(90% 55% at 100% 0%, rgba(200, 165, 110, 0.12), transparent 55%);
-  background-attachment: fixed;
+  /*
+   * Plus de `background-attachment: fixed` : il interdit au navigateur de
+   * deplacer la couche de fond au defilement, qui doit alors etre repeinte a
+   * chaque image — c'est la cause de saccade la plus courante au telephone. Le
+   * degrade etant un halo diffus ancre en haut de page, le fixer n'apportait
+   * rien de visible ; sur la page-cadeau il etait meme entierement recouvert
+   * par le fond opaque de `.gift-root`.
+   *
+   * Plus de `text-rendering: optimizeLegibility` non plus : il force le calcul
+   * des ligatures et du crenage sur tout le texte de la page, pour un gain nul
+   * sur des polices que les navigateurs rendent deja correctement par defaut.
+   */
   color: var(--ink);
   font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
   font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 h1,
@@ -239,6 +249,20 @@ select {
 /* Les cartes d'une meme rangee s'alignent, quel que soit le nombre de lignes du titre. */
 .items > li {
   display: flex;
+
+  /*
+   * Une carte hors de l'ecran n'est ni mise en page, ni peinte, et son image
+   * decodee peut etre relachee. Avec dix cadeaux, chacun portant une photo
+   * affichee deux fois — l'originale et sa copie floutee —, c'est ce qui separe
+   * une page fluide d'une page qui rame : seules les deux ou trois cartes
+   * visibles coutent quelque chose.
+   *
+   * `auto` en taille intrinseque : le navigateur retient la hauteur reellement
+   * mesuree la premiere fois, donc la barre de defilement ne saute pas. Les
+   * navigateurs qui ignorent la propriete affichent tout, comme avant.
+   */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 340px;
 }
 
 .items .card {
