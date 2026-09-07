@@ -40,6 +40,75 @@
   padding-top: clamp(2.75rem, 8vw, 4.5rem);
 }
 
+/*
+ * Sur un ecran d'ordinateur, les trois etapes doivent etre lisibles a
+ * l'ouverture, pas tranchees par le bas de la fenetre.
+ *
+ * L'ecart genereux entre sections fait l'air de la page, mais additionne a la
+ * maquette il repoussait la premiere carte a 616 px pour une carte haute de
+ * 232 : elle finissait a 848 px, soit exactement la hauteur utile d'un portable.
+ * Le moindre bandeau de favoris la coupait en deux.
+ *
+ * Le resserrement ne vaut qu'a partir de 52 rem, la largeur ou l'accroche passe
+ * en deux colonnes : en colonne unique on fait defiler de toute facon, et l'air
+ * y est plus utile qu'ailleurs.
+ */
+@media (min-width: 52rem) {
+  .landing > section + section,
+  .landing > footer {
+    margin-top: clamp(2.25rem, 4vw, 3rem);
+    padding-top: clamp(2.25rem, 4vw, 3rem);
+  }
+}
+
+/*
+ * Fenetre basse — la majorite des portables une fois la barre d'onglets et les
+ * favoris deduits. On resserre davantage et la maquette se fait plus compacte,
+ * plutot que de laisser les cartes passer sous la ligne de flottaison.
+ */
+@media (min-width: 52rem) and (max-height: 56rem) {
+  .landing {
+    padding-top: 2rem;
+  }
+
+  .landing > section + section,
+  .landing > footer {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
+
+  .lp-phone__thumb {
+    height: 34px;
+  }
+
+  .lp-phone__screen {
+    padding: 1rem 0.8rem 0.85rem;
+  }
+}
+
+/*
+ * Fenetre tres basse — un portable de 1366x768 laisse environ 730 px utiles.
+ * Le palier precedent n'y suffisait pas : il manquait une quinzaine de pixels,
+ * assez pour trancher le bas des cartes. Trois paliers plutot qu'une valeur
+ * unique : la page garde son air partout ou il y a la place, et ne se resserre
+ * que la ou elle doit.
+ */
+@media (min-width: 52rem) and (max-height: 46rem) {
+  .landing {
+    padding-top: 1.25rem;
+  }
+
+  .landing > section + section,
+  .landing > footer {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+
+  .lp-phone__thumb {
+    height: 28px;
+  }
+}
+
 /* Le bandeau de réassurance prolonge la section précédente : ni filet, ni grand écart. */
 .landing > .lp-notes {
   border-top: 0;
