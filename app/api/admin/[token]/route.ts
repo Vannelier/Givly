@@ -53,6 +53,10 @@ export async function PATCH(req: Request, { params }: Params) {
     const revealAt = "reveal_at" in patch ? patch.reveal_at ?? null : page.reveal_at;
     const linkTitle = patch.link_title ?? page.link_title;
     const welcome = patch.welcome_message ?? page.welcome_message;
+    const openLabel = patch.open_label ?? page.open_label;
+    const waitMessage = patch.wait_message ?? page.wait_message;
+    const itemsTitle = patch.items_title ?? page.items_title;
+    const itemsMessage = patch.items_message ?? page.items_message;
     const thanks = patch.thank_you_message ?? page.thank_you_message;
     const theme = patch.theme ?? page.theme;
 
@@ -68,6 +72,10 @@ export async function PATCH(req: Request, { params }: Params) {
              reveal_at         = ${revealAt},
              link_title        = ${linkTitle},
              welcome_message   = ${welcome},
+             open_label        = ${openLabel},
+             wait_message      = ${waitMessage},
+             items_title       = ${itemsTitle},
+             items_message     = ${itemsMessage},
              thank_you_message = ${thanks},
              cover_image_url   = ${cover},
              theme             = ${JSON.stringify(theme)}::jsonb,
@@ -94,6 +102,10 @@ export async function PATCH(req: Request, { params }: Params) {
         reveal_at: updated.reveal_at,
         link_title: updated.link_title,
         welcome_message: updated.welcome_message,
+        open_label: updated.open_label,
+        wait_message: updated.wait_message,
+        items_title: updated.items_title,
+        items_message: updated.items_message,
         thank_you_message: updated.thank_you_message,
         cover_image_url: updated.cover_image_url,
         theme: updated.theme,

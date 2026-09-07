@@ -51,7 +51,19 @@ export type Occasion = {
   /** Suggestions montrées en placeholder, jamais écrites d'office. */
   welcomeHint: string;
   thanksHint: string;
+  /** Texte du bouton qui lève le voile. */
+  openHint: string;
+  /** Ligne d'attente sous le compte à rebours, quand la carte est scellée. */
+  waitHint: string;
 };
+
+/*
+ * L'écran des cadeaux est fonctionnel, pas cérémonieux : le décorum de
+ * l'occasion vit sur le voile, juste avant. Ces deux suggestions sont donc
+ * communes à toutes les occasions, au lieu d'être déclinées quinze fois.
+ */
+export const ITEMS_TITLE_HINT = "À toi de choisir";
+export const ITEMS_MESSAGE_HINT = "Choisis celui qui te fait le plus envie.";
 
 export const OCCASIONS: Occasion[] = [
   {
@@ -64,6 +76,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Un cadeau pour toi",
     welcomeHint: "Je n'ai pas su choisir. Alors je te laisse faire.",
     thanksHint: "Parfait, c'est noté. Je m'occupe du reste.",
+    openHint: "Ouvrir",
+    waitHint: "Encore un peu de patience.",
   },
   {
     id: "anniversaire",
@@ -75,6 +89,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Joyeux anniversaire",
     welcomeHint: "Un an de plus, et un cadeau à choisir toi-même.",
     thanksHint: "Excellent choix. Bon anniversaire !",
+    openHint: "Ouvrir mon cadeau",
+    waitHint: "Rendez-vous le jour J.",
   },
   {
     id: "noel",
@@ -86,6 +102,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Joyeux Noël",
     welcomeHint: "Sous le sapin, cette année, c'est toi qui choisis.",
     thanksHint: "C'est noté. Joyeuses fêtes !",
+    openHint: "Ouvrir mon cadeau",
+    waitHint: "Pas avant Noël, promis ?",
   },
   {
     id: "saint-valentin",
@@ -97,6 +115,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "De la part de quelqu'un qui tient à toi",
     welcomeHint: "Tout ce que je sais, c'est que je voulais t'offrir quelque chose.",
     thanksHint: "Parfait. À très vite.",
+    openHint: "Ouvrir",
+    waitHint: "Encore un peu de patience.",
   },
   {
     id: "naissance",
@@ -108,6 +128,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue au monde",
     welcomeHint: "Un petit quelque chose pour bien commencer.",
     thanksHint: "C'est noté. Félicitations !",
+    openHint: "Ouvrir",
+    waitHint: "Bientôt, promis.",
   },
   {
     id: "felicitations",
@@ -119,6 +141,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bravo",
     welcomeHint: "Tu l'as bien mérité. À toi de choisir.",
     thanksHint: "Excellent. Encore bravo !",
+    openHint: "Ouvrir",
+    waitHint: "Ça arrive très bientôt.",
   },
   {
     id: "merci",
@@ -130,6 +154,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Merci",
     welcomeHint: "Un merci qui se choisit.",
     thanksHint: "C'est noté. Merci encore.",
+    openHint: "Ouvrir",
+    waitHint: "Encore un peu de patience.",
   },
   {
     id: "fete-des-meres",
@@ -141,6 +167,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour toi, maman",
     welcomeHint: "Merci pour tout. Choisis ce qui te ferait plaisir.",
     thanksHint: "C'est noté. Je t'embrasse.",
+    openHint: "Ouvrir mon cadeau",
+    waitHint: "Rendez-vous le jour J.",
   },
   {
     id: "fete-des-peres",
@@ -152,6 +180,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour toi, papa",
     welcomeHint: "Tu ne demandes jamais rien. Alors cette fois, tu choisis.",
     thanksHint: "Parfait. À très bientôt.",
+    openHint: "Ouvrir mon cadeau",
+    waitHint: "Rendez-vous le jour J.",
   },
   {
     id: "nouvel-an",
@@ -163,6 +193,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bonne année",
     welcomeHint: "Pour bien commencer l'année, choisis ce qui te tente.",
     thanksHint: "C'est noté. Très belle année à toi !",
+    openHint: "Ouvrir",
+    waitHint: "Rendez-vous à minuit.",
   },
   {
     id: "mariage",
@@ -174,6 +206,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour vous deux",
     welcomeHint: "Pour votre nouvelle vie, c'est vous qui choisissez.",
     thanksHint: "C'est noté. Tous mes vœux à vous deux.",
+    openHint: "Ouvrir notre cadeau",
+    waitHint: "Encore un peu de patience.",
   },
   {
     id: "reussite",
@@ -185,6 +219,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Tu l'as décroché",
     welcomeHint: "Après tout ce travail, tu as bien le droit de choisir.",
     thanksHint: "Excellent. Profite, c'est mérité.",
+    openHint: "Ouvrir",
+    waitHint: "Ça arrive très bientôt.",
   },
   {
     id: "cremaillere",
@@ -196,6 +232,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue chez toi",
     welcomeHint: "Pour ton nouveau chez-toi, choisis ce qui manque encore.",
     thanksHint: "C'est noté. Bonne installation !",
+    openHint: "Ouvrir",
+    waitHint: "Encore un peu de patience.",
   },
   {
     id: "retraite",
@@ -207,6 +245,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Et maintenant, le temps",
     welcomeHint: "Une page se tourne. Choisis de quoi remplir la suivante.",
     thanksHint: "C'est noté. Profite bien, tu l'as gagné.",
+    openHint: "Ouvrir",
+    waitHint: "Ça arrive très bientôt.",
   },
   {
     id: "pot-de-depart",
@@ -218,6 +258,8 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bonne route",
     welcomeHint: "L'équipe s'est cotisée. À toi de choisir.",
     thanksHint: "C'est noté. Bonne continuation !",
+    openHint: "Ouvrir",
+    waitHint: "Ça arrive très bientôt.",
   },
 ];
 

@@ -48,6 +48,14 @@ export type GiftPage = {
   /** Texte affiche par WhatsApp et consorts. Vide = le message d'accueil. */
   link_title: string;
   welcome_message: string;
+  /** Texte du bouton qui leve le voile. Vide = la suggestion de l'occasion. */
+  open_label: string;
+  /** Ligne d'attente sous le compte a rebours. Vide = la suggestion de l'occasion. */
+  wait_message: string;
+  /** Titre de l'ecran des cadeaux, distinct du titre porte par le voile. */
+  items_title: string;
+  /** Ligne sous ce titre, au-dessus des cadeaux. */
+  items_message: string;
   thank_you_message: string;
   cover_image_url: string | null;
   theme: Theme;
@@ -71,6 +79,10 @@ export type PublicPage = {
   header_image_url: string | null;
   reveal_at: string | null;
   welcome_message: string;
+  open_label: string;
+  wait_message: string;
+  items_title: string;
+  items_message: string;
   thank_you_message: string;
   theme: Theme;
   items: Item[];
@@ -90,6 +102,10 @@ export function toPublicPage(p: GiftPage): PublicPage {
     header_image_url: p.header_image_url,
     reveal_at: p.reveal_at,
     welcome_message: p.welcome_message,
+    open_label: p.open_label,
+    wait_message: p.wait_message,
+    items_title: p.items_title,
+    items_message: p.items_message,
     thank_you_message: p.thank_you_message,
     theme: p.theme,
     items: p.items,
@@ -105,6 +121,23 @@ export function isExpired(p: Pick<GiftPage, "expires_at">, now = new Date()): bo
 
 export function isLocked(p: Pick<GiftPage, "chosen_at">): boolean {
   return p.chosen_at !== null && p.chosen_at !== undefined;
+}
+
+/**
+ * Delai pendant lequel le receveur peut encore laisser son mot, apres avoir
+ * confirme son choix. Le mot ne part plus avec le choix : sans borne, n'importe
+ * quel detenteur du lien pourrait ecrire a sa place, des mois plus tard. Une
+ * heure couvre largement le cas reel, ou les deux gestes s'enchainent.
+ */
+export const REPLY_WINDOW_MS = 60 * 60 * 1000;
+
+/** Le mot est-il encore recevable ? Faux avant le choix, et une fois l'heure passee. */
+export function replyWindowOpen(
+  p: Pick<GiftPage, "chosen_at">,
+  now = new Date(),
+): boolean {
+  if (!p.chosen_at) return false;
+  return now.getTime() - new Date(p.chosen_at).getTime() <= REPLY_WINDOW_MS;
 }
 
 /** Scellee : la date de revelation n'est pas encore atteinte. */

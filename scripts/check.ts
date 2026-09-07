@@ -14,6 +14,8 @@ import {
   DEFAULT_OCCASION_ID,
   DEFAULT_OPENING_ID,
   FONTS,
+  ITEMS_MESSAGE_HINT,
+  ITEMS_TITLE_HINT,
   OCCASIONS,
   OCCASION_GROUPS,
   OPENINGS,
@@ -22,7 +24,7 @@ import {
 } from "../lib/occasions";
 import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
-import { isExpired, isLocked, isSealed } from "../lib/types";
+import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
 import { ValidationError, validateCreate, validatePatch } from "../lib/validation";
 
@@ -751,6 +753,94 @@ test("boot.mjs et lib/db.ts decident du TLS de la meme maniere", () => {
   ]) {
     assert.deepEqual(bootSslFor(url), sslFor(url), url);
   }
+});
+
+// --- Textes des trois ecrans -----------------------------------------------
+
+test("validateCreate accepte et borne les quatre textes d'ecran", () => {
+  const out = validateCreate({
+    ...validBody,
+    open_label: "  Ouvrir mon cadeau  ",
+    wait_message: "  Rendez-vous le jour J.  ",
+    items_title: "  À toi de choisir  ",
+    items_message: "  Choisis celui qui te plaît.  ",
+  });
+  assert.equal(out.open_label, "Ouvrir mon cadeau");
+  assert.equal(out.wait_message, "Rendez-vous le jour J.");
+  assert.equal(out.items_title, "À toi de choisir");
+  assert.equal(out.items_message, "Choisis celui qui te plaît.");
+});
+
+test("validateCreate laisse les quatre textes vides quand ils sont absents", () => {
+  const out = validateCreate({ ...validBody });
+  assert.equal(out.open_label, "");
+  assert.equal(out.wait_message, "");
+  assert.equal(out.items_title, "");
+  assert.equal(out.items_message, "");
+});
+
+for (const [field, limit] of [
+  ["open_label", LIMITS.openLabel],
+  ["wait_message", LIMITS.waitMessage],
+  ["items_title", LIMITS.itemsTitle],
+  ["items_message", LIMITS.itemsMessage],
+] as const) {
+  test(`validateCreate refuse un ${field} trop long`, () => {
+    throwsValidation(() => validateCreate({ ...validBody, [field]: "x".repeat(limit + 1) }), field);
+  });
+
+  test(`validatePatch borne aussi ${field}`, () => {
+    throwsValidation(() => validatePatch({ [field]: "x".repeat(limit + 1) }), field);
+  });
+}
+
+test("validatePatch ne renvoie que les textes d'ecran fournis", () => {
+  const out = validatePatch({ items_title: "Choisis" });
+  assert.deepEqual(Object.keys(out), ["items_title"]);
+  assert.equal(out.items_title, "Choisis");
+});
+
+test("chaque occasion propose un texte de bouton et un mot d'attente", () => {
+  for (const o of OCCASIONS) {
+    assert.ok(o.openHint.trim().length > 0, `openHint vide : ${o.id}`);
+    assert.ok(o.waitHint.trim().length > 0, `waitHint vide : ${o.id}`);
+    assert.ok(
+      o.openHint.length <= LIMITS.openLabel,
+      `openHint dépasse la limite du champ : ${o.id}`,
+    );
+    assert.ok(
+      o.waitHint.length <= LIMITS.waitMessage,
+      `waitHint dépasse la limite du champ : ${o.id}`,
+    );
+  }
+});
+
+test("les suggestions communes tiennent dans leurs champs", () => {
+  assert.ok(ITEMS_TITLE_HINT.length <= LIMITS.itemsTitle);
+  assert.ok(ITEMS_MESSAGE_HINT.length <= LIMITS.itemsMessage);
+});
+
+// --- Fenetre du mot du receveur --------------------------------------------
+
+test("le mot n'est recevable qu'apres un choix", () => {
+  assert.equal(replyWindowOpen({ chosen_at: null }), false);
+});
+
+test("le mot est recevable juste apres le choix", () => {
+  const now = new Date("2026-03-01T12:00:00Z");
+  assert.equal(replyWindowOpen({ chosen_at: "2026-03-01T11:59:00Z" }, now), true);
+});
+
+test("le mot n'est plus recevable une fois la fenetre passee", () => {
+  const now = new Date("2026-03-01T12:00:00Z");
+  const trop = new Date(now.getTime() - REPLY_WINDOW_MS - 1000).toISOString();
+  assert.equal(replyWindowOpen({ chosen_at: trop }, now), false);
+});
+
+test("la borne exacte de la fenetre reste recevable", () => {
+  const now = new Date("2026-03-01T12:00:00Z");
+  const pile = new Date(now.getTime() - REPLY_WINDOW_MS).toISOString();
+  assert.equal(replyWindowOpen({ chosen_at: pile }, now), true);
 });
 
 // --- Rapport ---------------------------------------------------------------

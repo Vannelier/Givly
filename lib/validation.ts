@@ -158,6 +158,10 @@ export type PageInput = {
   reveal_at: string | null;
   link_title: string;
   welcome_message: string;
+  open_label: string;
+  wait_message: string;
+  items_title: string;
+  items_message: string;
   thank_you_message: string;
   cover_image_url: string | null;
   theme: Theme;
@@ -187,6 +191,10 @@ export function validatePageFields(o: Record<string, unknown>): PageInput {
     reveal_at: optionalDate(o.reveal_at, "reveal_at"),
     link_title: text(o.link_title, "link_title", LIMITS.linkTitle),
     welcome_message: text(o.welcome_message, "welcome_message", LIMITS.message),
+    open_label: text(o.open_label, "open_label", LIMITS.openLabel),
+    wait_message: text(o.wait_message, "wait_message", LIMITS.waitMessage),
+    items_title: text(o.items_title, "items_title", LIMITS.itemsTitle),
+    items_message: text(o.items_message, "items_message", LIMITS.itemsMessage),
     thank_you_message: text(o.thank_you_message, "thank_you_message", LIMITS.message),
     cover_image_url: optionalUrl(o.cover_image_url, "cover_image_url"),
     theme: validateTheme(o.theme),
@@ -211,6 +219,14 @@ export function validatePatch(body: unknown): Partial<PageInput> {
   if ("link_title" in o) out.link_title = text(o.link_title, "link_title", LIMITS.linkTitle);
   if ("welcome_message" in o) {
     out.welcome_message = text(o.welcome_message, "welcome_message", LIMITS.message);
+  }
+  if ("open_label" in o) out.open_label = text(o.open_label, "open_label", LIMITS.openLabel);
+  if ("wait_message" in o) {
+    out.wait_message = text(o.wait_message, "wait_message", LIMITS.waitMessage);
+  }
+  if ("items_title" in o) out.items_title = text(o.items_title, "items_title", LIMITS.itemsTitle);
+  if ("items_message" in o) {
+    out.items_message = text(o.items_message, "items_message", LIMITS.itemsMessage);
   }
   if ("thank_you_message" in o) {
     out.thank_you_message = text(o.thank_you_message, "thank_you_message", LIMITS.message);

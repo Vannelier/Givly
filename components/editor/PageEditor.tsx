@@ -12,6 +12,8 @@ import {
 import { LIMITS } from "@/lib/limits";
 import {
   FONTS,
+  ITEMS_MESSAGE_HINT,
+  ITEMS_TITLE_HINT,
   OCCASION_GROUPS,
   OPENINGS,
   fontById,
@@ -35,6 +37,10 @@ export type EditorInitial = {
   header_image_url: string | null;
   reveal_at: string | null;
   welcome_message: string;
+  open_label: string;
+  wait_message: string;
+  items_title: string;
+  items_message: string;
   thank_you_message: string;
   cover_image_url: string | null;
   theme: Theme;
@@ -64,13 +70,17 @@ type DraftItem = {
   hint: string | null;
 };
 
+/*
+ * « La carte » n'a pas survecu comme etape : elle ne portait que le nom interne
+ * et le prenom du receveur. Le nom vit desormais avec l'adresse du lien, le
+ * prenom en tete du cadre « Intro » — la ou il s'affiche sur la carte.
+ */
 const STEPS = [
-  { n: 1, title: "La carte", short: "Carte" },
-  { n: 2, title: "Les cadeaux", short: "Cadeaux" },
-  { n: 3, title: "La présentation", short: "Présentation" },
+  { n: 1, title: "Les cadeaux", short: "Cadeaux" },
+  { n: 2, title: "La présentation", short: "Présentation" },
 ] as const;
 
-type StepNumber = 1 | 2 | 3;
+type StepNumber = 1 | 2;
 
 let keySeed = 0;
 const nextKey = () => `row_${++keySeed}`;
@@ -106,7 +116,7 @@ export default function PageEditor(props: Props) {
 
   const [step, setStep] = useState<StepNumber>(1);
   // En édition, tout est déjà rempli : on autorise à sauter d'une étape à l'autre.
-  const [furthest, setFurthest] = useState<StepNumber>(mode === "edit" ? 3 : 1);
+  const [furthest, setFurthest] = useState<StepNumber>(mode === "edit" ? 2 : 1);
 
   const [name, setName] = useState(initial.name);
   const [intro, setIntro] = useState(initial.intro_message);
@@ -116,6 +126,10 @@ export default function PageEditor(props: Props) {
   // <input type="datetime-local"> attend "AAAA-MM-JJThh:mm" en heure locale.
   const [revealAt, setRevealAt] = useState(toLocalInput(initial.reveal_at));
   const [welcome, setWelcome] = useState(initial.welcome_message);
+  const [openLabel, setOpenLabel] = useState(initial.open_label);
+  const [waitMessage, setWaitMessage] = useState(initial.wait_message);
+  const [itemsTitle, setItemsTitle] = useState(initial.items_title);
+  const [itemsMessage, setItemsMessage] = useState(initial.items_message);
   const [thanks, setThanks] = useState(initial.thank_you_message);
   const [cover, setCover] = useState(initial.cover_image_url ?? "");
   const [layout, setLayout] = useState<Theme["layout"]>(initial.theme.layout ?? "grid");
@@ -133,8 +147,11 @@ export default function PageEditor(props: Props) {
 
   // Un repli est ouvert d'emblee si le champ porte deja une valeur : en edition,
   // rien de ce qui a ete rempli ne doit se cacher.
-  const [introOn, setIntroOn] = useState(Boolean(initial.intro_message));
-  const [signatureOn, setSignatureOn] = useState(Boolean(initial.signature));
+  //
+  // Le mot d'ouverture et la signature n'en sont plus : ce sont des champs de
+  // texte comme les autres, ranges dans le cadre de l'ecran ou ils s'affichent.
+  // Une case a cocher devant un champ facultatif ne protegeait de rien et
+  // ajoutait un geste.
   const [headerOn, setHeaderOn] = useState(Boolean(initial.header_image_url));
   const [linkOn, setLinkOn] = useState(
     Boolean(initial.link_title) || Boolean(initial.cover_image_url),
@@ -211,7 +228,7 @@ export default function PageEditor(props: Props) {
       showError(invalid);
       return;
     }
-    goTo(Math.min(3, step + 1) as StepNumber);
+    goTo(Math.min(2, step + 1) as StepNumber);
   }
 
   function patchItem(key: string, patch: Partial<DraftItem>) {
@@ -361,6 +378,10 @@ export default function PageEditor(props: Props) {
     // Champ vide : on montre la suggestion de l'occasion, pas un texte fige.
     // L'apercu doit refleter le theme choisi, comme les placeholders du formulaire.
     welcome_message: welcome.trim() || current.welcomeHint,
+    open_label: openLabel,
+    wait_message: waitMessage,
+    items_title: itemsTitle,
+    items_message: itemsMessage,
     thank_you_message: thanks.trim() || current.thanksHint,
     theme,
     items: draftItems,
@@ -376,21 +397,17 @@ export default function PageEditor(props: Props) {
    */
   function validateStep(which: StepNumber): string | null {
     if (which === 1) {
-      if (name.trim().length > LIMITS.name) return `Le nom dépasse ${LIMITS.name} caractères.`;
-      if (mode === "create") {
-        const err = slugError(effectiveSlug);
-        if (err) return err;
-      }
-      return null;
-    }
-
-    if (which === 2) {
       const filled = filledItems();
       if (filled.length < LIMITS.itemsMin) return "Il faut au moins un cadeau.";
       if (filled.length > LIMITS.itemsMax) return `Pas plus de ${LIMITS.itemsMax} cadeaux.`;
       return null;
     }
 
+    if (name.trim().length > LIMITS.name) return `Le nom dépasse ${LIMITS.name} caractères.`;
+    if (mode === "create") {
+      const err = slugError(effectiveSlug);
+      if (err) return err;
+    }
     if (welcome.trim().length > LIMITS.message) {
       return `Le message principal dépasse ${LIMITS.message} caractères.`;
     }
@@ -423,6 +440,10 @@ export default function PageEditor(props: Props) {
       // Champ vide : on enregistre la suggestion affichée en placeholder, celle
       // que le donneur avait sous les yeux et a implicitement acceptée.
       welcome_message: welcome.trim() || current.welcomeHint,
+      open_label: openLabel.trim() || current.openHint,
+      wait_message: waitMessage.trim() || current.waitHint,
+      items_title: itemsTitle.trim() || ITEMS_TITLE_HINT,
+      items_message: itemsMessage.trim() || ITEMS_MESSAGE_HINT,
       thank_you_message: thanks.trim() || current.thanksHint,
       cover_image_url: cover.trim() || null,
       theme,
@@ -443,7 +464,7 @@ export default function PageEditor(props: Props) {
 
     // Une erreur sur une étape en amont doit ramener le donneur sur cette étape,
     // sinon le message parle d'un champ qu'il n'a pas sous les yeux.
-    for (const which of [1, 2, 3] as StepNumber[]) {
+    for (const which of [1, 2] as StepNumber[]) {
       const invalid = validateStep(which);
       if (invalid) {
         goTo(which);
@@ -469,7 +490,7 @@ export default function PageEditor(props: Props) {
 
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        if ((data.field as string) === "slug") goTo(1);
+        if ((data.field as string) === "slug") goTo(2);
         showError((data.error as string) ?? "L'enregistrement a échoué.");
         return;
       }
@@ -520,7 +541,7 @@ export default function PageEditor(props: Props) {
     );
   }
 
-  const isLast = step === 3;
+  const isLast = step === 2;
   const filledCount = filledItems().length;
 
   return (
@@ -563,58 +584,6 @@ export default function PageEditor(props: Props) {
       )}
 
       {step === 1 && (
-        <section className="panel">
-          <h2>La carte</h2>
-          <p className="help">
-            Le nom sert à t&apos;y retrouver et fabrique l&apos;adresse du lien. Il n&apos;est jamais
-            montré à la personne qui reçoit.
-          </p>
-
-          <Field
-            label="Nom de la carte"
-            help="Facultatif. Vide : il se compose tout seul à partir de l&apos;occasion et du prénom."
-          >
-            <input
-              type="text"
-              value={name}
-              aria-label="Nom de la carte"
-              maxLength={LIMITS.name}
-              placeholder="Anniversaire de Sophie"
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Counter value={name} max={LIMITS.name} />
-          </Field>
-
-          <Field
-            label="Prénom de la personne"
-            help="Facultatif. Affiché en tête de la carte : « Pour Sophie »."
-          >
-            <input
-              type="text"
-              value={recipient}
-              aria-label="Prénom de la personne"
-              maxLength={LIMITS.recipient}
-              placeholder="Sophie"
-              onChange={(e) => setRecipient(e.target.value)}
-            />
-            <Counter value={recipient} max={LIMITS.recipient} />
-          </Field>
-
-          {props.mode === "create" ? (
-            <p className="options__hint">
-              Adresse du lien : <code>{props.baseUrlLabel}/{effectiveSlug}</code>
-            </p>
-          ) : (
-            <Field label="Adresse du lien" help="Fixe : le lien que tu as déjà envoyé continue de fonctionner.">
-              <p className="readonly-value">
-                {props.slug}
-              </p>
-            </Field>
-          )}
-        </section>
-      )}
-
-      {step === 2 && (
         <section className="panel">
           <div className="panel__head">
             <h2>Les cadeaux</h2>
@@ -779,11 +748,11 @@ export default function PageEditor(props: Props) {
         </section>
       )}
 
-      {step === 3 && (
-        <div className="step3">
+      {step === 2 && (
+        <div className="compose">
           {/* Aperçu vivant : le même composant que la page réelle, en réduction.
               Il réagit à chaque réglage, sans passer par le plein écran. */}
-          <aside className="step3__side">
+          <aside className="compose__side">
             <div className="mini">
               <div className="mini__head">
                 <span>Aperçu en direct</span>
@@ -808,14 +777,14 @@ export default function PageEditor(props: Props) {
             </div>
           </aside>
 
-          <div className="step3__main">
+          <div className="compose__main">
             <section className="panel">
               <h2>L&apos;occasion</h2>
               <p className="help">
-                Elle pose d&apos;un coup une palette, un décor et une formule d&apos;ouverture. Tout
+                Elle pose d&apos;un coup une palette, un décor et des formulations de départ. Tout
                 reste modifiable juste en dessous.
               </p>
-<div className="occasion-groups" role="radiogroup" aria-label="Occasion">
+              <div className="occasion-groups" role="radiogroup" aria-label="Occasion">
                 {OCCASION_GROUPS.map((groupe) => (
                   <div key={groupe.label ?? "base"}>
                     {groupe.label && <p className="occasion-group__title">{groupe.label}</p>}
@@ -841,12 +810,46 @@ export default function PageEditor(props: Props) {
               </div>
             </section>
 
+            {/* Les trois cadres suivants suivent l'ordre des écrans que traverse la
+                personne qui reçoit : ce qu'elle voit en arrivant, les cadeaux, puis
+                l'écran qui suit son choix. */}
             <section className="panel">
-              <h2>Les mots</h2>
+              <h2>Intro</h2>
+              <p className="help">
+                Le premier écran : ce qui s&apos;affiche avant les cadeaux, sur le voile
+                d&apos;ouverture.
+              </p>
+
+              <Field
+                label="Prénom de la personne"
+                help="Facultatif. Affiché tout en haut : « Pour Sophie »."
+              >
+                <input
+                  type="text"
+                  value={recipient}
+                  aria-label="Prénom de la personne"
+                  maxLength={LIMITS.recipient}
+                  placeholder="Sophie"
+                  onChange={(e) => setRecipient(e.target.value)}
+                />
+                <Counter value={recipient} max={LIMITS.recipient} />
+              </Field>
+
+              <Field label="Mot d&apos;ouverture" help="La petite ligne au-dessus du titre.">
+                <input
+                  type="text"
+                  value={intro}
+                  aria-label="Mot d'ouverture"
+                  maxLength={LIMITS.intro}
+                  placeholder={current.intro}
+                  onChange={(e) => setIntro(e.target.value)}
+                />
+                <Counter value={intro} max={LIMITS.intro} />
+              </Field>
 
               <Field
                 label="Message principal"
-                help="Le titre de la page. Sert aussi à l&apos;aperçu du lien. Vide : la suggestion affichée est reprise."
+                help="Le grand titre. Sert aussi à l&apos;aperçu du lien."
               >
                 <textarea
                   value={welcome}
@@ -860,9 +863,160 @@ export default function PageEditor(props: Props) {
               </Field>
 
               <Field
-                label="Message de fin"
-                help="Affiché juste après la confirmation du choix. Vide : la suggestion affichée est reprise."
+                label="Texte du bouton"
+                help={
+                  sealEnabled
+                    ? "Le bouton qui lève le voile et découvre les cadeaux."
+                    : "Sans voile d'ouverture, ce bouton ne s'affiche pas."
+                }
               >
+                <input
+                  type="text"
+                  value={openLabel}
+                  aria-label="Texte du bouton d'ouverture"
+                  maxLength={LIMITS.openLabel}
+                  placeholder={current.openHint}
+                  onChange={(e) => setOpenLabel(e.target.value)}
+                />
+                <Counter value={openLabel} max={LIMITS.openLabel} />
+              </Field>
+
+              <div className="options">
+                <Optional
+                  label="Ouvrir la carte d&apos;un geste"
+                  help="Un voile opaque porte ces mots ; les cadeaux apparaissent après."
+                  checked={sealEnabled}
+                  onChange={setSealEnabled}
+                >
+                  <Field label="Manière de l&apos;ouvrir">
+                    <div className="openings" role="radiogroup" aria-label="Manière de l'ouvrir">
+                      {OPENINGS.map((o) => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={opening === o.id}
+                          className={`opening${opening === o.id ? " is-on" : ""}`}
+                          onClick={() => setOpeningStyle(o.id)}
+                        >
+                          <span className={`opening__glyph opening__glyph--${o.id}`} aria-hidden="true">
+                            <i />
+                            <i />
+                          </span>
+                          <span className="opening__name">{o.name}</span>
+                          <span className="opening__hint">{o.hint}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                </Optional>
+
+                <Optional
+                  label="Ouvrir à une date précise"
+                  help="Avant elle, la carte reste scellée sur un compte à rebours — tu peux donc envoyer le lien à l'avance."
+                  checked={revealOn}
+                  onChange={(on) => {
+                    setRevealOn(on);
+                    if (!on) setRevealAt("");
+                  }}
+                >
+                  <Field label="Date de révélation">
+                    <input
+                      type="datetime-local"
+                      value={revealAt}
+                      aria-label="Date de révélation"
+                      onChange={(e) => setRevealAt(e.target.value)}
+                    />
+                  </Field>
+
+                  <Field
+                    label="Mot d&apos;attente"
+                    help="Sous le compte à rebours, pendant que la carte est encore scellée."
+                  >
+                    <input
+                      type="text"
+                      value={waitMessage}
+                      aria-label="Mot d'attente"
+                      maxLength={LIMITS.waitMessage}
+                      placeholder={current.waitHint}
+                      onChange={(e) => setWaitMessage(e.target.value)}
+                    />
+                    <Counter value={waitMessage} max={LIMITS.waitMessage} />
+                  </Field>
+                </Optional>
+
+                <Optional
+                  label="Ajouter une photo d&apos;en-tête"
+                  help="Une photo large en haut de la carte, au-dessus du message."
+                  checked={headerOn}
+                  onChange={(on) => {
+                    setHeaderOn(on);
+                    if (!on) setHeader("");
+                  }}
+                >
+                  <Field label="Photo d&apos;en-tête">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      value={header}
+                      aria-label="Photo d'en-tête"
+                      placeholder="https://…/photo.jpg"
+                      onChange={(e) => setHeader(e.target.value)}
+                    />
+                  </Field>
+                </Optional>
+              </div>
+            </section>
+
+            <section className="panel">
+              <h2>Cadeaux</h2>
+              <p className="help">
+                L&apos;écran qui suit l&apos;ouverture. Ses mots lui appartiennent : répéter ceux du
+                voile ferait lire deux fois la même chose.
+              </p>
+
+              <Field label="Titre" help="Au-dessus des cadeaux.">
+                <input
+                  type="text"
+                  value={itemsTitle}
+                  aria-label="Titre de l'écran des cadeaux"
+                  maxLength={LIMITS.itemsTitle}
+                  placeholder={ITEMS_TITLE_HINT}
+                  onChange={(e) => setItemsTitle(e.target.value)}
+                />
+                <Counter value={itemsTitle} max={LIMITS.itemsTitle} />
+              </Field>
+
+              <Field label="Contenu" help="La ligne sous ce titre.">
+                <textarea
+                  value={itemsMessage}
+                  aria-label="Contenu de l'écran des cadeaux"
+                  maxLength={LIMITS.itemsMessage}
+                  rows={2}
+                  placeholder={ITEMS_MESSAGE_HINT}
+                  onChange={(e) => setItemsMessage(e.target.value)}
+                />
+                <Counter value={itemsMessage} max={LIMITS.itemsMessage} />
+              </Field>
+
+              <Field label="Signature" help="Facultatif. En bas de page, pour dire de qui ça vient.">
+                <input
+                  type="text"
+                  value={signature}
+                  aria-label="Signature"
+                  maxLength={LIMITS.signature}
+                  placeholder="Avec toute mon affection, Nathan"
+                  onChange={(e) => setSignature(e.target.value)}
+                />
+                <Counter value={signature} max={LIMITS.signature} />
+              </Field>
+            </section>
+
+            <section className="panel">
+              <h2>Choix</h2>
+              <p className="help">Le dernier écran, une fois le cadeau confirmé.</p>
+
+              <Field label="Message de fin" help="Ce qui s&apos;affiche à la place des cadeaux.">
                 <textarea
                   value={thanks}
                   aria-label="Message de fin"
@@ -876,47 +1030,14 @@ export default function PageEditor(props: Props) {
 
               <div className="options">
                 <Optional
-                  label="Personnaliser le mot d&apos;ouverture"
-                  help={`Sinon : « ${current.intro} »`}
-                  checked={introOn}
-                  onChange={(on) => {
-                    setIntroOn(on);
-                    if (!on) setIntro("");
-                  }}
+                  label="Proposer de laisser un mot"
+                  help="Un bouton sur cet écran, après le choix. Inutile si tu fais scanner le QR devant la personne."
+                  checked={replyOn}
+                  onChange={setReplyOn}
                 >
-                  <Field label="Mot d&apos;ouverture" help="La petite ligne au-dessus du titre.">
-                    <input
-                      type="text"
-                      value={intro}
-                      aria-label="Message d'ouverture"
-                      maxLength={LIMITS.intro}
-                      placeholder={current.intro}
-                      onChange={(e) => setIntro(e.target.value)}
-                    />
-                    <Counter value={intro} max={LIMITS.intro} />
-                  </Field>
-                </Optional>
-
-                <Optional
-                  label="Signer la carte"
-                  help="Une ligne en bas de page, pour dire de qui ça vient."
-                  checked={signatureOn}
-                  onChange={(on) => {
-                    setSignatureOn(on);
-                    if (!on) setSignature("");
-                  }}
-                >
-                  <Field label="Signature">
-                    <input
-                      type="text"
-                      value={signature}
-                      aria-label="Signature"
-                      maxLength={LIMITS.signature}
-                      placeholder="Avec toute mon affection, Nathan"
-                      onChange={(e) => setSignature(e.target.value)}
-                    />
-                    <Counter value={signature} max={LIMITS.signature} />
-                  </Field>
+                  <p className="help" style={{ marginBottom: 0 }}>
+                    Le mot apparaîtra dans ta vue d&apos;administration, avec le choix.
+                  </p>
                 </Optional>
               </div>
             </section>
@@ -989,8 +1110,8 @@ export default function PageEditor(props: Props) {
                 </div>
               </Field>
 
-              <div className="options">
-                {current.motif !== "none" && (
+              {current.motif !== "none" && (
+                <div className="options">
                   <label className="check">
                     <input
                       type="checkbox"
@@ -999,90 +1120,44 @@ export default function PageEditor(props: Props) {
                     />
                     <span>Afficher le décor de l&apos;occasion</span>
                   </label>
-                )}
+                </div>
+              )}
+            </section>
 
-                <Optional
-                  label="Ouvrir la carte d&apos;un geste"
-                  help="Un voile opaque porte le mot d'ouverture et le titre ; les cadeaux apparaissent après."
-                  checked={sealEnabled}
-                  onChange={setSealEnabled}
+            <section className="panel">
+              <h2>Le lien</h2>
+
+              {props.mode === "create" ? (
+                <p className="options__hint">
+                  Adresse du lien : <code>{props.baseUrlLabel}/{effectiveSlug}</code>
+                </p>
+              ) : (
+                <Field
+                  label="Adresse du lien"
+                  help="Fixe : le lien que tu as déjà envoyé continue de fonctionner."
                 >
-                  <Field label="Manière de l&apos;ouvrir">
-                    <div className="openings" role="radiogroup" aria-label="Manière de l'ouvrir">
-                      {OPENINGS.map((o) => (
-                        <button
-                          key={o.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={opening === o.id}
-                          className={`opening${opening === o.id ? " is-on" : ""}`}
-                          onClick={() => setOpeningStyle(o.id)}
-                        >
-                          <span className={`opening__glyph opening__glyph--${o.id}`} aria-hidden="true">
-                            <i />
-                            <i />
-                          </span>
-                          <span className="opening__name">{o.name}</span>
-                          <span className="opening__hint">{o.hint}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                </Optional>
+                  <p className="readonly-value">{props.slug}</p>
+                </Field>
+              )}
 
-                <Optional
-                  label="Laisser un mot en répondant"
-                  help="Un champ libre à côté du bouton. Inutile si tu fais scanner le QR devant la personne."
-                  checked={replyOn}
-                  onChange={setReplyOn}
-                >
-                  <p className="help" style={{ marginBottom: 0 }}>
-                    Le mot apparaîtra dans ta vue d&apos;administration, avec le choix.
-                  </p>
-                </Optional>
+              <Field
+                label="Nom de la carte"
+                help="Facultatif, jamais montré. Il sert à t&apos;y retrouver et fabrique l&apos;adresse du lien."
+              >
+                <input
+                  type="text"
+                  value={name}
+                  aria-label="Nom de la carte"
+                  maxLength={LIMITS.name}
+                  placeholder="Anniversaire de Sophie"
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <Counter value={name} max={LIMITS.name} />
+              </Field>
 
+              <div className="options">
                 <Optional
-                  label="Ouvrir à une date précise"
-                  help="Avant elle, la carte reste scellée sur un compte à rebours — tu peux donc envoyer le lien à l'avance."
-                  checked={revealOn}
-                  onChange={(on) => {
-                    setRevealOn(on);
-                    if (!on) setRevealAt("");
-                  }}
-                >
-                  <Field label="Date de révélation">
-                    <input
-                      type="datetime-local"
-                      value={revealAt}
-                      aria-label="Date de révélation"
-                      onChange={(e) => setRevealAt(e.target.value)}
-                    />
-                  </Field>
-                </Optional>
-
-                <Optional
-                  label="Ajouter une photo d&apos;en-tête"
-                  help="Une photo large en haut de la carte, au-dessus du message."
-                  checked={headerOn}
-                  onChange={(on) => {
-                    setHeaderOn(on);
-                    if (!on) setHeader("");
-                  }}
-                >
-                  <Field label="Photo d&apos;en-tête">
-                    <input
-                      type="url"
-                      inputMode="url"
-                      value={header}
-                      aria-label="Photo d'en-tête"
-                      placeholder="https://…/photo.jpg"
-                      onChange={(e) => setHeader(e.target.value)}
-                    />
-                  </Field>
-                </Optional>
-
-                <Optional
-                  label="Soigner l&apos;aperçu du lien"
+                  label="Personnaliser le lien"
                   help="Ce que montrent WhatsApp, Signal et les SMS quand tu colles le lien."
                   checked={linkOn}
                   onChange={(on) => {

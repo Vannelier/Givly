@@ -14,6 +14,10 @@ CREATE TABLE IF NOT EXISTS gift_pages (
   reply_message      text        NOT NULL DEFAULT '',
   link_title         text        NOT NULL DEFAULT '',
   welcome_message    text        NOT NULL DEFAULT '',
+  open_label         text        NOT NULL DEFAULT '',
+  wait_message       text        NOT NULL DEFAULT '',
+  items_title        text        NOT NULL DEFAULT '',
+  items_message      text        NOT NULL DEFAULT '',
   thank_you_message  text        NOT NULL DEFAULT '',
   cover_image_url    text,
   theme              jsonb       NOT NULL DEFAULT '{}'::jsonb,
@@ -38,6 +42,10 @@ ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS header_image_url text;
 ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS reveal_at timestamptz;
 ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS reply_message text NOT NULL DEFAULT '';
 ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS link_title text NOT NULL DEFAULT '';
+ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS open_label text NOT NULL DEFAULT '';
+ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS wait_message text NOT NULL DEFAULT '';
+ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS items_title text NOT NULL DEFAULT '';
+ALTER TABLE gift_pages ADD COLUMN IF NOT EXISTS items_message text NOT NULL DEFAULT '';
 
 -- Les UNIQUE ci-dessus creent deja les index sur slug et admin_token.
 CREATE INDEX IF NOT EXISTS gift_pages_expires_at_idx ON gift_pages (expires_at);

@@ -94,7 +94,7 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | chemin | rôle |
 |---|---|
 | `app/page.tsx` | page d'accueil : présente l'outil et renvoie vers `/creer` |
-| `app/creer/page.tsx` | assistant de création, en trois étapes |
+| `app/creer/page.tsx` | assistant de création, en deux étapes |
 | `app/[slug]/page.tsx` | page-cadeau publique (SSR + `generateMetadata` pour l'aperçu de lien) |
 | `app/admin/[token]/page.tsx` | vue admin : état, choix, `view_count`, édition, suppression |
 | `components/GiftView.tsx` | le rendu que voit le receveur — **le même** composant sert à l'aperçu |
@@ -141,48 +141,66 @@ façon pas former un slug ; ils restent listés pour que la liste dise ce qui es
 | `PATCH /api/admin/[token]` | édite la page ; 409 si verrouillée ou expirée |
 | `DELETE /api/admin/[token]` | supprime la page |
 | `POST /api/pages/[slug]/choose` | `{ itemId }` → enregistre le choix et verrouille |
+| `POST /api/pages/[slug]/reply` | `{ reply }` → attache le mot du receveur, après le choix ; 409 hors fenêtre ou si un mot existe déjà |
 
 ## Ce qui est personnalisable
 
-| réglage | où | effet |
-|---|---|---|
-| **Occasion** | étape 3 | Preset complet : palette, décor et formule d'ouverture d'un coup. Quinze occasions, rangées par rubrique. |
-| **Prénom** | étape 1 | « Pour Sophie », en tête de la carte et sur le voile. |
-| **Message d'ouverture** | étape 3 | La ligne au-dessus du titre. Vide = celle de l'occasion. |
-| **Message principal** | étape 3 | Le titre de la page, et le titre de l'aperçu de lien. Laissé vide, la suggestion de l'occasion est enregistrée telle quelle. |
-| **Message de fin** | étape 3 | Après la confirmation du choix. Laissé vide, la suggestion de l'occasion est enregistrée telle quelle. |
-| **Signature** | étape 3 | Une ligne en bas de page. Facultative. |
-| **Palette** | étape 3 | Sept palettes. Réglée par l'occasion, modifiable ensuite. |
-| **Police du titre** | étape 3 | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
-| **Décor** | étape 3 | Le motif de l'occasion, désactivable. |
-| **Aperçu du lien** | étape 3 | Le texte cliquable et l'image que montrent WhatsApp et les SMS. |
-| **Ouverture** | étape 3 | Le voile à lever, en trois styles : voile, rideau, enveloppe. Désactivable. |
-| **Mot du receveur** | étape 3 | Un champ de réponse libre. Désactivé par défaut. |
-| **Photo d'en-tête** | étape 3 | Une photo large en haut de la carte. |
-| **Date de révélation** | étape 3 | Avant elle, la carte reste scellée sur un compte à rebours. |
-| **Disposition** | étape 3 | Grille ou liste. |
-| **Image d'aperçu du lien** | étape 3 | Ce que montrent WhatsApp et consorts. |
+L'assistant tient en **deux étapes** : les cadeaux, puis la présentation. Cette seconde étape est
+découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse la personne qui reçoit —
+**Intro**, **Cadeaux**, **Choix** — précédés de l'occasion et suivis du thème et du lien.
 
-**Le facultatif se replie.** Tout réglage optionnel est d'abord une case à cocher ; le champ
+| réglage | cadre | effet |
+|---|---|---|
+| **Occasion** | Occasion | Preset complet : palette, décor et formulations de départ d'un coup. Quinze occasions, rangées par rubrique. |
+| **Prénom** | Intro | « Pour Sophie », tout en haut du voile. |
+| **Mot d'ouverture** | Intro | La ligne au-dessus du titre. Vide = celle de l'occasion. |
+| **Message principal** | Intro | Le grand titre du voile, et le titre de l'aperçu de lien. |
+| **Texte du bouton** | Intro | Le bouton qui lève le voile. Vide = la suggestion de l'occasion (« Ouvrir », « Ouvrir mon cadeau »…). |
+| **Ouverture** | Intro | Le voile à lever, en trois styles : voile, rideau, enveloppe. Désactivable. |
+| **Date de révélation** | Intro | Avant elle, la carte reste scellée sur un compte à rebours. |
+| **Mot d'attente** | Intro | Sous le compte à rebours, tant que la carte est scellée. Vide = la suggestion de l'occasion. |
+| **Photo d'en-tête** | Intro | Une photo large en haut de la carte. |
+| **Titre** | Cadeaux | Au-dessus des cadeaux. Vide = « À toi de choisir ». |
+| **Contenu** | Cadeaux | La ligne sous ce titre. Vide = « Choisis celui qui te fait le plus envie. » |
+| **Signature** | Cadeaux | Une ligne en bas de page. Facultative. |
+| **Message de fin** | Choix | Après la confirmation du choix. |
+| **Mot du receveur** | Choix | Un bouton, sur l'écran de confirmation, qui ouvre la saisie. Désactivé par défaut. |
+| **Palette** | Thème | Huit palettes. Réglée par l'occasion, modifiable ensuite. |
+| **Police du titre** | Thème | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
+| **Disposition** | Thème | Grille ou liste. |
+| **Décor** | Thème | Le motif de l'occasion, désactivable. |
+| **Nom de la carte** | Lien | Jamais montré. Il fabrique l'adresse du lien. |
+| **Personnaliser le lien** | Lien | Le texte cliquable et l'image que montrent WhatsApp et les SMS. |
+
+**Chaque écran a ses propres mots.** Le voile porte le prénom, le mot d'ouverture et le message
+principal ; l'écran des cadeaux porte son titre et son contenu ; l'écran de confirmation porte le
+message de fin. Le voile et l'écran des cadeaux répétaient auparavant les deux mêmes lignes, lues
+coup sur coup. Quand l'ouverture animée est désactivée, il n'y a plus de voile où loger l'intro :
+l'écran des cadeaux la reprend alors à son compte, en tête, et son propre titre passe en `h2`.
+
+**Le facultatif se replie.** Un réglage optionnel est d'abord une case à cocher ; le champ
 n'apparaît qu'une fois cochée (composant `Optional`). Décocher **efface la valeur** : un réglage
 invisible mais toujours actif — une date de révélation oubliée, par exemple — serait un piège.
 Un repli s'ouvre d'emblée si le champ porte déjà une valeur, pour qu'en édition rien de rempli ne
 se cache.
 
-Sont repliés : l'adresse du lien (elle découle du nom), le mot d'ouverture, la signature,
-l'ouverture animée, la date de révélation, la photo d'en-tête et l'image d'aperçu du lien. Restent
-toujours visibles les champs principaux et les choix structurants — occasion, palette, police,
-disposition.
+Sont repliés : l'ouverture animée, la date de révélation, la photo d'en-tête, le mot du receveur et
+la personnalisation du lien. Les champs de texte des trois cadres, eux, sont toujours visibles :
+une case à cocher devant un champ facultatif ne protégeait de rien et ajoutait un geste.
 
 **Aucun champ de texte n'est obligatoire.** Laissé vide, un champ prend la valeur de la suggestion
-que le donneur avait sous les yeux en placeholder : le message principal et le message de fin
-reprennent la formule de l'occasion, un cadeau sans titre devient « Sans titre », et le nom de la
-carte se compose à partir de l'occasion et du prénom. Il ne reste qu'une exigence, structurelle :
-il faut au moins un cadeau à choisir.
+que le donneur avait sous les yeux en placeholder : les messages reprennent la formule de
+l'occasion, un cadeau sans titre devient « Sans titre », et le nom de la carte se compose à partir
+de l'occasion et du prénom. Il ne reste qu'une exigence, structurelle : il faut au moins un cadeau
+à choisir.
 
 **Une occasion est un preset, pas une contrainte.** La choisir repose palette et décor, et met à jour
-le message d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un texte
+le mot d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un texte
 écrit à la main n'est jamais écrasé.
+
+Les suggestions du titre et du contenu de l'écran des cadeaux, elles, sont **communes à toutes les
+occasions** (`ITEMS_TITLE_HINT`, `ITEMS_MESSAGE_HINT`) : cet écran est fonctionnel, le décorum de
+l'occasion vit sur le voile juste avant.
 
 **Le décor est un SVG en `currentColor`**, pas une image : il suit la palette sans code de couleur
 en dur, ne coûte aucun téléchargement, et se désactive en une case à cocher. Il n'apparaît que pour
@@ -220,8 +238,25 @@ nouvelle, une intention différente.
 ## Le mot du receveur
 
 Optionnel, et **désactivé par défaut** : si le donneur fait scanner le QR code devant la personne,
-un champ de réponse n'a aucun sens. Activé, il ajoute un champ libre à côté du bouton, dont le
-contenu remonte dans la vue admin avec le choix.
+un champ de réponse n'a aucun sens. Activé, son contenu remonte dans la vue admin avec le choix.
+
+**Il arrive après le choix, plus à côté de lui.** La zone de texte posée sous les cadeaux se lisait
+comme une case à remplir avant de pouvoir confirmer, alors qu'elle était facultative. Le choix part
+donc seul, et l'écran de confirmation propose ensuite un bouton « Laisser un mot » qui ouvre la
+saisie.
+
+Ce détachement a un coût : le mot ne voyage plus dans la même requête que le choix, donc plus rien
+ne garantit à lui seul que c'est bien l'auteur du choix qui écrit. Deux gardes referment la porte,
+posés en SQL dans le `WHERE` de `POST /api/pages/[slug]/reply` :
+
+- **un seul mot par carte** — `reply_message = ''` ;
+- **dans l'heure qui suit le choix** — `chosen_at > now() - interval` (`REPLY_WINDOW_MS`,
+  `lib/types.ts`). Le délai réel entre les deux gestes se compte en secondes.
+
+Le bouton disparaît de lui-même une fois la fenêtre passée : `replyWindowOpen()` est partagé par la
+route et par `GiftView`. Côté client, il n'est évalué qu'après le montage — l'heure courante diffère
+forcément entre le rendu serveur et le navigateur, et l'évaluer plus tôt ferait diverger
+l'hydratation sur une carte choisie il y a presque une heure.
 
 Le serveur n'enregistre le mot que si l'option est active sur la page — une requête directe ne peut
 pas glisser un texte dans une carte qui ne l'a pas demandé.
@@ -280,7 +315,7 @@ serveur pour ça.
 Deux aperçus, un seul composant — `GiftView` sert à la fois la page réelle et les deux aperçus,
 donc aucun ne peut mentir.
 
-- **L'aperçu en direct**, à l'étape 3 : une réduction du rendu réel, qui réagit à chaque réglage.
+- **L'aperçu en direct**, à l'étape « La présentation » : une réduction du rendu réel, qui réagit à chaque réglage.
   Colonne collante à partir de 62 rem, bandeau en haut de l'étape en dessous. Il est mis à l'échelle
   par `transform: scale()` — ce qui crée au passage un bloc englobant, si bien que la barre de
   confirmation et le voile, en `position: fixed`, restent enfermés dans le cadre au lieu de
@@ -359,14 +394,17 @@ disparaissent au redéploiement suivant.
 
 ## L'assistant de composition
 
-Création et édition passent par le même composant, en trois étapes :
+Création et édition passent par le même composant, en deux étapes :
 
-1. **La carte** — le nom que tu lui donnes (jamais montré au receveur) et le prénom de la
-   personne. L'adresse du lien en découle, sans réglage : personne ne s'en soucie, et le
-   serveur résout tout seul une collision en ajoutant `-2`, `-3`…
-2. **Les cadeaux** — de 2 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
-3. **La présentation** — occasion, messages, signature, palette, police, décor, disposition,
-   image d'aperçu du lien. Avec un aperçu en direct à côté des réglages.
+1. **Les cadeaux** — de 2 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
+2. **La présentation** — l'occasion, puis un cadre par écran que traverse la personne qui reçoit
+   (**Intro**, **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté
+   des réglages.
+
+**« La carte » n'a pas survécu comme étape.** Elle ne portait que deux champs : le nom interne et le
+prénom du receveur. Le prénom a rejoint le cadre **Intro**, là où il s'affiche ; le nom a rejoint le
+cadre **Lien**, puisque c'est lui qui fabrique l'adresse. Celle-ci en découle sans réglage :
+personne ne s'en soucie, et le serveur résout tout seul une collision en ajoutant `-2`, `-3`…
 
 Chaque étape ne valide que ses propres champs, pour ne pas bloquer sur une étape qu'on n'a pas
 encore atteinte. À l'enregistrement, tout est revalidé et une erreur en amont **ramène sur l'étape
@@ -449,6 +487,10 @@ n'importe quelle édition.
   spam (création massive, téléversements). Assumé au MVP ; un rate-limit par IP et/ou un captcha
   sont à prévoir avant toute exposition publique sérieuse.
 - **Le slug public est devinable.** Ne rien mettre de sensible dans une page-cadeau.
+- **Le mot du receveur n'est plus lié à l'auteur du choix.** Il part dans une seconde requête ; qui
+  détient le lien peut donc l'écrire à sa place, tant que la carte n'en porte pas déjà un et que
+  l'heure qui suit le choix n'est pas écoulée. C'est le prix du bouton « Laisser un mot » posé après
+  la confirmation, et le même modèle de confiance que le choix lui-même : le lien fait foi.
 - **`admin_token` est la seule protection admin.** 32 octets aléatoires, transmis dans l'URL :
   qui a le lien a les droits.
 - **`@vercel/postgres` est déprécié** (Vercel Postgres a migré vers Neon). Il fonctionne toujours et

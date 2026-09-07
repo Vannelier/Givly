@@ -516,14 +516,15 @@ input[type="datetime-local"]:focus {
   }
 }
 
-/* --- Etape 3 : reglages + apercu vivant ------------------------------------ */
+/* --- Presentation : reglages + apercu vivant ------------------------------- */
 
-.step3 {
+/* La colonne de réglages et son aperçu vivant, sur l'étape « La présentation ». */
+.compose {
   display: grid;
   gap: 1rem;
 }
 
-.step3__main {
+.compose__main {
   display: grid;
   gap: 1rem;
   min-width: 0;
@@ -576,16 +577,16 @@ input[type="datetime-local"]:focus {
 }
 
 @media (min-width: 62rem) {
-  .step3 {
+  .compose {
     grid-template-columns: minmax(0, 1fr) 320px;
     align-items: start;
   }
 
-  .step3__main {
+  .compose__main {
     order: -1;
   }
 
-  .step3__side {
+  .compose__side {
     position: sticky;
     top: 1rem;
   }
