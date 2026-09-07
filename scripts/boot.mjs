@@ -16,7 +16,8 @@
  * ferait boucler l'hébergeur sur des redémarrages sans rien expliquer.
  */
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 /**
  * Doit rester identique à `sslFor` dans lib/db.ts — `scripts/check.ts` vérifie
@@ -69,29 +70,67 @@ export async function applySchema() {
 }
 
 /**
- * Prévient quand les images n'ont nulle part où durer.
+ * Doit rester identique à `MEDIA_DIR` dans lib/mediaStore.ts — `scripts/check.ts`
+ * vérifie que les deux implémentations s'accordent.
+ */
+export function mediaDir() {
+  const explicite = process.env.MEDIA_DIR && process.env.MEDIA_DIR.trim();
+  return explicite ? resolve(explicite) : resolve(process.cwd(), ".media");
+}
+
+/**
+ * Dit où atterrissent les images, et prévient quand elles n'ont nulle part où
+ * durer.
  *
- * Sans `BLOB_READ_WRITE_TOKEN`, le repli écrit dans `.media/`. C'est ce qu'on
- * veut en développement, mais sur un hébergeur au système de fichiers éphémère
- * — Railway, Fly, Render sans volume — **toutes les images disparaissent au
+ * Sans `BLOB_READ_WRITE_TOKEN`, le repli écrit sur le disque. C'est ce qu'on veut
+ * en développement, mais sur un hébergeur au système de fichiers éphémère —
+ * Railway, Fly, Render sans volume — **toutes les images disparaissent au
  * déploiement suivant** : les cadeaux d'une carte déjà envoyée cessent de
  * s'afficher, et l'aperçu du lien pointe vers un 404.
  *
  * Rien ne le signalait : l'envoi réussissait, la carte s'affichait, et la perte
- * n'apparaissait qu'au redéploiement d'après. D'où cet avertissement au
- * démarrage — il ne bloque rien, il nomme le piège.
+ * n'apparaissait qu'au redéploiement d'après. D'où cette vérification — elle ne
+ * bloque rien, elle nomme le piège et donne le chemin exact à comparer au point
+ * de montage.
  */
-function verifierStockageImages() {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return;
-  if (process.env.NODE_ENV !== "production") return;
+async function verifierStockageImages() {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log("[givly] Images : stockage distant configure.");
+    return;
+  }
 
-  for (const ligne of [
-    "BLOB_READ_WRITE_TOKEN absent : les images sont ecrites dans .media/, sur le",
-    "disque du conteneur. Si ce disque n'est pas un volume persistant, elles",
-    "disparaitront au prochain deploiement — y compris celles des cartes deja",
-    "envoyees. Configure le stockage distant, ou monte un volume sur .media/.",
-  ]) {
-    console.warn(`[givly] ${ligne}`);
+  // On ecrit reellement : c'est la seule facon de savoir si le volume est monte
+  // la ou l'application ecrit, et s'il est accessible en ecriture. Un montage
+  // pose a cote passerait sinon inapercu jusqu'au deploiement suivant.
+  const dossier = mediaDir();
+  try {
+    await mkdir(dossier, { recursive: true });
+    const sonde = join(dossier, ".ecriture-test");
+    await writeFile(sonde, "");
+    await rm(sonde, { force: true });
+  } catch (err) {
+    console.error(`[givly] Images : ${dossier} n'est pas accessible en ecriture — ${err.message}`);
+    console.error("[givly] Les televersements echoueront. Verifie le montage et ses droits.");
+    return;
+  }
+
+  console.log(`[givly] Images : dossier ${dossier}.`);
+
+  /*
+   * Pas de garde sur NODE_ENV : ce script tourne avant Next, qui n'a donc pas
+   * encore pose la variable — l'avertissement risquait de ne jamais s'afficher
+   * la ou il sert. Il ne peut de toute facon se declencher qu'au demarrage de
+   * production, `npm run dev` ne passant pas par ici.
+   */
+  if (!process.env.MEDIA_DIR) {
+    for (const ligne of [
+      "Ce dossier suit le conteneur, pas un volume : si rien n'est monte dessus,",
+      "les images disparaitront au prochain deploiement, y compris celles des",
+      "cartes deja envoyees. Monte un volume et pointe-le avec MEDIA_DIR, ou",
+      "configure BLOB_READ_WRITE_TOKEN.",
+    ]) {
+      console.warn(`[givly] ${ligne}`);
+    }
   }
 }
 
@@ -99,6 +138,8 @@ function verifierStockageImages() {
 // Sans `await` au niveau du module, pour rester importable par les outils qui
 // transposent en CommonJS.
 if (process.argv[1] && process.argv[1].endsWith("boot.mjs")) {
-  verifierStockageImages();
-  applySchema().catch((err) => console.error("[givly]", err.message));
+  verifierStockageImages()
+    .catch((err) => console.error("[givly]", err.message))
+    .then(() => applySchema())
+    .catch((err) => console.error("[givly]", err.message));
 }

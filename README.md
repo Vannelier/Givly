@@ -598,9 +598,29 @@ l'hébergeur sans rien expliquer.
 
 `npm run db:migrate` reste disponible pour l'appliquer manuellement.
 
-**Les images**, enfin : sans `BLOB_READ_WRITE_TOKEN`, le repli écrit dans `.media/`.
-Ce dossier n'est durable que si un volume persistant est monté ; sinon les images
-disparaissent au redéploiement suivant.
+**Les images.** Il faut choisir l'une des deux, et le choix n'est pas optionnel en
+production : sans lui, les images sont écrites sur le disque du conteneur et
+**disparaissent au déploiement suivant, y compris sur les cartes déjà envoyées**.
+L'envoi réussit, la carte s'affiche, et la perte n'apparaît qu'au déploiement
+d'après — c'est un piège entièrement silencieux, et il s'est refermé une fois.
+
+1. **`BLOB_READ_WRITE_TOKEN`** : les images partent sur Vercel Blob, servies par
+   un CDN. Le service s'utilise depuis n'importe quel hébergeur, sans y déployer
+   quoi que ce soit. Rien à gérer ensuite.
+2. **Un volume persistant**, désigné par **`MEDIA_DIR`**. Le chemin doit être
+   exactement le point de montage : sur Railway, un volume monté sur
+   `/app/.media` se déclare `MEDIA_DIR=/app/.media`. Sans cette variable, le code
+   écrit à côté du code, donc hors du volume — et le piège se referme.
+
+   Attention : un volume appartient à **un service**. Celui de la base de données
+   ne protège que la base ; il en faut un sur le service applicatif.
+
+Le démarrage annonce le chemin retenu et vérifie qu'il est accessible en écriture,
+pour qu'un montage posé à côté se voie tout de suite :
+
+```
+[givly] Images : dossier /app/.media.
+```
 
 ## L'assistant de composition
 

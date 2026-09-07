@@ -17,7 +17,26 @@ import { shrinkImage } from "./image";
  * éphémère : une image écrite là disparaîtrait au déploiement suivant.
  */
 
-export const MEDIA_DIR = path.join(process.cwd(), ".media");
+/**
+ * Où le repli disque écrit ses images.
+ *
+ * `MEDIA_DIR` permet de pointer un volume persistant sans rien deviner. C'est
+ * nécessaire dès qu'on héberge ailleurs que sur Vercel avec un volume monté :
+ * le chemin par défaut dépend du répertoire de travail du conteneur, et monter
+ * le volume à côté fait retomber dans la panne silencieuse — l'envoi réussit,
+ * la carte s'affiche, et tout disparaît au déploiement suivant.
+ *
+ * Poser la variable vaut donc aussi déclaration d'intention : le stockage disque
+ * est voulu et durable, l'avertissement au démarrage n'a plus lieu d'être.
+ */
+export const MEDIA_DIR = process.env.MEDIA_DIR?.trim()
+  ? path.resolve(process.env.MEDIA_DIR.trim())
+  : path.join(process.cwd(), ".media");
+
+/** Vrai quand le dossier d'images a été désigné explicitement. */
+export function mediaDirConfigured(): boolean {
+  return Boolean(process.env.MEDIA_DIR?.trim());
+}
 
 /** Nom de fichier accepté par la route de service. Volontairement étroit. */
 export const MEDIA_NAME = /^[a-z0-9-]+\.(jpg|png|webp)$/;

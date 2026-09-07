@@ -9,7 +9,7 @@ import { readdirSync } from "node:fs";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
-import { sslFor as bootSslFor } from "./boot.mjs";
+import { sslFor as bootSslFor, mediaDir as bootMediaDir } from "./boot.mjs";
 import {
   DEFAULT_EFFECT_ID,
   DEFAULT_FONT_ID,
@@ -31,6 +31,7 @@ import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
+import { MEDIA_DIR } from "../lib/mediaStore";
 import sharp from "sharp";
 import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
 import { ValidationError, validateCreate, validatePatch, validateTheme } from "../lib/validation";
@@ -781,6 +782,20 @@ test("boot.mjs et lib/db.ts decident du TLS de la meme maniere", () => {
   ]) {
     assert.deepEqual(bootSslFor(url), sslFor(url), url);
   }
+});
+
+/*
+ * Meme raison que pour sslFor : boot.mjs tourne avant Next et ne peut pas
+ * importer un module TypeScript, il redit donc le calcul. Si les deux divergent,
+ * la verification du demarrage annonce un dossier et l'application ecrit dans un
+ * autre — exactement le silence qu'elle est censee rompre.
+ *
+ * `MEDIA_DIR` est lu au chargement du module cote TypeScript : on ne compare donc
+ * que le cas par defaut, le seul que ce harnais puisse observer.
+ */
+test("boot.mjs et mediaStore designent le meme dossier d'images", () => {
+  assert.equal(process.env.MEDIA_DIR ?? "", "", "MEDIA_DIR doit etre absent pour ce test");
+  assert.equal(bootMediaDir(), MEDIA_DIR);
 });
 
 // --- Textes des trois ecrans -----------------------------------------------
