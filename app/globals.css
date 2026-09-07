@@ -992,9 +992,17 @@ select {
   }
 }
 
+/*
+ * Au-dessus du rabat de l'enveloppe (z-index 2), pas en dessous.
+ *
+ * Le texte est ecrit sur l'enveloppe : c'est lui qu'on doit lire en arrivant.
+ * Sous le rabat, le triangle lui passait devant et masquait le mot d'ouverture
+ * et la moitie du titre — visible au repos, avant meme la moindre animation.
+ * Les autres ouvertures n'avaient pas le probleme : elles n'ont pas de rabat.
+ */
 .cover__inner {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   max-width: 30rem;
   text-align: center;
   animation: cover-rise 1s var(--ease) 0.14s both;
