@@ -1,0 +1,179 @@
+/* ---------------------------------------------------------------------------
+   Pages de texte : questions, contact, confidentialité, conditions, mentions
+   légales. Une seule colonne, mesurée pour la lecture.
+   --------------------------------------------------------------------------- */
+
+/*
+ * 36 rem, soit environ 70 signes par ligne. Au-delà, l'œil perd le début de la
+ * ligne suivante en revenant à la marge — c'est la raison pour laquelle ces
+ * pages ne prennent pas la largeur de l'accueil.
+ */
+.prose {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding-bottom: clamp(2.5rem, 8vw, 4rem);
+}
+
+.prose h1 {
+  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  text-wrap: balance;
+  margin-bottom: 1rem;
+}
+
+.prose h2 {
+  font-size: 1.2rem;
+  margin-top: 2.4rem;
+  margin-bottom: 0.7rem;
+  text-wrap: balance;
+}
+
+.prose h3 {
+  font-size: 1rem;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 650;
+  margin-top: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.prose p,
+.prose li {
+  color: var(--ink-soft);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.prose p + p {
+  margin-top: 0.85rem;
+}
+
+.prose__chapo {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+}
+
+.prose__date {
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.prose ul {
+  margin: 0.7rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.prose li + li {
+  margin-top: 0.45rem;
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--accent-dark);
+}
+
+/*
+ * Encadré d'appui : un fait qu'on ne veut pas voir manqué au survol du texte.
+ * Sobre à dessein — trois encadrés voyants sur une page en annulent l'effet.
+ */
+.prose__note {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--accent-soft);
+  background: var(--card);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.prose__note p {
+  font-size: 0.9rem;
+}
+
+/* Mention obligatoire non renseignée : visible, jamais inventée. */
+.prose__manquant {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* --- Questions fréquentes -------------------------------------------------- */
+
+/*
+ * `<details>` natif : ouvre et ferme sans une ligne de JavaScript, reste
+ * accessible au clavier, et son contenu est lu par les moteurs même replié.
+ */
+.faq {
+  margin-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.faq__item {
+  border-bottom: 1px solid var(--line);
+}
+
+.faq__item > summary {
+  cursor: pointer;
+  padding: 1rem 2rem 1rem 0;
+  position: relative;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+  list-style: none;
+  text-wrap: balance;
+}
+
+.faq__item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq__item > summary::after {
+  content: "+";
+  position: absolute;
+  right: 0.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 1.2rem;
+  color: var(--ink-faint);
+  transition: transform 0.2s var(--ease);
+}
+
+.faq__item[open] > summary::after {
+  content: "−";
+}
+
+.faq__item > div {
+  padding-bottom: 1.1rem;
+}
+
+/* --- Pied de page : les liens légaux --------------------------------------- */
+
+.lp-foot__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  font-size: 0.8rem;
+}
+
+.lp-foot__nav a {
+  color: var(--ink-faint);
+  text-decoration: none;
+}
+
+.lp-foot__nav a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+/*
+ * Le pied de page passe en colonne dès qu'il y a des liens : trois blocs sur une
+ * ligne se tassaient les uns contre les autres en dessous de 40 rem.
+ */
+@media (max-width: 44rem) {
+  .lp-foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1rem;
+  }
+}

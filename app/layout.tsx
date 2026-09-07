@@ -12,6 +12,7 @@ import { baseUrl } from "@/lib/env";
 import "./globals.css";
 import "./editor.css";
 import "./landing.css";
+import "./legal.css";
 
 const display = Fraunces({
   subsets: ["latin"],

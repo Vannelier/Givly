@@ -1,14 +1,60 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import SiteFooter from "@/components/SiteFooter";
 
-export const metadata = {
-  title: "Givly — offre le choix",
+/*
+ * Le titre porte ce qu'on cherche, pas ce qu'on est.
+ *
+ * « Givly — offre le choix » ne se trouve qu'en tapant « Givly », c'est-à-dire
+ * en connaissant déjà le site. Le titre décrit donc d'abord l'action — offrir en
+ * laissant choisir — et garde la marque en fin de ligne, là où elle ne prend pas
+ * la place des mots utiles. Environ 60 signes : au-delà, Google coupe.
+ */
+export const metadata: Metadata = {
+  title: "Offrir en laissant choisir le cadeau — Givly",
   description:
-    "L'inverse d'une liste de souhaits : tu réunis quelques idées sur une page, la personne choisit celle qu'elle préfère. Sans compte, sans paiement.",
+    "Réunis quelques idées de cadeau sur une page, envoie le lien, découvre celle qui a été retenue. Gratuit, sans compte et sans paiement.",
+  alternates: { canonical: "/" },
+  keywords: [
+    "offrir un cadeau au choix",
+    "laisser choisir son cadeau",
+    "idées cadeau à envoyer",
+    "carte cadeau personnalisée",
+    "alternative à la liste de souhaits",
+  ],
+};
+
+/*
+ * Décrit le site pour les moteurs : de quoi il s'agit, et que c'est gratuit.
+ * `WebApplication` plutôt que `WebSite` — c'est un outil qu'on utilise, pas un
+ * contenu qu'on lit — et un `offers` à zéro, qui est la façon normalisée de dire
+ * « gratuit » plutôt que de l'espérer compris depuis la description.
+ */
+const DONNEES_STRUCTUREES = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Givly",
+  applicationCategory: "LifestyleApplication",
+  operatingSystem: "Tout navigateur web",
+  inLanguage: "fr",
+  description:
+    "Réunis quelques idées de cadeau sur une page, envoie le lien, découvre celle qui a été retenue.",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+  featureList: [
+    "Jusqu'à dix propositions par carte",
+    "Aucun compte requis",
+    "QR code à imprimer",
+    "Carte modifiable jusqu'au choix",
+  ],
 };
 
 export default function LandingPage() {
   return (
     <main className="landing">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(DONNEES_STRUCTUREES) }}
+      />
       {/* --- Accroche : la promesse, la preuve, l'action, en un seul écran. --- */}
       <section className="lp-hero">
         <div className="lp-hero__text">
@@ -182,13 +228,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      <footer className="lp-foot">
-        <p>
-          Une page reste en ligne 30 jours si personne ne choisit. Garde ton lien
-          d&apos;administration : c&apos;est le seul moyen d&apos;y revenir.
-        </p>
-        <p className="lp-foot__mark">Givly</p>
-      </footer>
+      <SiteFooter note="Une page reste en ligne 30 jours si personne ne choisit. Garde ton lien d'administration : c'est le seul moyen d'y revenir." />
     </main>
   );
 }
