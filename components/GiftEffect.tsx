@@ -39,8 +39,11 @@ export default function GiftEffect({ kind }: { kind: EffectId }) {
             style={
               {
                 "--x": `${(a * 100).toFixed(2)}%`,
-                "--delay": `${(b * 1.4).toFixed(2)}s`,
-                "--dur": `${(2.6 + c * 2.4).toFixed(2)}s`,
+                // Duree et etalement triples : la salve passait trop vite pour
+                // qu'on la remarque. Les particules tombent plus lentement et
+                // continuent d'arriver plus longtemps.
+                "--delay": `${(b * 4.2).toFixed(2)}s`,
+                "--dur": `${(7.8 + c * 7.2).toFixed(2)}s`,
                 "--drift": `${(b * 60 - 30).toFixed(1)}px`,
                 "--spin": `${(a * 720 - 360).toFixed(0)}deg`,
                 "--size": `${(0.4 + c * 0.5).toFixed(2)}rem`,
