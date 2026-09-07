@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import GiftView, { type PreviewScreen } from "@/components/GiftView";
 import {
@@ -27,6 +27,13 @@ import {
   type OpeningId,
 } from "@/lib/occasions";
 import { PALETTES, paletteIdOf, type PaletteId } from "@/lib/palettes";
+import {
+  brouillonUtile,
+  effacerBrouillon,
+  ecrireBrouillon,
+  lireBrouillon,
+  type Brouillon,
+} from "@/components/editor/draft";
 import { slugError, slugify } from "@/lib/slug";
 import type { Item, PublicPage, Theme } from "@/lib/types";
 
@@ -177,11 +184,196 @@ export default function PageEditor(props: Props) {
   );
   const [revealOn, setRevealOn] = useState(Boolean(initial.reveal_at));
 
+  /*
+   * Un brouillon a-t-il ete retrouve ? Sert uniquement a l'annoncer : la
+   * restauration elle-meme est silencieuse, on ne demande pas au donneur s'il
+   * veut recuperer son travail — la reponse est evidemment oui. Le bandeau
+   * existe pour l'autre cas, celui ou il voulait justement repartir de zero.
+   */
+  const [brouillonRetrouve, setBrouillonRetrouve] = useState(false);
+  const restaure = useRef(false);
+
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+
+  /*
+   * L'instantane du travail en cours, reconstruit a chaque rendu — quelques
+   * champs, le cout est nul — pour que la sauvegarde et le vidage au masquage
+   * lisent toujours l'etat le plus recent.
+   */
+  const instantane: Brouillon = {
+    version: 1,
+    a: 0,
+    etape: step,
+    name,
+    intro,
+    signature,
+    recipient,
+    header,
+    revealAt,
+    welcome,
+    openLabel,
+    waitMessage,
+    itemsTitle,
+    itemsMessage,
+    thanks,
+    cover,
+    layout: layout === "list" ? "list" : "grid",
+    palette,
+    occasion,
+    font,
+    opening,
+    effect,
+    linkTitle,
+    motif,
+    replyOn,
+    sealEnabled,
+    headerOn,
+    linkOn,
+    revealOn,
+    items: items.map((i) => ({
+      label: i.label,
+      image_url: i.image_url,
+      source_url: i.source_url,
+      note: i.note,
+    })),
+  };
+
+  const dernier = useRef(instantane);
+  dernier.current = instantane;
+  // Sert de cle de dependance : l'objet est neuf a chaque rendu, sa forme
+  // serialisee ne change que quand quelque chose a reellement bouge.
+  const empreinte = JSON.stringify(instantane);
+
+  /*
+   * Restauration, une fois, au montage.
+   *
+   * Pas dans l'initialisation des `useState` : `localStorage` n'existe pas au
+   * rendu serveur, et lire le brouillon la ferait diverger l'hydratation. On
+   * accepte donc une image du formulaire vide, le temps d'une frame.
+   *
+   * Silencieuse : on ne demande pas au donneur s'il veut retrouver son travail,
+   * la reponse est oui. Le bandeau qui suit sert au cas inverse.
+   */
+  useEffect(() => {
+    if (mode !== "create" || restaure.current) return;
+    restaure.current = true;
+
+    const b = lireBrouillon();
+    if (!b || !brouillonUtile(b)) return;
+
+    setStep(b.etape === 2 ? 2 : 1);
+    setFurthest(b.etape === 2 ? 2 : 1);
+    setName(b.name);
+    setIntro(b.intro);
+    setSignature(b.signature);
+    setRecipient(b.recipient);
+    setHeader(b.header);
+    setRevealAt(b.revealAt);
+    setWelcome(b.welcome);
+    setOpenLabel(b.openLabel);
+    setWaitMessage(b.waitMessage);
+    setItemsTitle(b.itemsTitle);
+    setItemsMessage(b.itemsMessage);
+    setThanks(b.thanks);
+    setCover(b.cover);
+    setLayout(b.layout === "list" ? "list" : "grid");
+    // Les identifiants passent par les normalisateurs : un theme retire depuis
+    // l'enregistrement retombe seul sur la valeur par defaut.
+    setPalette(paletteIdOf({ id: b.palette }));
+    setOccasion(occasionById(b.occasion).id);
+    setFont(fontById(b.font).id);
+    setOpeningStyle(openingById(b.opening).id);
+    setEffect(effectById(b.effect).id);
+    setLinkTitle(b.linkTitle);
+    setMotif(b.motif);
+    setReplyOn(b.replyOn);
+    setSealEnabled(b.sealEnabled);
+    setHeaderOn(b.headerOn);
+    setLinkOn(b.linkOn);
+    setRevealOn(b.revealOn);
+    if (b.items.length > 0) {
+      setItems(b.items.map((i) => ({ key: nextKey(), ...i, busy: null, hint: null })));
+    }
+    setBrouillonRetrouve(true);
+  }, [mode]);
+
+  /* Enregistrement courant, temporise : une frappe ne doit pas ecrire a chaque touche. */
+  useEffect(() => {
+    if (mode !== "create" || !restaure.current) return;
+    if (!brouillonUtile(dernier.current)) {
+      effacerBrouillon();
+      return;
+    }
+    const id = setTimeout(() => ecrireBrouillon(dernier.current), 500);
+    return () => clearTimeout(id);
+  }, [mode, empreinte]);
+
+  /*
+   * Le filet qui compte au telephone.
+   *
+   * C'est en partant chez le marchand que le travail se perd, et un onglet passe
+   * en arriere-plan peut etre supprime sans preavis. `beforeunload` n'est pas
+   * fiable sur mobile ; `pagehide` et le passage a `hidden`, si. On ecrit alors
+   * sans attendre la temporisation.
+   */
+  useEffect(() => {
+    if (mode !== "create") return;
+
+    const enregistrer = () => {
+      if (brouillonUtile(dernier.current)) ecrireBrouillon(dernier.current);
+    };
+    const surVisibilite = () => {
+      if (document.visibilityState === "hidden") enregistrer();
+    };
+
+    window.addEventListener("pagehide", enregistrer);
+    document.addEventListener("visibilitychange", surVisibilite);
+    return () => {
+      window.removeEventListener("pagehide", enregistrer);
+      document.removeEventListener("visibilitychange", surVisibilite);
+    };
+  }, [mode]);
+
+  /** Vide le formulaire et le brouillon : pour qui voulait justement recommencer. */
+  function repartirDeZero() {
+    effacerBrouillon();
+    setBrouillonRetrouve(false);
+    setStep(1);
+    setFurthest(1);
+    setName("");
+    setIntro("");
+    setSignature("");
+    setRecipient("");
+    setHeader("");
+    setRevealAt("");
+    setWelcome("");
+    setOpenLabel("");
+    setWaitMessage("");
+    setItemsTitle("");
+    setItemsMessage("");
+    setThanks("");
+    setCover("");
+    setLayout("grid");
+    setPalette(paletteIdOf(undefined));
+    setOccasion(occasionById(undefined).id);
+    setFont(fontById(undefined).id);
+    setOpeningStyle(openingById(undefined).id);
+    setEffect(effectById(undefined).id);
+    setLinkTitle("");
+    setMotif(true);
+    setReplyOn(false);
+    setSealEnabled(true);
+    setHeaderOn(false);
+    setLinkOn(false);
+    setRevealOn(false);
+    setItems(toDraftItems([]));
+    setError(null);
+    toTop();
+  }
 
   useEffect(() => {
     if (!preview) return;
@@ -523,6 +715,9 @@ export default function PageEditor(props: Props) {
       setWarnings(w);
 
       if (props.mode === "create") {
+        // La page existe : le brouillon n'a plus de raison d'etre, et le laisser
+        // ferait resurgir la carte precedente a la composition suivante.
+        effacerBrouillon();
         props.onCreated(data as unknown as CreateResult);
       } else {
         // Le serveur a pu réécrire les items : ids attribués aux nouvelles lignes,
@@ -608,6 +803,14 @@ export default function PageEditor(props: Props) {
       ))}
       {savedAt && (
         <p className="notice notice--info editor__notice">Modifications enregistrées à {savedAt}.</p>
+      )}
+      {brouillonRetrouve && (
+        <p className="notice notice--info editor__notice">
+          Ta carte en cours a été retrouvée telle que tu l&apos;avais laissée.{" "}
+          <button type="button" className="notice__action" onClick={repartirDeZero}>
+            Repartir de zéro
+          </button>
+        </p>
       )}
 
       {step === 1 && (

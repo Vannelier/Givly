@@ -21,11 +21,26 @@ export default function Confidentialite() {
     >
       <h2>Aucun cookie, aucun traqueur</h2>
       <p>
-        Le site ne dépose <strong>aucun cookie</strong>, n&apos;utilise{" "}
+        Le site ne dépose <strong>aucun cookie</strong> et n&apos;utilise{" "}
         <strong>aucun outil de mesure d&apos;audience</strong> — pas de Google Analytics, pas
-        d&apos;équivalent — et n&apos;écrit rien dans le stockage local de ton navigateur. C&apos;est
-        pour cette raison qu&apos;aucune bannière de consentement ne t&apos;est présentée : il
-        n&apos;y a rien à consentir.
+        d&apos;équivalent. Rien ne suit ta navigation, ni ici ni ailleurs. C&apos;est pour cette
+        raison qu&apos;aucune bannière de consentement ne t&apos;est présentée.
+      </p>
+
+      <h2>Une seule chose est gardée sur ton appareil</h2>
+      <p>
+        Pendant que tu composes une carte, le formulaire enregistre ton travail en cours dans le{" "}
+        <strong>stockage local de ton navigateur</strong>. C&apos;est ce qui te permet de partir
+        chercher l&apos;adresse d&apos;un produit chez un marchand, puis de revenir et de retrouver
+        ta carte là où tu l&apos;avais laissée — au téléphone, un onglet mis de côté est souvent
+        déchargé par le système.
+      </p>
+      <p>
+        Ce brouillon <strong>ne quitte jamais ton appareil</strong> : il n&apos;est envoyé à aucun
+        serveur, pas même au nôtre, et nous n&apos;y avons aucun accès. Il est effacé dès que la
+        page est créée, et de toute façon au bout de sept jours. Le bouton « Repartir de zéro », en
+        tête du formulaire, le supprime immédiatement ; vider les données de site depuis ton
+        navigateur fait la même chose.
       </p>
       <p>
         Les polices de caractères sont servies depuis notre propre domaine, pas depuis Google Fonts :
