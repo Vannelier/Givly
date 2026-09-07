@@ -68,9 +68,37 @@ export async function applySchema() {
   }
 }
 
+/**
+ * Prévient quand les images n'ont nulle part où durer.
+ *
+ * Sans `BLOB_READ_WRITE_TOKEN`, le repli écrit dans `.media/`. C'est ce qu'on
+ * veut en développement, mais sur un hébergeur au système de fichiers éphémère
+ * — Railway, Fly, Render sans volume — **toutes les images disparaissent au
+ * déploiement suivant** : les cadeaux d'une carte déjà envoyée cessent de
+ * s'afficher, et l'aperçu du lien pointe vers un 404.
+ *
+ * Rien ne le signalait : l'envoi réussissait, la carte s'affichait, et la perte
+ * n'apparaissait qu'au redéploiement d'après. D'où cet avertissement au
+ * démarrage — il ne bloque rien, il nomme le piège.
+ */
+function verifierStockageImages() {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return;
+  if (process.env.NODE_ENV !== "production") return;
+
+  for (const ligne of [
+    "BLOB_READ_WRITE_TOKEN absent : les images sont ecrites dans .media/, sur le",
+    "disque du conteneur. Si ce disque n'est pas un volume persistant, elles",
+    "disparaitront au prochain deploiement — y compris celles des cartes deja",
+    "envoyees. Configure le stockage distant, ou monte un volume sur .media/.",
+  ]) {
+    console.warn(`[givly] ${ligne}`);
+  }
+}
+
 // Exécuté directement (et non importé par les vérifications) : on applique.
 // Sans `await` au niveau du module, pour rester importable par les outils qui
 // transposent en CommonJS.
 if (process.argv[1] && process.argv[1].endsWith("boot.mjs")) {
+  verifierStockageImages();
   applySchema().catch((err) => console.error("[givly]", err.message));
 }
