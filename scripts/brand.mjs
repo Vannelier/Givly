@@ -25,11 +25,15 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // --- La marque --------------------------------------------------------------
 
 /*
- * Un paquet cadeau vu de face : deux rubans qui se croisent, un nœud posé sur le
- * croisement. Choisi pour tenir à 16 px — c'est la taille réelle d'un favicon
- * dans un onglet, et tout ce qui est plus fin que deux pixels y disparaît. Les
- * boucles du nœud sont donc pleines et non évidées : à 16 px, un trou de 1 px
- * n'aurait fait que salir la forme.
+ * Un paquet cadeau vu de face : le couvercle, le corps, le nœud posé dessus, et
+ * le ruban ménagé en creux dans la silhouette.
+ *
+ * Tout est dimensionné pour tenir à 16 px — la taille réelle d'un favicon dans
+ * un onglet, où rien de plus fin que deux pixels ne survit. D'où des boucles
+ * pleines plutôt qu'évidées, et un ruban assez large pour rester lisible une
+ * fois réduit. Une première version en plein cadre, deux bandes qui se croisent,
+ * a été abandonnée : réduite, elle ne se lisait plus comme un paquet mais comme
+ * une croix.
  */
 const VB = 64;
 const RADIUS = 14;
@@ -38,17 +42,26 @@ const INK_TOP = [0xb8, 0x59, 0x3f];
 const INK_BOTTOM = [0x8b, 0x3f, 0x2f];
 const RIBBON = [0xfa, 0xf6, 0xf0];
 
-const BAND_V = { x: 26.5, w: 11 };
-const BAND_H = { y: 33, h: 11 };
-const LOOP = { dx: 8.6, cy: 25.5, rx: 9.6, ry: 6.4, tilt: 25 };
-const KNOT = { cx: 32, cy: 31.5, r: 4.6 };
+// Le couvercle déborde du corps de chaque côté : c'est ce décalage qui fait lire
+// un paquet plutôt qu'un simple rectangle.
+const LID = { x: 6.5, y: 21, w: 51, h: 10.5, r: 3 };
+const BOX = { x: 10.5, y: 29.5, w: 43, h: 25, r: 4.5 };
+const LOOP = { dx: 8.8, cy: 15.6, rx: 9.2, ry: 6.3, tilt: 28 };
+const KNOT = { cx: 32, cy: 20.5, r: 3.9 };
+// Le ruban n'est pas dessiné par-dessus : il est creusé dans la silhouette, et
+// laisse donc voir le fond. Une bande claire sur clair n'aurait rien montré.
+const STRAP = { x: 29.3, w: 5.4, y: LID.y, h: BOX.y + BOX.h - LID.y };
 
 const hex = ([r, g, b]) => `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
 
 function markSvg({ radius = RADIUS } = {}) {
-  const loop = (side) =>
-    `<ellipse cx="${(32 + side * LOOP.dx).toFixed(1)}" cy="${LOOP.cy}" rx="${LOOP.rx}" ry="${LOOP.ry}"` +
-    ` transform="rotate(${side * LOOP.tilt} ${(32 + side * LOOP.dx).toFixed(1)} ${LOOP.cy})"/>`;
+  const loop = (side) => {
+    const cx = (32 + side * LOOP.dx).toFixed(1);
+    return (
+      `<ellipse cx="${cx}" cy="${LOOP.cy}" rx="${LOOP.rx}" ry="${LOOP.ry}"` +
+      ` transform="rotate(${side * LOOP.tilt} ${cx} ${LOOP.cy})"/>`
+    );
+  };
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VB} ${VB}" width="${VB}" height="${VB}" role="img" aria-label="Givly">
   <defs>
@@ -56,18 +69,22 @@ function markSvg({ radius = RADIUS } = {}) {
       <stop offset="0" stop-color="${hex(INK_TOP)}"/>
       <stop offset="1" stop-color="${hex(INK_BOTTOM)}"/>
     </linearGradient>
-    <clipPath id="carte">
-      <rect width="${VB}" height="${VB}" rx="${radius}"/>
-    </clipPath>
+    <mask id="paquet">
+      <rect width="${VB}" height="${VB}" fill="#000"/>
+      <g fill="#fff">
+        <rect x="${LID.x}" y="${LID.y}" width="${LID.w}" height="${LID.h}" rx="${LID.r}"/>
+        <rect x="${BOX.x}" y="${BOX.y}" width="${BOX.w}" height="${BOX.h}" rx="${BOX.r}"/>
+      </g>
+      <rect x="${STRAP.x}" y="${STRAP.y}" width="${STRAP.w}" height="${STRAP.h}" fill="#000"/>
+      <g fill="#fff">
+        ${loop(-1)}
+        ${loop(1)}
+        <circle cx="${KNOT.cx}" cy="${KNOT.cy}" r="${KNOT.r}"/>
+      </g>
+    </mask>
   </defs>
   <rect width="${VB}" height="${VB}" rx="${radius}" fill="url(#fond)"/>
-  <g fill="${hex(RIBBON)}" clip-path="url(#carte)">
-    <rect x="${BAND_V.x}" y="0" width="${BAND_V.w}" height="${VB}"/>
-    <rect x="0" y="${BAND_H.y}" width="${VB}" height="${BAND_H.h}"/>
-    ${loop(-1)}
-    ${loop(1)}
-    <circle cx="${KNOT.cx}" cy="${KNOT.cy}" r="${KNOT.r}"/>
-  </g>
+  <rect width="${VB}" height="${VB}" rx="${radius}" fill="${hex(RIBBON)}" mask="url(#paquet)"/>
 </svg>
 `;
 }
@@ -92,12 +109,31 @@ function inTiltedEllipse(x, y, cx, cy, rx, ry, degrees) {
   return (u * u) / (rx * rx) + (v * v) / (ry * ry) <= 1;
 }
 
+function inRoundedRect(x, y, { x: rx0, y: ry0, w, h, r }) {
+  const cx = rx0 + w / 2;
+  const cy = ry0 + h / 2;
+  const dx = Math.abs(x - cx) - (w / 2 - r);
+  const dy = Math.abs(y - cy) - (h / 2 - r);
+  const outside = Math.hypot(Math.max(dx, 0), Math.max(dy, 0));
+  return outside + Math.min(Math.max(dx, dy), 0) <= r;
+}
+
+/**
+ * La silhouette du paquet, ruban déjà creusé.
+ *
+ * Le nœud est testé en premier et échappe au creux : il est posé par-dessus le
+ * ruban, comme sur un vrai paquet. Le laisser entamer par la bande le coupait en
+ * deux et faisait apparaître deux échardes de part et d'autre.
+ */
 function inRibbon(x, y) {
-  if (x >= BAND_V.x && x <= BAND_V.x + BAND_V.w) return true;
-  if (y >= BAND_H.y && y <= BAND_H.y + BAND_H.h) return true;
   if (inTiltedEllipse(x, y, 32 - LOOP.dx, LOOP.cy, LOOP.rx, LOOP.ry, -LOOP.tilt)) return true;
   if (inTiltedEllipse(x, y, 32 + LOOP.dx, LOOP.cy, LOOP.rx, LOOP.ry, LOOP.tilt)) return true;
-  return Math.hypot(x - KNOT.cx, y - KNOT.cy) <= KNOT.r;
+  if (Math.hypot(x - KNOT.cx, y - KNOT.cy) <= KNOT.r) return true;
+
+  if (x >= STRAP.x && x <= STRAP.x + STRAP.w && y >= STRAP.y && y <= STRAP.y + STRAP.h) {
+    return false;
+  }
+  return inRoundedRect(x, y, LID) || inRoundedRect(x, y, BOX);
 }
 
 /**

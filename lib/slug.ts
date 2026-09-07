@@ -1,3 +1,11 @@
+/**
+ * Adresses que le site occupe déjà : une carte qui en prendrait une resterait
+ * inaccessible, masquée par la route ou le fichier de même nom.
+ *
+ * Les entrées à points ne peuvent pas entrer en collision avec un slug — le
+ * format n'en accepte pas — mais elles sont gardées : c'est la liste des noms
+ * pris, et la lire ainsi évite d'en oublier un en ajoutant une route.
+ */
 export const RESERVED_SLUGS = new Set([
   "admin",
   "api",
@@ -6,7 +14,13 @@ export const RESERVED_SLUGS = new Set([
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
+  "manifest.webmanifest",
+  "icon",
+  "icon.svg",
+  "apple-icon",
+  "apple-touch-icon.png",
   "opengraph-image",
+  "twitter-image",
 ]);
 
 export const SLUG_MIN = 3;

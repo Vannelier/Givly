@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Caveat,
   Cormorant_Garamond,
@@ -8,6 +8,7 @@ import {
   Playfair_Display,
   Quicksand,
 } from "next/font/google";
+import { baseUrl } from "@/lib/env";
 import "./globals.css";
 import "./editor.css";
 import "./landing.css";
@@ -67,9 +68,43 @@ const calligraphy = Dancing_Script({
   variable: "--font-calligraphy",
 });
 
+const DESCRIPTION =
+  "Compose une petite page-cadeau, envoie le lien, laisse la personne choisir.";
+
+/*
+ * Les icônes ne sont pas déclarées ici : `app/favicon.ico`, `app/icon.svg` et
+ * `app/apple-icon.png` sont détectés par Next, qui pose les balises lui-même.
+ * Les redéclarer dans `metadata.icons` remplacerait cette détection au lieu de
+ * la compléter. Même chose pour la bannière, prise dans `app/opengraph-image.tsx`.
+ *
+ * `metadataBase` sert à tout le site : sans elle, l'adresse de la bannière
+ * partirait en relatif, et aucune messagerie ne sait quoi en faire.
+ *
+ * Pas de gabarit de titre (`template`) : le titre d'une page-cadeau est celui
+ * que le donneur a écrit, et lui accoler « — Givly » signerait sa carte à sa
+ * place dans l'aperçu WhatsApp.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl()),
   title: "Givly — compose une page-cadeau",
-  description: "Compose une petite page-cadeau, envoie le lien, laisse la personne choisir.",
+  description: DESCRIPTION,
+  applicationName: "Givly",
+  openGraph: {
+    type: "website",
+    siteName: "Givly",
+    locale: "fr_BE",
+    title: "Givly — offre le choix",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Givly — offre le choix",
+    description: DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#b0533c",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
