@@ -994,22 +994,6 @@ export default function PageEditor(props: Props) {
                   </Field>
                 </Optional>
 
-                <Optional
-                  label="Ajouter une photo d&apos;en-tête"
-                  help="Une photo large en haut de la carte, au-dessus du message."
-                  checked={headerOn}
-                  onChange={(on) => {
-                    setHeaderOn(on);
-                    if (!on) setHeader("");
-                  }}
-                >
-                  <ImageField
-                    label="Photo d'en-tête"
-                    ariaLabel="Photo d'en-tête"
-                    value={header}
-                    onChange={setHeader}
-                  />
-                </Optional>
               </div>
             </section>
 
@@ -1059,6 +1043,25 @@ export default function PageEditor(props: Props) {
                 />
                 <Counter value={signature} max={LIMITS.signature} />
               </Field>
+
+              <div className="options">
+                <Optional
+                  label="Ajouter une photo d&apos;en-tête"
+                  help="Une photo large en haut de cet écran, au-dessus du titre."
+                  checked={headerOn}
+                  onChange={(on) => {
+                    setHeaderOn(on);
+                    if (!on) setHeader("");
+                  }}
+                >
+                  <ImageField
+                    label="Photo d'en-tête"
+                    ariaLabel="Photo d'en-tête"
+                    value={header}
+                    onChange={setHeader}
+                  />
+                </Optional>
+              </div>
             </section>
 
             <section
