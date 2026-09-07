@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Givly">
+  <defs>
+    <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b8593f"/>
+      <stop offset="1" stop-color="#8b3f2f"/>
+    </linearGradient>
+    <clipPath id="carte">
+      <rect width="64" height="64" rx="14"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#fond)"/>
+  <g fill="#faf6f0" clip-path="url(#carte)">
+    <rect x="26.5" y="0" width="11" height="64"/>
+    <rect x="0" y="33" width="64" height="11"/>
+    <ellipse cx="23.4" cy="25.5" rx="9.6" ry="6.4" transform="rotate(-25 23.4 25.5)"/>
+    <ellipse cx="40.6" cy="25.5" rx="9.6" ry="6.4" transform="rotate(25 40.6 25.5)"/>
+    <circle cx="32" cy="31.5" r="4.6"/>
+  </g>
+</svg>
