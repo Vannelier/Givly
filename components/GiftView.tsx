@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import GiftCover from "@/components/GiftCover";
+import GiftEffect from "@/components/GiftEffect";
 import GiftMotif from "@/components/GiftMotif";
 import {
   ITEMS_MESSAGE_HINT,
   ITEMS_TITLE_HINT,
+  effectById,
   fontById,
   occasionById,
   openingById,
@@ -244,6 +246,7 @@ export default function GiftView({
   } as React.CSSProperties;
   const rootClass = `gift-root${variant === "embedded" ? " gift-root--embedded" : ""}`;
   const motif = page.theme.motif === false ? "none" : occasion.motif;
+  const effect = effectById(page.theme.effect).id;
   const intro = page.intro_message.trim() || occasion.intro;
   const openLabel = page.open_label.trim() || occasion.openHint;
   const waitMessage = page.wait_message.trim() || occasion.waitHint;
@@ -362,6 +365,8 @@ export default function GiftView({
   return (
     <div className={rootClass} style={skin}>
       <GiftMotif kind={motif} />
+      {/* Monte avec la cascade : l'effet demarre a son montage, pas au chargement. */}
+      {revealing && <GiftEffect kind={effect} />}
       <div className="shell">
         {page.header_image_url && (
           <div className="gift-banner">

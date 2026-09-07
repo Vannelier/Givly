@@ -51,6 +51,8 @@ export type Occasion = {
   /** Suggestions montrées en placeholder, jamais écrites d'office. */
   welcomeHint: string;
   thanksHint: string;
+  /** Effet proposé par défaut, comme la palette et le décor. */
+  effect: EffectId;
   /** Texte du bouton qui lève le voile. */
   openHint: string;
   /** Ligne d'attente sous le compte à rebours, quand la carte est scellée. */
@@ -76,6 +78,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Un cadeau pour toi",
     welcomeHint: "Je n'ai pas su choisir. Alors je te laisse faire.",
     thanksHint: "Parfait, c'est noté. Je m'occupe du reste.",
+    effect: "aucun",
     openHint: "Ouvrir",
     waitHint: "Encore un peu de patience.",
   },
@@ -89,6 +92,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Joyeux anniversaire",
     welcomeHint: "Un an de plus, et un cadeau à choisir toi-même.",
     thanksHint: "Excellent choix. Bon anniversaire !",
+    effect: "confettis",
     openHint: "Ouvrir mon cadeau",
     waitHint: "Rendez-vous le jour J.",
   },
@@ -102,6 +106,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Joyeux Noël",
     welcomeHint: "Sous le sapin, cette année, c'est toi qui choisis.",
     thanksHint: "C'est noté. Joyeuses fêtes !",
+    effect: "neige",
     openHint: "Ouvrir mon cadeau",
     waitHint: "Pas avant Noël, promis ?",
   },
@@ -115,6 +120,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "De la part de quelqu'un qui tient à toi",
     welcomeHint: "Tout ce que je sais, c'est que je voulais t'offrir quelque chose.",
     thanksHint: "Parfait. À très vite.",
+    effect: "petales",
     openHint: "Ouvrir",
     waitHint: "Encore un peu de patience.",
   },
@@ -128,6 +134,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue au monde",
     welcomeHint: "Un petit quelque chose pour bien commencer.",
     thanksHint: "C'est noté. Félicitations !",
+    effect: "etincelles",
     openHint: "Ouvrir",
     waitHint: "Bientôt, promis.",
   },
@@ -141,6 +148,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bravo",
     welcomeHint: "Tu l'as bien mérité. À toi de choisir.",
     thanksHint: "Excellent. Encore bravo !",
+    effect: "confettis",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -154,6 +162,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Merci",
     welcomeHint: "Un merci qui se choisit.",
     thanksHint: "C'est noté. Merci encore.",
+    effect: "petales",
     openHint: "Ouvrir",
     waitHint: "Encore un peu de patience.",
   },
@@ -167,6 +176,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour toi, maman",
     welcomeHint: "Merci pour tout. Choisis ce qui te ferait plaisir.",
     thanksHint: "C'est noté. Je t'embrasse.",
+    effect: "petales",
     openHint: "Ouvrir mon cadeau",
     waitHint: "Rendez-vous le jour J.",
   },
@@ -180,6 +190,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour toi, papa",
     welcomeHint: "Tu ne demandes jamais rien. Alors cette fois, tu choisis.",
     thanksHint: "Parfait. À très bientôt.",
+    effect: "aucun",
     openHint: "Ouvrir mon cadeau",
     waitHint: "Rendez-vous le jour J.",
   },
@@ -193,6 +204,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bonne année",
     welcomeHint: "Pour bien commencer l'année, choisis ce qui te tente.",
     thanksHint: "C'est noté. Très belle année à toi !",
+    effect: "etincelles",
     openHint: "Ouvrir",
     waitHint: "Rendez-vous à minuit.",
   },
@@ -206,6 +218,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Pour vous deux",
     welcomeHint: "Pour votre nouvelle vie, c'est vous qui choisissez.",
     thanksHint: "C'est noté. Tous mes vœux à vous deux.",
+    effect: "petales",
     openHint: "Ouvrir notre cadeau",
     waitHint: "Encore un peu de patience.",
   },
@@ -219,6 +232,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Tu l'as décroché",
     welcomeHint: "Après tout ce travail, tu as bien le droit de choisir.",
     thanksHint: "Excellent. Profite, c'est mérité.",
+    effect: "confettis",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -232,6 +246,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue chez toi",
     welcomeHint: "Pour ton nouveau chez-toi, choisis ce qui manque encore.",
     thanksHint: "C'est noté. Bonne installation !",
+    effect: "aucun",
     openHint: "Ouvrir",
     waitHint: "Encore un peu de patience.",
   },
@@ -245,6 +260,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Et maintenant, le temps",
     welcomeHint: "Une page se tourne. Choisis de quoi remplir la suivante.",
     thanksHint: "C'est noté. Profite bien, tu l'as gagné.",
+    effect: "aucun",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -258,6 +274,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bonne route",
     welcomeHint: "L'équipe s'est cotisée. À toi de choisir.",
     thanksHint: "C'est noté. Bonne continuation !",
+    effect: "confettis",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -312,15 +329,52 @@ export const DEFAULT_FONT_ID: FontId = "elegant";
 
 // --- Styles d'ouverture ----------------------------------------------------
 
-export type OpeningId = "voile" | "rideau" | "enveloppe";
+export type OpeningId =
+  | "voile"
+  | "rideau"
+  | "volets"
+  | "enveloppe"
+  | "couvercle"
+  | "halo";
 
 export type OpeningStyle = { id: OpeningId; name: string; hint: string };
 
 export const OPENINGS: OpeningStyle[] = [
   { id: "voile", name: "Voile", hint: "Se dissipe en fondu." },
-  { id: "rideau", name: "Rideau", hint: "Deux volets qui s'ecartent." },
-  { id: "enveloppe", name: "Enveloppe", hint: "Un rabat qui se souleve." },
+  { id: "rideau", name: "Rideau", hint: "Deux pans s'écartent sur les côtés." },
+  { id: "volets", name: "Volets", hint: "Le haut et le bas s'ouvrent." },
+  { id: "enveloppe", name: "Enveloppe", hint: "Le rabat se lève, la carte sort." },
+  { id: "couvercle", name: "Couvercle", hint: "Le dessus se soulève d'un bloc." },
+  { id: "halo", name: "Halo", hint: "Un cercle qui se resserre et s'efface." },
 ];
+
+/*
+ * Les effets sont separes des ouvertures : l'ouverture dit comment le voile se
+ * leve, l'effet ce qui se passe juste apres, sur la page decouverte. Les deux se
+ * combinent librement — un halo peut lacher des confettis — et un effet vaut
+ * meme sans voile, quand le donneur l'a coupe.
+ */
+export type EffectId = "aucun" | "confettis" | "petales" | "etincelles" | "neige";
+
+export type Effect = { id: EffectId; name: string; hint: string };
+
+export const EFFECTS: Effect[] = [
+  { id: "aucun", name: "Aucun", hint: "Rien ne tombe." },
+  { id: "confettis", name: "Confettis", hint: "Une pluie colorée, une fois." },
+  { id: "petales", name: "Pétales", hint: "Ils descendent en tournoyant." },
+  { id: "etincelles", name: "Étincelles", hint: "Elles montent et s'éteignent." },
+  { id: "neige", name: "Neige", hint: "Des flocons, lentement." },
+];
+
+export const DEFAULT_EFFECT_ID: EffectId = "aucun";
+
+export function effectById(id: string | undefined | null): Effect {
+  return EFFECTS.find((e) => e.id === id) ?? EFFECTS[0];
+}
+
+export function isEffectId(id: unknown): id is EffectId {
+  return typeof id === "string" && EFFECTS.some((e) => e.id === id);
+}
 
 export const DEFAULT_OPENING_ID: OpeningId = "voile";
 

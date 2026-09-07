@@ -1,8 +1,10 @@
 import type { Item, Theme } from "./types";
 import { newItemId } from "./ids";
 import {
+  DEFAULT_EFFECT_ID,
   DEFAULT_OCCASION_ID,
   DEFAULT_OPENING_ID,
+  isEffectId,
   isFontId,
   isOccasionId,
   isOpeningId,
@@ -106,6 +108,8 @@ export function validateTheme(value: unknown): Theme {
   // Le voile d'ouverture est actif par defaut : il faut le refuser explicitement.
   const cover = o.cover !== false;
   const opening = isOpeningId(o.opening) ? o.opening : DEFAULT_OPENING_ID;
+  // L'effet vaut aussi sans voile : il ne depend pas de `cover`.
+  const effect = isEffectId(o.effect) ? o.effect : DEFAULT_EFFECT_ID;
   // Laisser un mot n'a pas de sens quand on scanne le QR devant la personne :
   // c'est donc au donneur de l'activer, jamais actif par defaut.
   const reply = o.reply === true;
@@ -118,6 +122,7 @@ export function validateTheme(value: unknown): Theme {
     motif,
     cover,
     opening,
+    effect,
     reply,
   };
 }

@@ -156,7 +156,7 @@ découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse l
 | **Mot d'ouverture** | Intro | La ligne au-dessus du titre. Vide = celle de l'occasion. |
 | **Message principal** | Intro | Le grand titre du voile, et le titre de l'aperçu de lien. |
 | **Texte du bouton** | Intro | Le bouton qui lève le voile. Vide = la suggestion de l'occasion (« Ouvrir », « Ouvrir mon cadeau »…). |
-| **Ouverture** | Intro | Le voile à lever, en trois styles : voile, rideau, enveloppe. Désactivable. |
+| **Ouverture** | Intro | Le voile à lever, en six styles : voile, rideau, volets, enveloppe, couvercle, halo. Désactivable. |
 | **Date de révélation** | Intro | Avant elle, la carte reste scellée sur un compte à rebours. |
 | **Mot d'attente** | Intro | Sous le compte à rebours, tant que la carte est scellée. Vide = la suggestion de l'occasion. |
 | **Photo d'en-tête** | Intro | Une photo large en haut de la carte. |
@@ -169,6 +169,7 @@ découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse l
 | **Police du titre** | Thème | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
 | **Disposition** | Thème | Grille ou liste. |
 | **Décor** | Thème | Le motif de l'occasion, désactivable. |
+| **Effet** | Thème | Confettis, pétales, étincelles ou neige, joués une fois sur la page découverte. Proposé par l'occasion. |
 | **Nom de la carte** | Lien | Jamais montré. Il fabrique l'adresse du lien. |
 | **Personnaliser le lien** | Lien | Le texte cliquable et l'image que montrent WhatsApp et les SMS. |
 
@@ -207,7 +208,8 @@ en dur, ne coûte aucun téléchargement, et se désactive en une case à cocher
 les occasions qui en proposent un.
 
 **En base, seuls les identifiants sont stockés** (`theme.occasion`, `theme.palette.id`,
-`theme.font`). Les couleurs et les motifs vivent dans `lib/palettes.ts` et `lib/occasions.ts` :
+`theme.font`, `theme.opening`, `theme.effect`). Les couleurs et les motifs vivent dans
+`lib/palettes.ts` et `lib/occasions.ts` :
 retoucher un thème met à jour toutes les pages déjà créées, et un identifiant inconnu retombe
 proprement sur la valeur par défaut. Rien d'autre qu'un identifiant connu n'est accepté du client.
 
@@ -313,21 +315,62 @@ imprimer les aplats de couleur, qu'il supprime par défaut.
 
 ## L'ouverture de la carte
 
-Le receveur ne tombe pas directement sur les cadeaux. Un voile se pose au-dessus, portant le
-message d'ouverture et le titre, avec un bouton **Ouvrir**. Il se lève d'un geste, et les cartes
-entrent en cascade.
+Six manières de lever le voile, et **la géométrie appartient à chaque style**, pas au panneau.
+C'était le défaut d'origine : les deux panneaux étaient figés en moitiés gauche et droite — une
+forme taillée pour le rideau — et l'enveloppe se contentait de les faire basculer autour de leur
+arête haute. Deux bandes verticales qui tombent en arrière ne ressemblent à aucun rabat, alors même
+que le sélecteur de l'éditeur en dessinait un, triangulaire, depuis le début. **L'aperçu promettait
+ce que l'animation ne rendait pas.**
 
-Le voile est **opaque**. Un premier essai le laissait translucide et flouté, pour deviner les
-cadeaux derrière — mais le titre de la page transparaissait sous celui du voile, et on lisait le
-même texte en double. Cacher franchement rend aussi l'ouverture plus spectaculaire, surtout en
-rideau et en enveloppe. Il porte son propre décor, puisqu'il masque celui de la page.
+| style | ce qui se passe |
+|---|---|
+| **Voile** | Les deux moitiés s'effacent en montant légèrement. |
+| **Rideau** | Deux pans s'écartent sur les côtés, avec un tombé de plis et une ombre sur le bord intérieur. |
+| **Volets** | Le haut monte, le bas descend. |
+| **Enveloppe** | Un rabat triangulaire bascule autour de sa pliure, puis le corps glisse vers le bas. |
+| **Couvercle** | Le voile se décolle, s'incline et s'en va d'un bloc. |
+| **Halo** | Un cercle se resserre vers le centre et s'efface. |
 
-Son fond est peint par deux panneaux et non par le voile lui-même : c'est ce qui permet au style
-« rideau » de les écarter chacun de son côté.
+**Le voile était peint de la couleur de ce qu'il cachait.** `--paper` sur `--paper`, opaque et
+pourtant invisible : quel que soit le mouvement, l'écran restait de la même teinte du début à la
+fin, et l'ouverture se réduisait au texte qui s'efface. Les panneaux prennent donc `--paper-warm`,
+plus soutenu — le pan qui s'écarte laisse voir une page plus claire derrière lui. C'est cette seule
+nuance qui rend les six animations lisibles.
 
-Il est désactivable (« Ouvrir la carte d'un geste »), et il ne s'affiche jamais sur une page déjà
-choisie ou expirée : dans ces cas, l'état doit être visible tout de suite. Sous
-`prefers-reduced-motion`, le voile reste mais s'efface sans animation.
+Trois détails donnent au rideau le poids d'un tissu, là où deux rectangles glissaient : un tombé de
+plis en dégradé répété, une ombre portée sur le bord intérieur, et un léger contretemps de 60 ms
+entre les deux pans.
+
+Toutes les fermetures tiennent en **0,95 s**, la durée que `GiftView` attend avant de retirer le
+voile (`COVER_CLOSE_MS`). Allonger l'une sans l'autre couperait l'animation en plein vol.
+
+## Les effets
+
+**Séparés des ouvertures, à dessein.** L'ouverture dit comment le voile se lève ; l'effet, ce qui se
+passe derrière. Les deux se combinent librement — un halo peut lâcher des confettis — et un effet
+reste utile quand le donneur a coupé le voile.
+
+| effet | rendu |
+|---|---|
+| **Confettis** | Rectangles colorés qui tombent en tournant. |
+| **Pétales** | Ovales dans le ton de la palette, plus lents. |
+| **Étincelles** | Elles montent depuis le bas et s'éteignent. |
+| **Neige** | Disques pâles, chute droite et posée. |
+
+Comme la palette et le décor, **l'occasion en propose un** : neige pour Noël, confettis pour un
+anniversaire, pétales pour la Saint-Valentin. Il suit l'occasion tant que le donneur n'en a pas
+choisi un autre.
+
+Trois règles de fabrication :
+
+- **Une seule salve, jamais une boucle.** Un effet qui tournerait sans fin consommerait la batterie
+  pendant tout le temps de lecture, pour un charme qui s'use en trois secondes.
+- **Aucun `Math.random` au rendu.** Les positions viennent d'une suite déterministe indexée sur le
+  numéro de la particule. Un tirage aléatoire donnerait des valeurs différentes côté serveur et côté
+  navigateur, et l'hydratation divergerait à chaque chargement.
+- **Seuls `transform` et `opacity` sont animés**, sur 26 `<span>` vides : le compositeur les déplace
+  sans repasser par la mise en page ni la peinture. Sous `prefers-reduced-motion`, l'effet n'est pas
+  ralenti mais retiré — c'est du décor pur.
 
 ## La date de révélation
 

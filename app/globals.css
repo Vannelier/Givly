@@ -657,14 +657,22 @@ select {
  * un fantome du titre, lisible en double. Cacher franchement rend aussi
  * l'ouverture plus spectaculaire, surtout en rideau et en enveloppe.
  */
+/*
+ * La geometrie appartient a chaque style d'ouverture, plus au panneau.
+ *
+ * Le fond est `--paper-warm`, plus soutenu que le `--paper` de la page qu'il
+ * recouvre. C'etait le defaut de fond des trois ouvertures d'origine : le voile
+ * etait bien opaque, mais peint exactement de la couleur de ce qu'il cachait.
+ * Il n'y avait donc rien a voir bouger — quel que soit le mouvement, l'ecran
+ * restait de la meme teinte du debut a la fin, et l'ouverture se reduisait au
+ * texte qui s'efface. Une nuance suffit : le pan qui s'ecarte laisse voir une
+ * page plus claire derriere lui.
+ */
 .cover__panel {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50.2%;
-  background: var(--paper);
+  background: var(--paper-warm);
   background-image:
-    radial-gradient(120% 80% at 50% 0%, var(--glow-a, rgba(176, 83, 60, 0.09)), transparent 65%);
+    radial-gradient(120% 80% at 50% 0%, var(--glow-a, rgba(176, 83, 60, 0.14)), transparent 65%);
 }
 
 .cover__panel--a {
@@ -688,7 +696,30 @@ select {
   }
 }
 
-/* Voile : les deux panneaux s'effacent ensemble. */
+/* ---------------------------------------------------------------------------
+   Les six manieres d'ouvrir.
+
+   Les deux panneaux ne portent aucune geometrie par defaut : chaque style leur
+   en donne une. C'est ce qui manquait — ils etaient figes en moities gauche et
+   droite, taillees pour le rideau, et l'enveloppe se contentait de les faire
+   basculer, ce qui ne ressemblait a aucun rabat.
+
+   Toutes les fermetures tiennent en 0,95 s, la duree que GiftView attend avant
+   de retirer le voile (COVER_CLOSE_MS). Allonger l'une sans l'autre couperait
+   l'animation en plein vol.
+   --------------------------------------------------------------------------- */
+
+/* --- Voile : les deux moities s'effacent ensemble. ------------------------- */
+
+.cover--voile .cover__panel {
+  top: 0;
+  bottom: 0;
+  width: 50.2%;
+}
+
+.cover--voile .cover__panel--a { left: 0; }
+.cover--voile .cover__panel--b { right: 0; }
+
 .cover--voile.is-closing .cover__panel {
   animation: veil-out 0.95s var(--ease) both;
 }
@@ -704,42 +735,250 @@ select {
   }
 }
 
-/* Rideau : les panneaux s'ecartent. */
+/* --- Rideau : deux pans qui s'ecartent sur les cotes. ---------------------- */
+
+/*
+ * Trois details donnent le poids d'un tissu, la ou deux rectangles glissaient :
+ * un tombe de plis en degrade repete, une ombre sur le bord interieur, et un
+ * leger contretemps entre les deux pans — un rideau ne s'ouvre jamais des deux
+ * cotes a la milliseconde pres.
+ */
+.cover--rideau .cover__panel {
+  top: 0;
+  bottom: 0;
+  width: 50.2%;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.05) 0 1px,
+      transparent 1px 9%,
+      rgba(255, 255, 255, 0.55) 9% 11%,
+      transparent 11% 20%
+    ),
+    radial-gradient(120% 80% at 50% 0%, var(--glow-a, rgba(176, 83, 60, 0.14)), transparent 65%);
+}
+
+.cover--rideau .cover__panel--a {
+  left: 0;
+  box-shadow: 6px 0 18px -6px rgba(52, 38, 28, 0.35);
+}
+
+.cover--rideau .cover__panel--b {
+  right: 0;
+  box-shadow: -6px 0 18px -6px rgba(52, 38, 28, 0.35);
+}
+
+/* Le pan part d'abord vers l'interieur, comme tire, avant de s'ouvrir. */
 .cover--rideau.is-closing .cover__panel--a {
-  animation: curtain-left 0.95s var(--ease) both;
+  animation: curtain-left 0.95s cubic-bezier(0.55, -0.28, 0.3, 1) both;
 }
 
 .cover--rideau.is-closing .cover__panel--b {
-  animation: curtain-right 0.95s var(--ease) both;
+  animation: curtain-right 0.95s cubic-bezier(0.55, -0.28, 0.3, 1) 60ms both;
 }
 
 @keyframes curtain-left {
   to {
-    transform: translateX(-101%);
+    transform: translateX(-101%) scaleX(0.92);
   }
 }
 
 @keyframes curtain-right {
   to {
-    transform: translateX(101%);
+    transform: translateX(101%) scaleX(0.92);
   }
 }
 
-/* Enveloppe : les panneaux basculent vers le haut comme un rabat. */
-.cover--enveloppe.is-closing .cover__panel {
-  transform-origin: top center;
-  animation: flap-up 0.95s var(--ease) both;
+/* --- Volets : le haut et le bas s'ouvrent. --------------------------------- */
+
+.cover--volets .cover__panel {
+  left: 0;
+  right: 0;
+  height: 50.2%;
 }
 
-@keyframes flap-up {
+.cover--volets .cover__panel--a {
+  top: 0;
+  bottom: auto;
+  box-shadow: 0 6px 18px -6px rgba(52, 38, 28, 0.35);
+}
+
+.cover--volets .cover__panel--b {
+  bottom: 0;
+  top: auto;
+  box-shadow: 0 -6px 18px -6px rgba(52, 38, 28, 0.35);
+}
+
+.cover--volets.is-closing .cover__panel--a {
+  animation: shutter-up 0.95s cubic-bezier(0.6, 0, 0.25, 1) both;
+}
+
+.cover--volets.is-closing .cover__panel--b {
+  animation: shutter-down 0.95s cubic-bezier(0.6, 0, 0.25, 1) 60ms both;
+}
+
+@keyframes shutter-up {
+  to {
+    transform: translateY(-101%);
+  }
+}
+
+@keyframes shutter-down {
+  to {
+    transform: translateY(101%);
+  }
+}
+
+/* --- Enveloppe : le rabat se leve, puis la carte sort. --------------------- */
+
+/*
+ * Un vrai rabat, enfin. Le panneau `b` fait tout le fond opaque ; `a` reste
+ * inutilise, et c'est `.cover__flap` qui porte le triangle, exactement la forme
+ * que le selecteur de l'editeur dessinait deja. Il bascule autour de son arete
+ * haute, en 3D, puis le corps descend — la carte qu'on retire de l'enveloppe.
+ */
+.cover--enveloppe {
+  perspective: 900px;
+}
+
+.cover--enveloppe .cover__panel--a {
+  display: none;
+}
+
+.cover--enveloppe .cover__panel--b {
+  inset: 0;
+  width: auto;
+}
+
+.cover--enveloppe .cover__flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 46%;
+  display: block;
+  /*
+   * Plus sombre en pointe qu'a la pliure : c'est ce degrade qui donne l'ombre
+   * portee du rabat sur le corps, et qui le distingue du panneau qu'il couvre.
+   */
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--paper-warm) 88%, var(--ink)) 0%,
+    var(--paper-warm) 55%,
+    color-mix(in srgb, var(--paper-warm) 82%, var(--ink)) 100%
+  );
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top center;
+  backface-visibility: hidden;
+  z-index: 2;
+}
+
+/*
+ * Le corps garde `--paper-warm` comme les autres ouvertures : c'est le rabat,
+ * plus sombre, qui doit s'en detacher. Le peindre en `--paper` le confondait
+ * avec la page derriere — exactement le defaut qu'on vient de corriger.
+ */
+
+.cover--enveloppe.is-closing .cover__flap {
+  animation: flap-open 0.44s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.cover--enveloppe.is-closing .cover__panel--b {
+  animation: envelope-slip 0.6s cubic-bezier(0.5, 0, 0.3, 1) 0.35s both;
+}
+
+@keyframes flap-open {
   from {
     transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-172deg);
+  }
+}
+
+@keyframes envelope-slip {
+  from {
+    transform: translateY(0);
     opacity: 1;
   }
   to {
-    transform: rotateX(-96deg);
-    opacity: 0.2;
+    transform: translateY(104%);
+    opacity: 0.35;
   }
+}
+
+/* --- Couvercle : le dessus se souleve d'un bloc. --------------------------- */
+
+.cover--couvercle {
+  perspective: 1200px;
+}
+
+.cover--couvercle .cover__panel--a {
+  display: none;
+}
+
+.cover--couvercle .cover__panel--b {
+  inset: 0;
+  width: auto;
+  transform-origin: top center;
+}
+
+.cover--couvercle.is-closing .cover__panel--b {
+  animation: lid-off 0.95s cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+/* Il se decolle, s'incline, puis s'en va : trois temps en une seule courbe. */
+@keyframes lid-off {
+  0% {
+    transform: translateY(0) rotateX(0deg) scale(1);
+    opacity: 1;
+  }
+  28% {
+    transform: translateY(-2%) rotateX(4deg) scale(1.015);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-104%) rotateX(26deg) scale(1.05);
+    opacity: 0.5;
+  }
+}
+
+/* --- Halo : un cercle qui s'ouvre depuis le centre. ------------------------ */
+
+/*
+ * Le decoupage porte sur le voile entier, panneaux compris : c'est ce qui donne
+ * un bord net, la ou une opacite aurait donne un fondu quelconque.
+ */
+.cover--halo .cover__panel {
+  inset: 0;
+  width: auto;
+}
+
+.cover--halo .cover__panel--b {
+  display: none;
+}
+
+.cover--halo.is-closing {
+  animation: iris-open 0.95s cubic-bezier(0.5, 0, 0.25, 1) both;
+}
+
+@keyframes iris-open {
+  from {
+    clip-path: circle(75% at 50% 50%);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0.9;
+  }
+}
+
+/* Le rabat n'existe que pour l'enveloppe. */
+.cover__flap {
+  display: none;
 }
 
 .cover.is-closing .cover__inner {
@@ -830,6 +1069,142 @@ select {
   font-size: 0.92rem;
   color: var(--ink-soft);
   text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------------------
+   Les effets : ce qui tombe sur la page une fois decouverte.
+
+   Une seule salve, jamais une boucle. Un effet qui tournerait sans fin
+   consommerait la batterie du telephone pendant tout le temps de lecture, pour
+   un charme qui s'use en trois secondes.
+
+   Chaque particule n'anime que `transform` et `opacity` : le compositeur les
+   deplace sans repasser par la mise en page ni la peinture.
+   --------------------------------------------------------------------------- */
+
+.fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fx span {
+  position: absolute;
+  top: -8%;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  opacity: 0;
+  animation-duration: var(--dur);
+  animation-delay: var(--delay);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+/* Confettis : rectangles colores qui tombent en tournant. */
+.fx--confettis span {
+  height: calc(var(--size) * 0.42);
+  border-radius: 1px;
+  background: hsl(var(--hue) 70% 58%);
+  animation-name: fx-fall;
+}
+
+/* Petales : ovales dans le ton de la palette, plus lents. */
+.fx--petales span {
+  border-radius: 60% 20% 60% 20%;
+  background: var(--accent);
+  opacity: 0;
+  animation-name: fx-fall;
+  animation-duration: calc(var(--dur) * 1.35);
+}
+
+/* Neige : disques pales, chute droite et posee. */
+.fx--neige span {
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  width: calc(var(--size) * 0.5);
+  height: calc(var(--size) * 0.5);
+  animation-name: fx-snow;
+  animation-duration: calc(var(--dur) * 1.6);
+}
+
+/* Etincelles : elles partent du bas et s'eteignent en montant. */
+.fx--etincelles span {
+  top: auto;
+  bottom: -4%;
+  border-radius: 999px;
+  width: calc(var(--size) * 0.34);
+  height: calc(var(--size) * 0.34);
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation-name: fx-rise;
+}
+
+@keyframes fx-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  8% {
+    opacity: 0.95;
+  }
+  80% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), 108vh, 0) rotate(var(--spin));
+  }
+}
+
+@keyframes fx-snow {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  10% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * 0.5), 108vh, 0);
+  }
+}
+
+@keyframes fx-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), -72vh, 0) scale(1);
+  }
+}
+
+/*
+ * Mouvement reduit : l'effet est du decor pur, on le retire entierement plutot
+ * que de le ralentir. Meme chose pour la cascade des cartes et le voile, dont le
+ * mouvement est deja neutralise cote JavaScript.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .fx {
+    display: none;
+  }
+}
+
+/* Dans l'apercu miniature, la salve doit rester dans le cadre. */
+.gift-root--embedded .fx span {
+  animation-duration: calc(var(--dur) * 0.6);
 }
 
 /* --- Photo d'en-tete ------------------------------------------------------- */
