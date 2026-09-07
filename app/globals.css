@@ -196,9 +196,63 @@ select {
  * vit sur le voile. Sans voile, les deux se suivent.
  */
 .gift-head,
+/*
+ * Le titre de l'ecran des cadeaux entre par le milieu de l'ecran.
+ *
+ * Il grandit avec un rebond la ou l'oeil arrive apres l'ouverture, puis remonte
+ * a sa place et laisse les cadeaux se poser derriere lui. Le voir apparaitre
+ * deja range en haut ne racontait rien : l'ecran s'ouvrait sur un texte fixe et
+ * une grille vide.
+ *
+ * `--titre-montee` porte la distance jusqu'au centre. En `vh` sur la vraie page,
+ * mais en pixels dans l'apercu miniature : les unites de fenetre s'y mesurent
+ * sur la vraie fenetre, pas sur le cadre — le meme piege que pour les `clamp`.
+ *
+ * Rien n'est anime que `transform` et `opacity` : la mise en page ne bouge pas,
+ * et le titre garde sa place reservee pendant tout le trajet.
+ */
 .gift-items-head {
+  --titre-montee: 32vh;
+  --titre-duree: 1.35s;
   text-align: center;
   margin-bottom: clamp(1.75rem, 6vw, 2.75rem);
+}
+
+/* Avant la revelation, le titre est cache derriere le voile : rien a peindre. */
+.gift-items-head:not(.is-revealed) {
+  opacity: 0;
+}
+
+/*
+ * `opacity: 1` est declare en plus de l'animation, comme pour les cartes : si
+ * l'animation ne tourne pas — onglet en arriere-plan, keyframes absentes — le
+ * titre reste visible au lieu de disparaitre pour de bon.
+ */
+.gift-items-head.is-revealed {
+  opacity: 1;
+  animation: titre-entree var(--titre-duree) var(--ease) both;
+}
+
+@keyframes titre-entree {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--titre-montee)) scale(0.62);
+  }
+  /* Le depassement : c'est lui qui donne le rebond. */
+  30% {
+    opacity: 1;
+    transform: translateY(var(--titre-montee)) scale(1.14);
+  }
+  44% {
+    transform: translateY(var(--titre-montee)) scale(0.97);
+  }
+  56% {
+    transform: translateY(var(--titre-montee)) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .eyebrow {
@@ -1294,6 +1348,8 @@ select {
 .gift-root--embedded .gift-head,
 .gift-root--embedded .gift-items-head {
   margin-bottom: 1.75rem;
+  /* Le cadre fait 682 px : son milieu tombe vers 210, pas a 32 % de la fenetre. */
+  --titre-montee: 210px;
 }
 
 .gift-root--embedded .gift-head h1,

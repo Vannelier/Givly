@@ -430,7 +430,7 @@ export default function GiftView({
           </header>
         )}
 
-        <header className="gift-items-head">
+        <header className={`gift-items-head${revealing ? " is-revealed" : ""}`}>
           {/* Sans voile, le titre de l'intro est deja le h1 de la page. */}
           {showIntroBlock ? <h2>{itemsTitle}</h2> : <h1>{itemsTitle}</h1>}
           <p className="lede">{itemsMessage}</p>
