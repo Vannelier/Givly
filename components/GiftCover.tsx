@@ -18,6 +18,8 @@ export default function GiftCover({
   to,
   intro,
   title,
+  openLabel,
+  waitMessage,
   motif,
   style,
   sealedUntil,
@@ -27,6 +29,10 @@ export default function GiftCover({
   to: string;
   intro: string;
   title: string;
+  /** Texte du bouton d'ouverture. */
+  openLabel: string;
+  /** Mot d'attente, sous la date. Vide = rien affiche. */
+  waitMessage: string;
   motif: MotifKind;
   style: OpeningId;
   sealedUntil: Date | null;
@@ -64,10 +70,11 @@ export default function GiftCover({
                 minute: "2-digit",
               })}
             </p>
+            {waitMessage.trim() && <p className="cover__patience">{waitMessage}</p>}
           </div>
         ) : (
           <button type="button" className="btn cover__btn" onClick={onOpen} autoFocus>
-            Ouvrir
+            {openLabel}
           </button>
         )}
       </div>

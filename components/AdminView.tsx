@@ -22,6 +22,10 @@ export type AdminSnapshot = {
   reply_message: string;
   sealed: boolean;
   welcome_message: string;
+  open_label: string;
+  wait_message: string;
+  items_title: string;
+  items_message: string;
   thank_you_message: string;
   cover_image_url: string | null;
   theme: Theme;
@@ -55,6 +59,10 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
     header_image_url: page.header_image_url,
     reveal_at: page.reveal_at,
     welcome_message: page.welcome_message,
+    open_label: page.open_label,
+    wait_message: page.wait_message,
+    items_title: page.items_title,
+    items_message: page.items_message,
     thank_you_message: page.thank_you_message,
     cover_image_url: page.cover_image_url,
     theme: page.theme,

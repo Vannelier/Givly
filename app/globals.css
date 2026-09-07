@@ -180,7 +180,13 @@ select {
 
 /* --- En-tête de la page cadeau -------------------------------------------- */
 
-.gift-head {
+/*
+ * Deux en-tetes possibles : celui de l'intro (prenom, mot d'ouverture, titre) et
+ * celui des cadeaux. Avec le voile actif, seul le second est rendu — le premier
+ * vit sur le voile. Sans voile, les deux se suivent.
+ */
+.gift-head,
+.gift-items-head {
   text-align: center;
   margin-bottom: clamp(1.75rem, 6vw, 2.75rem);
 }
@@ -193,15 +199,31 @@ select {
   margin-bottom: 0.9rem;
 }
 
-.gift-head h1 {
+.gift-head h1,
+.gift-items-head h1 {
   font-size: clamp(1.75rem, 6.5vw, 2.7rem);
   text-wrap: balance;
 }
 
-.gift-head .lede {
+/*
+ * En h2, le titre des cadeaux vient apres celui de l'intro : il passe au second
+ * rang, sinon deux titres de meme taille se disputeraient la page.
+ */
+.gift-items-head h2 {
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  text-wrap: balance;
+}
+
+.gift-head .lede,
+.gift-items-head .lede {
   margin-top: 0.85rem;
   color: var(--ink-soft);
   font-size: 0.97rem;
+}
+
+/* Les deux en-tetes a la suite : le premier se rapproche du second. */
+.gift-head + .gift-items-head {
+  margin-top: clamp(-1rem, -3vw, -0.5rem);
 }
 
 /* --- Liste de cadeaux ------------------------------------------------------ */
@@ -776,6 +798,16 @@ select {
   color: var(--ink-soft);
 }
 
+.cover__patience {
+  margin-top: 0.9rem;
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
 /* --- Photo d'en-tete ------------------------------------------------------- */
 
 .gift-banner {
@@ -852,12 +884,18 @@ select {
   padding-bottom: 2.5rem;
 }
 
-.gift-root--embedded .gift-head {
+.gift-root--embedded .gift-head,
+.gift-root--embedded .gift-items-head {
   margin-bottom: 1.75rem;
 }
 
-.gift-root--embedded .gift-head h1 {
+.gift-root--embedded .gift-head h1,
+.gift-root--embedded .gift-items-head h1 {
   font-size: 1.75rem;
+}
+
+.gift-root--embedded .gift-items-head h2 {
+  font-size: 1.15rem;
 }
 
 .gift-root--embedded .state {
@@ -905,11 +943,32 @@ select {
 
 /* --- Mot du receveur ------------------------------------------------------- */
 
-.reply {
-  margin-top: clamp(1.5rem, 5vw, 2.25rem);
+/*
+ * Il vit desormais sur l'ecran de confirmation, derriere un bouton : pose sous
+ * les cadeaux, il se lisait comme une case a remplir avant de pouvoir confirmer.
+ */
+.after-reply {
+  margin-top: clamp(1.75rem, 5vw, 2.5rem);
   max-width: 28rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+.after-reply textarea {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  resize: vertical;
+  margin-bottom: 0.85rem;
+}
+
+.after-reply textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .reply__label {
@@ -923,22 +982,6 @@ select {
 .reply__label span {
   color: var(--ink-faint);
   font-size: 0.78rem;
-}
-
-.reply textarea {
-  width: 100%;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 0.65rem 0.8rem;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  resize: vertical;
-}
-
-.reply textarea:focus {
-  outline: none;
-  border-color: var(--accent);
 }
 
 .state__reply {

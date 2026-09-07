@@ -55,13 +55,15 @@ export async function POST(req: Request) {
       inserted = await sql`
         INSERT INTO gift_pages
           (slug, admin_token, name, intro_message, signature, recipient_name,
-           header_image_url, reveal_at, link_title, welcome_message, thank_you_message,
+           header_image_url, reveal_at, link_title, welcome_message, open_label,
+           wait_message, items_title, items_message, thank_you_message,
            cover_image_url, theme, items, plan, expires_at)
         VALUES
           (${slug}, ${admin_token}, ${input.name}, ${input.intro_message}, ${input.signature},
            ${input.recipient_name}, ${header_image_url}, ${input.reveal_at}, ${input.link_title},
-           ${input.welcome_message}, ${input.thank_you_message}, ${cover_image_url},
-           ${JSON.stringify(input.theme)}::jsonb,
+           ${input.welcome_message}, ${input.open_label}, ${input.wait_message},
+           ${input.items_title}, ${input.items_message}, ${input.thank_you_message},
+           ${cover_image_url}, ${JSON.stringify(input.theme)}::jsonb,
            ${JSON.stringify(items)}::jsonb, 'free', ${expiresAt})
         RETURNING *
       `;

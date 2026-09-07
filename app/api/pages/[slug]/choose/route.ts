@@ -1,6 +1,5 @@
 import { findBySlug, sql } from "@/lib/db";
 import { fail, handleError, json, readJson } from "@/lib/http";
-import { LIMITS } from "@/lib/limits";
 import { isExpired, isLocked, isSealed } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -10,14 +9,9 @@ type Params = { params: Promise<{ slug: string }> };
 export async function POST(req: Request, { params }: Params) {
   try {
     const { slug } = await params;
-    const body = (await readJson(req)) as { itemId?: unknown; reply?: unknown };
+    const body = (await readJson(req)) as { itemId?: unknown };
     const itemId = typeof body?.itemId === "string" ? body.itemId : null;
     if (!itemId) return fail("Aucun cadeau sélectionné.", 400, "itemId");
-
-    const reply = typeof body?.reply === "string" ? body.reply.trim() : "";
-    if (reply.length > LIMITS.reply) {
-      return fail(`Le mot ne peut pas dépasser ${LIMITS.reply} caractères.`, 400, "reply");
-    }
 
     const page = await findBySlug(slug);
     if (!page) return fail("Cette page n'existe pas.", 404);
@@ -32,11 +26,13 @@ export async function POST(req: Request, { params }: Params) {
 
     // Le garde `chosen_at IS NULL` dans le WHERE rend le verrouillage atomique :
     // deux confirmations simultanées ne peuvent pas toutes les deux gagner.
+    //
+    // Le mot du receveur ne passe plus par ici : il est proposé une fois le choix
+    // confirmé, et arrive par `POST /api/pages/[slug]/reply`.
     const { rowCount } = await sql`
       UPDATE gift_pages
          SET chosen_item_id = ${itemId},
-             chosen_at      = now(),
-             reply_message  = ${page.theme.reply === true ? reply : ""}
+             chosen_at      = now()
        WHERE id = ${page.id}::uuid
          AND chosen_at IS NULL
     `;

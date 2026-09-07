@@ -3,10 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import GiftCover from "@/components/GiftCover";
 import GiftMotif from "@/components/GiftMotif";
-import { fontById, occasionById, openingById } from "@/lib/occasions";
+import {
+  ITEMS_MESSAGE_HINT,
+  ITEMS_TITLE_HINT,
+  fontById,
+  occasionById,
+  openingById,
+} from "@/lib/occasions";
 import { LIMITS } from "@/lib/limits";
 import { paletteStyle } from "@/lib/palettes";
-import { isSealed } from "@/lib/types";
+import { isSealed, replyWindowOpen } from "@/lib/types";
 import type { Item, PublicPage } from "@/lib/types";
 
 type Mode = "live" | "preview";
@@ -21,6 +27,8 @@ type Props = {
 };
 
 type Phase = "choosing" | "submitting" | "done" | "locked";
+/** Etat de la zone de mot, sur l'ecran de confirmation. */
+type ReplyPhase = "idle" | "writing" | "sending" | "sent";
 
 /**
  * Rythme de la revelation. Ces trois valeurs doublent `--reveal-delay`,
@@ -71,8 +79,28 @@ export default function GiftView({
   // Un seul cadeau : il n'y a rien a choisir. La page devient une annonce, et le
   // bouton un accuse de reception — meme mecanique, autre intention.
   const solo = page.items.length === 1;
+
+  /*
+   * Le mot du receveur arrive apres le choix, plus a cote de lui : la zone de
+   * texte posee sous les cadeaux se lisait comme une case a remplir avant de
+   * pouvoir confirmer, alors qu'elle etait facultative. Le choix part seul, et
+   * l'ecran de confirmation propose ensuite d'ecrire.
+   */
   const replyAllowed = page.theme.reply === true;
   const [reply, setReply] = useState("");
+  const [replyPhase, setReplyPhase] = useState<ReplyPhase>("idle");
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const sentReply = page.reply_message.trim();
+
+  /*
+   * Le delai de reponse depend de l'heure courante, qui differe forcement entre
+   * le rendu serveur et le navigateur. L'evaluer avant le montage ferait diverger
+   * l'hydratation sur une carte choisie il y a presque une heure ; on attend donc
+   * d'etre monte. Un choix confirme dans cette session ouvre la fenetre sans
+   * calcul : il vient d'avoir lieu.
+   */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Le voile n'a de sens que tant qu'un choix est attendu : une page deja
   // choisie ou expiree doit montrer son etat tout de suite.
@@ -160,7 +188,7 @@ export default function GiftView({
       const res = await fetch(`/api/pages/${encodeURIComponent(page.slug)}/choose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId: selectedId, reply: replyAllowed ? reply : "" }),
+        body: JSON.stringify({ itemId: selectedId }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -175,6 +203,40 @@ export default function GiftView({
     }
   }
 
+  /**
+   * Le mot part dans une seconde requete, apres le choix. Une page deja choisie
+   * n'accepte qu'une ecriture : le garde est pose en SQL, cote route.
+   */
+  async function sendReply() {
+    const mot = reply.trim();
+    if (!mot || replyPhase === "sending") return;
+    setReplyError(null);
+
+    if (mode === "preview") {
+      setReplyPhase("sent");
+      return;
+    }
+
+    setReplyPhase("sending");
+    try {
+      const res = await fetch(`/api/pages/${encodeURIComponent(page.slug)}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reply: mot }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setReplyError(data.error ?? "Le mot n'a pas pu être envoyé.");
+        setReplyPhase("writing");
+        return;
+      }
+      setReplyPhase("sent");
+    } catch {
+      setReplyError("Connexion perdue. Vérifie ta connexion et réessaie.");
+      setReplyPhase("writing");
+    }
+  }
+
   const occasion = occasionById(page.theme.occasion);
   const skin = {
     ...paletteStyle(page.theme.palette),
@@ -183,6 +245,26 @@ export default function GiftView({
   const rootClass = `gift-root${variant === "embedded" ? " gift-root--embedded" : ""}`;
   const motif = page.theme.motif === false ? "none" : occasion.motif;
   const intro = page.intro_message.trim() || occasion.intro;
+  const openLabel = page.open_label.trim() || occasion.openHint;
+  const waitMessage = page.wait_message.trim() || occasion.waitHint;
+  const itemsTitle = page.items_title.trim() || ITEMS_TITLE_HINT;
+  // Un cadeau unique n'est pas un choix : la page devient une annonce.
+  const itemsMessage =
+    page.items_message.trim() || (solo ? "C'est pour toi." : ITEMS_MESSAGE_HINT);
+
+  /*
+   * Quand le voile est actif, c'est lui qui porte le prenom, le mot d'ouverture
+   * et le titre : les repeter sur l'ecran des cadeaux ferait lire deux fois la
+   * meme chose a la suite. Sans voile, cet ecran est le premier et le seul —
+   * il reprend donc l'intro a son compte.
+   */
+  const showIntroBlock = !coverEnabled;
+
+  const canReply =
+    replyAllowed &&
+    !sentReply &&
+    replyPhase !== "sent" &&
+    (phase === "done" || (mounted && replyWindowOpen(page)));
 
   if (settled) {
     return (
@@ -205,9 +287,59 @@ export default function GiftView({
               </div>
             </>
           )}
-          {(reply.trim() || page.reply_message.trim()) && (
-            <p className="state__reply">« {reply.trim() || page.reply_message} »</p>
+          {/* Le mot deja enregistre, ou celui qui vient d'etre envoye. */}
+          {(sentReply || replyPhase === "sent") && (
+            <p className="state__reply">« {sentReply || reply.trim()} »</p>
           )}
+
+          {/*
+            Proposer d'ecrire seulement une fois le choix passe, et seulement si
+            rien n'a encore ete laisse : la carte n'accepte qu'un mot.
+          */}
+          {canReply && (
+            <div className="after-reply">
+              {replyPhase === "idle" ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setReplyPhase("writing")}
+                >
+                  Laisser un mot
+                </button>
+              ) : (
+                <>
+                  <label className="reply__label" htmlFor="reply">
+                    Ton mot <span>Facultatif</span>
+                  </label>
+                  <textarea
+                    id="reply"
+                    value={reply}
+                    maxLength={LIMITS.reply}
+                    rows={3}
+                    autoFocus
+                    placeholder="Merci, ça me fait très plaisir…"
+                    onChange={(e) => setReply(e.target.value)}
+                  />
+                  {replyError && (
+                    <p className="notice notice--error" role="alert">
+                      {replyError}
+                    </p>
+                  )}
+                  <div className="btn-row" style={{ justifyContent: "center" }}>
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      disabled={!reply.trim() || replyPhase === "sending"}
+                      onClick={sendReply}
+                    >
+                      {replyPhase === "sending" ? "Envoi…" : "Envoyer"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {page.signature.trim() && <p className="signature">{page.signature}</p>}
           {mode === "preview" && (
             <div className="btn-row" style={{ justifyContent: "center", marginTop: "2rem" }}>
@@ -238,13 +370,18 @@ export default function GiftView({
           </div>
         )}
 
-        <header className="gift-head">
-          {page.recipient_name && <p className="gift-to">Pour {page.recipient_name}</p>}
-          <p className="eyebrow">{intro}</p>
-          <h1>{page.welcome_message}</h1>
-          <p className="lede">
-            {solo ? "C'est pour toi." : "Choisis celui qui te fait le plus envie."}
-          </p>
+        {showIntroBlock && (
+          <header className="gift-head">
+            {page.recipient_name && <p className="gift-to">Pour {page.recipient_name}</p>}
+            <p className="eyebrow">{intro}</p>
+            <h1>{page.welcome_message}</h1>
+          </header>
+        )}
+
+        <header className="gift-items-head">
+          {/* Sans voile, le titre de l'intro est deja le h1 de la page. */}
+          {showIntroBlock ? <h2>{itemsTitle}</h2> : <h1>{itemsTitle}</h1>}
+          <p className="lede">{itemsMessage}</p>
         </header>
 
         <ul
@@ -268,22 +405,6 @@ export default function GiftView({
           <p className="notice notice--error" style={{ marginTop: "1.25rem" }} role="alert">
             {error}
           </p>
-        )}
-
-        {replyAllowed && (
-          <div className="reply">
-            <label className="reply__label" htmlFor="reply">
-              Un mot à laisser ? <span>Facultatif</span>
-            </label>
-            <textarea
-              id="reply"
-              value={reply}
-              maxLength={LIMITS.reply}
-              rows={2}
-              placeholder="Merci, ça me fait très plaisir…"
-              onChange={(e) => setReply(e.target.value)}
-            />
-          </div>
         )}
 
         {page.signature.trim() && <p className="signature">{page.signature}</p>}
@@ -317,6 +438,8 @@ export default function GiftView({
           to={page.recipient_name}
           intro={intro}
           title={page.welcome_message}
+          openLabel={openLabel}
+          waitMessage={waitMessage}
           motif={motif}
           style={openingById(page.theme.opening).id}
           sealedUntil={sealed ? revealAt : null}
