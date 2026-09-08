@@ -1201,6 +1201,18 @@ async function checkImages() {
     }
   });
 
+  test("le titre du voile ne suit plus la duree de celui des cadeaux", () => {
+    /*
+     * `--titre-duree` est aussi celle du titre de l'ecran des cadeaux, et
+     * GiftView compte REVEAL_APRES_TITRE_MS avant de lancer la cascade :
+     * rebrancher le voile dessus ferait repartir les deux ensemble, et etirer
+     * l'un ferait partir les cartes pendant que l'autre bouge encore.
+     */
+    assert.match(css, /--voile-titre-duree: \d/);
+    assert.match(css, /animation-duration: var\(--voile-titre-duree\);/);
+    assert.doesNotMatch(css, /\.cover__title \{[^}]*var\(--titre-duree\)/);
+  });
+
   test("la pastille de validation garde de quoi etre composee", () => {
     // Sans `z-index` explicite, le compositeur refuse de lui donner un calque et
     // rabat l'animation sur le fil principal : 11 peintures par clic au lieu de 7.
