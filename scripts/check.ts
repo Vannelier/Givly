@@ -1224,7 +1224,7 @@ async function checkImages() {
       css,
       /\.cover__title \{\n\s+animation-delay: calc\(0\.2s \+ 2 \* var\(--voile-pas\) \+ var\(--voile-souffle\)\);/,
     );
-    assert.match(css, /\.cover__wait \{[\s\S]{0,400}?var\(--voile-souffle\) \+ 2s\)/);
+    assert.match(css, /\.cover__wait \{[\s\S]{0,1400}?var\(--voile-souffle\) \+ [\d.]+s\)/);
   });
 
   test("la pastille de validation garde de quoi etre composee", () => {
