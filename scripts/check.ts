@@ -1184,6 +1184,23 @@ async function checkImages() {
     assert.match(css, /@media \(hover: hover\) and \(pointer: fine\) \{\n\s+\.card \{/);
   });
 
+  test("les entrees en scene n'empruntent pas la courbe des reactions", () => {
+    /*
+     * `--ease` franchit la moitie de son parcours en 16 % de la duree : parfait
+     * pour un bouton qui repond, ruineux pour une mise en scene, ou la duree
+     * declaree ne se voit alors nulle part. Les trois arrivees — les lignes du
+     * voile, les deux titres, les cartes — passent par `--ease-entree`.
+     */
+    assert.match(css, /--ease-entree: cubic-bezier\(/);
+    for (const regle of [
+      /animation: cover-rise var\(--voile-duree\) var\(--ease-entree\)/,
+      /animation: titre-entree var\(--titre-duree\) var\(--ease-entree\)/,
+      /animation: card-rise var\(--reveal-duration\) var\(--ease-entree\)/,
+    ]) {
+      assert.match(css, regle, `entree encore sur --ease : ${regle}`);
+    }
+  });
+
   test("la pastille de validation garde de quoi etre composee", () => {
     // Sans `z-index` explicite, le compositeur refuse de lui donner un calque et
     // rabat l'animation sur le fil principal : 11 peintures par clic au lieu de 7.
