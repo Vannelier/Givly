@@ -119,7 +119,9 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `components/QrCard.tsx` | QR code du lien public |
 | `scripts/brand.mjs` | fabrique la marque : `app/icon.svg`, `app/favicon.ico`, les PNG |
 | `app/opengraph-image.tsx` | la bannière de partage du site (1200 × 630) |
-| `components/PrintableCard.tsx` | carte A6 à imprimer, aux couleurs du thème |
+| `components/PrintableCard.tsx` | la feuille A4 pliable : deux panneaux, le pli, le QR |
+| `components/PrintCarousel.tsx` | les flèches qui font défiler les modèles |
+| `lib/printModels.ts` | les dix modèles ; seul l'identifiant est retenu |
 | `lib/mediaStore.ts` | où atterrissent les images : Vercel Blob, ou disque en développement |
 | `lib/extract.ts` | lecture des métadonnées OG, best-effort |
 | `lib/blob.ts` | recopie des images vers Vercel Blob |
@@ -331,12 +333,43 @@ pas glisser un texte dans une carte qui ne l'a pas demandé.
 
 ## La carte à imprimer
 
-`/admin/[token]/imprimer` : une carte A6 aux couleurs du thème, avec le QR code, le prénom, le mot
-d'ouverture, le titre et la signature. Tout est dessiné en CSS et en SVG — rien à télécharger, et
-l'impression sort nette à n'importe quelle taille.
+`/admin/[token]/imprimer` : une **feuille A4 paysage, pliée en deux** — le pliage de la carte de
+vœux classique. Aucun réglage d'imprimante, aucun découpage, et l'intérieur reste vierge pour un
+mot écrit à la main.
+
+Le panneau **droit** porte la couverture (le prénom, le mot d'ouverture, le titre), le **gauche**
+le dos (le QR code, la légende, la signature). On rabat le gauche derrière le droit : le pli tombe
+à gauche, la couverture est devant.
+
+Le format précédent ne tenait pas ses promesses : le bandeau invitait à plier, mais la feuille de
+style forçait `@page { size: A6 }` et la carte faisait exactement 105 × 148 mm — il n'y avait rien
+à plier, et une imprimante chargée en A4 la calait dans un coin.
+
+**Dix modèles, au carrousel.** Quatre compositions — `centre`, `cadre`, `bandeau`, `affiche` —
+déclinées sur les décors existants. La liste est plate (`lib/printModels.ts`) : chaque entrée est
+une combinaison déjà arbitrée, pas deux sélecteurs à croiser, parce qu'un carrousel qu'on parcourt
+à la flèche doit être court. Comme les palettes et les occasions, seul l'identifiant compte ; tout
+le rendu vit dans `app/print.css`, et ajouter un modèle coûte une ligne et un bloc de style.
+
+Le choix **n'est pas enregistré** : il vit dans l'état de la page. Le persister demanderait une
+colonne, une migration et une règle de validation, pour un geste qu'on fait une fois.
+
+Le carrousel émet une **direction**, pas un identifiant, et le parent calcule le voisin en forme
+fonctionnelle. Sans ça, deux clics rapprochés partaient du même état — la seconde flèche
+recalculait le voisin de l'ancien modèle et n'avançait pas.
+
+À l'écran, la feuille garde ses dimensions réelles en millimètres et se réduit par un facteur
+mesuré, pas deviné : c'est la même boîte qui part à l'impression, donc l'aperçu ne peut pas mentir
+sur les proportions. Le QR passe en correction d'erreur **Q** — sur papier il sera plié, manipulé,
+parfois imprimé à court d'encre.
 
 Les commandes disparaissent à l'impression ; `print-color-adjust: exact` force le navigateur à
-imprimer les aplats de couleur, qu'il supprime par défaut.
+imprimer les aplats de couleur, qu'il supprime par défaut. La composition `bandeau` consomme donc
+franchement de l'encre.
+
+⚠️ **Ce qu'aucune vérification ne couvre** : le rendu papier, le sens du pli, les marges réelles de
+l'imprimante et la lisibilité du QR une fois imprimé. La géométrie à l'écran est contrôlée ; le
+premier tirage reste à faire.
 
 ## L'ouverture de la carte
 
