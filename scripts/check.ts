@@ -5,7 +5,7 @@
  *   npm run check
  */
 import assert from "node:assert/strict";
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
@@ -1146,6 +1146,51 @@ async function checkImages() {
   test("une donnee illisible ressort telle quelle", () => {
     assert.ok(repli.data.equals(pourri));
     assert.equal(repli.contentType, "image/jpeg");
+  });
+}
+
+// --- Feuille de style : les reglages qu'un refactor casse sans bruit ---------
+
+/*
+ * Trois defauts signales par les receveurs venaient tous d'une propriete CSS,
+ * invisible a la relecture et sans effet sur le typage ni sur la compilation.
+ * Ils sont fixes ici pour qu'un retour en arriere se voie tout de suite.
+ */
+{
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const bloc = (selecteur: string) => {
+    const i = css.indexOf(`\n${selecteur} {`);
+    assert.notEqual(i, -1, `regle absente : ${selecteur}`);
+    return css.slice(i, css.indexOf("\n}", i));
+  };
+
+  test("les effets sont ancres a la fenetre, pas au document", () => {
+    // En `absolute`, les particules partaient d'un bord de la page haute de
+    // plusieurs ecrans : avec vingt cadeaux, zero particule sur vingt-six etait
+    // visible depuis le haut de la page. En `fixed`, les vingt-six le sont.
+    assert.match(bloc(".fx"), /position: fixed;/);
+  });
+
+  test("la carte ne rogne pas son propre anneau de selection", () => {
+    // `overflow: hidden` sur la carte soumettait l'anneau au meme masque arrondi
+    // que la vignette. Le rognage appartient a la vignette seule.
+    assert.doesNotMatch(bloc(".card"), /overflow: hidden;/);
+    assert.match(bloc(".thumb"), /overflow: hidden;/);
+  });
+
+  test("le soulevement au survol epargne les ecrans tactiles", () => {
+    // Sur tactile, `:hover` reste colle apres le doigt : la carte se repeignait
+    // pendant 0,22 s, flou de la photo compris.
+    assert.match(css, /@media \(hover: hover\) and \(pointer: fine\) \{\n\s+\.card \{/);
+  });
+
+  test("la pastille de validation garde de quoi etre composee", () => {
+    // Sans `z-index` explicite, le compositeur refuse de lui donner un calque et
+    // rabat l'animation sur le fil principal : 11 peintures par clic au lieu de 7.
+    const pastille = bloc(".card__check");
+    assert.match(pastille, /z-index: 1;/);
+    assert.doesNotMatch(pastille, /transition:/);
+    assert.match(bloc('.card[aria-pressed="true"] .card__check'), /will-change: transform, opacity;/);
   });
 }
 

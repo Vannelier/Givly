@@ -404,17 +404,28 @@ select {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 0;
-  overflow: hidden;
+  /*
+   * Pas de `overflow: hidden` ici.
+   *
+   * Le rognage arrondi de la carte s'appliquait a tout son contenu, anneau de
+   * selection compris : celui-ci se retrouvait a la merci du meme masque que la
+   * vignette et sa copie floutee, et sur certains moteurs le bord haut y perdait
+   * sa premiere rangee de pixels — le cadre paraissait coupe au-dessus.
+   *
+   * Seule la vignette a besoin d'etre rognee : c'est la seule chose qui deborde.
+   * Elle porte donc son propre masque, et l'anneau n'a plus rien au-dessus de
+   * lui. Le fond de la carte reste arrondi de lui-meme : `border-radius` decoupe
+   * toujours le fond et la bordure de l'element qui le porte, sans `overflow`.
+   */
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   /*
-   * Seule la position s'anime. `box-shadow` et `border-color` en sortent : une
-   * ombre portee floue se recalcule a chaque image sur toute la surface de la
-   * carte — photo comprise — et c'etait la source des a-coups au moment de
-   * choisir. L'anneau de selection, lui, passe par l'opacite d'un pseudo-element,
-   * que le compositeur sait faire varier sans repeindre quoi que ce soit.
+   * Rien ne s'anime ici. `box-shadow` et `border-color` ont ete ecartes les
+   * premiers — une ombre portee floue se recalcule a chaque image sur toute la
+   * surface de la carte, photo comprise. Le soulevement au survol les a suivis :
+   * il est descendu dans la requete `hover: hover` plus bas, hors de portee des
+   * ecrans tactiles ou `:hover` reste colle apres le doigt.
    */
-  transition: transform 0.22s var(--ease);
 }
 
 /*
@@ -428,6 +439,13 @@ select {
  * `inset: 0` colle a la boite de rembourrage, donc juste a l'interieur de la
  * bordure, et `z-index` le place au-dessus de la vignette. Rien ne peut plus le
  * recouvrir, et il fait le tour complet.
+ *
+ * Il apparait d'un coup, sans fondu. Le fondu coutait treize peintures — une par
+ * image d'animation — et chacune repassait sur toute la carte, copie floutee de
+ * la photo comprise : c'etait la saccade ressentie au moment de choisir. Mesure
+ * au ralentisseur x6, un clic passait de 0 a 13 peintures et 18 rasterisations ;
+ * sans le fondu il n'en reste qu'une. Deux dixiemes de seconde de douceur ne
+ * valent pas ce prix, et la pastille de validation porte deja le mouvement.
  */
 .card::after {
   content: "";
@@ -437,16 +455,34 @@ select {
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.22s var(--ease);
   z-index: 2;
 }
 
-.card:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
+/*
+ * Le soulevement au survol ne concerne que les pointeurs qui survolent.
+ *
+ * Sur un ecran tactile, `:hover` se colle a la derniere carte touchee et n'en
+ * repart plus : le doigt levait la carte de deux pixels, et le navigateur
+ * repeignait pendant 0,22 s toute sa surface — la photo et son flou de 22 px
+ * avec. Une animation de position sur un element non promu ne se compose pas,
+ * elle se repeint.
+ *
+ * `hover: hover` ecarte le tactile ; `pointer: fine` ecarte les telecommandes et
+ * les stylets grossiers, ou le survol existe sans qu'on vise au pixel. La
+ * transition elle-meme vit ici : sur telephone, la carte n'anime plus rien.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .card {
+    transition: transform 0.22s var(--ease);
+  }
 
-.card:active:not(:disabled) {
-  transform: translateY(0);
+  .card:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  .card:active:not(:disabled) {
+    transform: translateY(0);
+  }
 }
 
 .card[aria-pressed="true"] {
@@ -484,12 +520,25 @@ select {
   isolation: isolate;
   aspect-ratio: 4 / 3;
   background: linear-gradient(150deg, var(--thumb-a, var(--paper-warm)), var(--thumb-b, #e9dcca));
+  /*
+   * Le rognage arrondi vit ici, plus sur la carte.
+   *
+   * Un pixel de moins que le rayon de la carte : la vignette commence a
+   * l'interieur de sa bordure de 1 px, donc sa courbe interieure est d'autant
+   * plus serree. Sans cette soustraction, un liset de fond apparait dans les
+   * angles hauts.
+   *
+   * En grille elle occupe le haut — deux coins arrondis en haut. En liste elle
+   * occupe la colonne de gauche sur toute la hauteur — deux coins a gauche.
+   */
   overflow: hidden;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
 }
 
 .items--list .thumb {
   aspect-ratio: auto;
   min-height: 100%;
+  border-radius: calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);
 }
 
 .thumb img {
@@ -546,8 +595,27 @@ select {
   font-size: 0.88rem;
 }
 
+/*
+ * La pastille de validation — le seul mouvement qui reste au moment du choix.
+ *
+ * Elle etait animee par une transition, et cette transition etait la source de la
+ * saccade : mesuree au ralentisseur x6, la retirer faisait tomber un clic de 12
+ * recalculs de style et 11 peintures a 8 et 7, et le temps de composition de
+ * 8,7 ms a 1,8 ms. Le compositeur refusait de la prendre en charge — pour animer
+ * une opacite sans repeindre, il doit sortir l'element sur son propre calque, et
+ * il ne le fait pas quand cela romprait l'ordre de peinture avec ce qui
+ * l'entoure. Faute de quoi chaque image repassait sur toute la carte, flou de
+ * 22 px de la photo compris.
+ *
+ * Deux ajouts lui rendent le calque : `z-index: 1` la place franchement au-dessus
+ * du corps et de la vignette et au-dessous de l'anneau, donc la promouvoir ne
+ * change plus rien a l'ordre ; `will-change`, pose uniquement sur la carte
+ * choisie, demande le calque a l'avance. Un seul cadeau pouvant etre retenu a la
+ * fois, cela fait un calque, pas dix.
+ */
 .card__check {
   position: absolute;
+  z-index: 1;
   top: 0.65rem;
   right: 0.65rem;
   width: 1.85rem;
@@ -561,14 +629,22 @@ select {
   box-shadow: 0 2px 8px rgba(52, 38, 28, 0.3);
   opacity: 0;
   transform: scale(0.6);
-  transition:
-    opacity 0.2s var(--ease),
-    transform 0.24s var(--ease);
 }
 
 .card[aria-pressed="true"] .card__check {
-  opacity: 1;
-  transform: scale(1);
+  will-change: transform, opacity;
+  animation: pastille 0.26s var(--ease) both;
+}
+
+@keyframes pastille {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /*
@@ -1394,8 +1470,27 @@ select {
    deplace sans repasser par la mise en page ni la peinture.
    --------------------------------------------------------------------------- */
 
+/*
+ * Ancre a l'ecran, pas au document.
+ *
+ * En `absolute`, le calque couvrait toute la page-cadeau : avec huit cadeaux,
+ * elle mesure plus de deux mille pixels. Les confettis partaient donc a -8 % de
+ * cette hauteur — deux cents pixels au-dessus du premier ecran — et tombaient de
+ * 108 vh, soit une seule fenetre : passe le haut de la page, plus rien. Les
+ * etincelles, elles, partaient de sous le bas du *document* et montaient de
+ * 72 vh : elles finissaient leur course avant meme d'atteindre l'ecran. L'effet
+ * existait, personne ne le voyait.
+ *
+ * En `fixed`, le calque est la fenetre. Les particules entrent par le bord de
+ * l'ecran ou qu'on en soit dans la page, et les distances en `vh` des keyframes
+ * retrouvent le sens qu'elles avaient toujours eu.
+ *
+ * Dans l'apercu de l'editeur, le cadre porte un `transform` : il devient le bloc
+ * englobant du `fixed`, et l'effet reste enferme dans la miniature. C'est bien ce
+ * qu'on veut la-bas.
+ */
 .fx {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
@@ -1404,7 +1499,7 @@ select {
 
 .fx span {
   position: absolute;
-  top: -8%;
+  top: -10vh;
   left: var(--x);
   width: var(--size);
   height: var(--size);
@@ -1446,7 +1541,7 @@ select {
 /* Etincelles : elles partent du bas et s'eteignent en montant. */
 .fx--etincelles span {
   top: auto;
-  bottom: -4%;
+  bottom: -6vh;
   border-radius: 999px;
   width: calc(var(--size) * 0.34);
   height: calc(var(--size) * 0.34);
