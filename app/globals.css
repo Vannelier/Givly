@@ -118,7 +118,11 @@ select {
  * que le premier cadeau ne se montre ; `--reveal-step` est assez large pour
  * qu'ils arrivent un par un et non en bloc. GiftView reprend ces memes valeurs
  * pour faire monter la barre de confirmation apres le dernier cadeau — les deux
- * doivent donc rester d'accord (voir REVEAL_DELAY_MS / REVEAL_STEP_MS).
+ * doivent donc rester d'accord (voir REVEAL_APRES_TITRE_MS / COVER_CLOSE_MS).
+ *
+ * Le rythme est celui d'une ceremonie, pas d'un ecran utilitaire : on lit avant
+ * qu'on ne propose d'ouvrir, le voile prend son temps, et les cadeaux arrivent
+ * assez espaces pour qu'on les regarde un par un.
  */
 .gift-root {
   /*
@@ -128,9 +132,13 @@ select {
    * de l'entree du titre se jouait derriere le voile, donc invisible.
    */
   --ouverture-delai: 0ms;
-  --reveal-delay: calc(var(--ouverture-delai) + 1200ms);
-  --reveal-step: 260ms;
-  --reveal-duration: 700ms;
+  --reveal-delay: calc(var(--ouverture-delai) + 1600ms);
+  /*
+   * Repli seulement : GiftView pose la vraie valeur en style en ligne, car elle
+   * depend du nombre de cadeaux (voir revealStep).
+   */
+  --reveal-step: 420ms;
+  --reveal-duration: 780ms;
   position: relative;
   min-height: 100dvh;
   background: var(--paper);
@@ -229,7 +237,7 @@ select {
  */
 .gift-items-head {
   --titre-montee: 30vh;
-  --titre-duree: 1.2s;
+  --titre-duree: 1.6s;
 }
 
 /* Avant la revelation, le titre est cache derriere le voile : rien a peindre. */
@@ -806,7 +814,7 @@ select {
 .cover--voile .cover__panel--b { right: 0; }
 
 .cover--voile.is-closing .cover__panel {
-  animation: veil-out 0.95s var(--ease) both;
+  animation: veil-out 1.5s var(--ease) both;
 }
 
 @keyframes veil-out {
@@ -855,11 +863,11 @@ select {
 
 /* Le pan part d'abord vers l'interieur, comme tire, avant de s'ouvrir. */
 .cover--rideau.is-closing .cover__panel--a {
-  animation: curtain-left 0.95s cubic-bezier(0.55, -0.28, 0.3, 1) both;
+  animation: curtain-left 1.5s cubic-bezier(0.55, -0.28, 0.3, 1) both;
 }
 
 .cover--rideau.is-closing .cover__panel--b {
-  animation: curtain-right 0.95s cubic-bezier(0.55, -0.28, 0.3, 1) 60ms both;
+  animation: curtain-right 1.5s cubic-bezier(0.55, -0.28, 0.3, 1) 60ms both;
 }
 
 @keyframes curtain-left {
@@ -895,11 +903,11 @@ select {
 }
 
 .cover--volets.is-closing .cover__panel--a {
-  animation: shutter-up 0.95s cubic-bezier(0.6, 0, 0.25, 1) both;
+  animation: shutter-up 1.5s cubic-bezier(0.6, 0, 0.25, 1) both;
 }
 
 .cover--volets.is-closing .cover__panel--b {
-  animation: shutter-down 0.95s cubic-bezier(0.6, 0, 0.25, 1) 60ms both;
+  animation: shutter-down 1.5s cubic-bezier(0.6, 0, 0.25, 1) 60ms both;
 }
 
 @keyframes shutter-up {
@@ -1009,7 +1017,7 @@ select {
 }
 
 .cover--couvercle.is-closing .cover__panel--b {
-  animation: lid-off 0.95s cubic-bezier(0.5, 0, 0.2, 1) both;
+  animation: lid-off 1.5s cubic-bezier(0.5, 0, 0.2, 1) both;
 }
 
 /* Il se decolle, s'incline, puis s'en va : trois temps en une seule courbe. */
@@ -1044,7 +1052,7 @@ select {
 }
 
 .cover--halo.is-closing {
-  animation: iris-open 0.95s cubic-bezier(0.5, 0, 0.25, 1) both;
+  animation: iris-open 1.5s cubic-bezier(0.5, 0, 0.25, 1) both;
 }
 
 @keyframes iris-open {
@@ -1067,7 +1075,7 @@ select {
 }
 
 .cover.is-closing .cover__inner {
-  animation: inner-out 0.56s var(--ease) both;
+  animation: inner-out 0.7s var(--ease) both;
 }
 
 @keyframes inner-out {
@@ -1090,7 +1098,41 @@ select {
   z-index: 3;
   max-width: 30rem;
   text-align: center;
-  animation: cover-rise 1s var(--ease) 0.14s both;
+}
+
+/*
+ * Ligne par ligne, et non d'un bloc.
+ *
+ * Tout arrivait ensemble en une seconde : il n'y avait rien a attendre, et le
+ * bouton etait la avant meme qu'on ait lu a qui la carte s'adressait. Chaque
+ * ligne prend maintenant son tour — le prenom, l'occasion, le message — et
+ * l'invitation a ouvrir ferme la marche. C'est la lecture qui fait monter
+ * l'attente, pas un delai arbitraire.
+ */
+.cover__inner > * {
+  animation: cover-rise 0.9s var(--ease) both;
+}
+
+.cover__to {
+  animation-delay: 0.2s;
+}
+
+.cover__intro {
+  animation-delay: 0.6s;
+}
+
+.cover__title {
+  animation-delay: 1s;
+}
+
+/*
+ * Le bouton en dernier, et d'une entree plus breve que les lignes de texte :
+ * il doit se poser franchement, pas ramper apres une longue attente.
+ */
+.cover__btn,
+.cover__wait {
+  animation-delay: 1.6s;
+  animation-duration: 0.6s;
 }
 
 @keyframes cover-rise {
@@ -1345,8 +1387,34 @@ select {
  */
 .items.is-revealed > li {
   opacity: 1;
+}
+
+/*
+ * Une carte n'entre que lorsqu'elle est reellement a l'ecran.
+ *
+ * La cascade partait d'un minuteur : avec plus de trois ou quatre cadeaux, les
+ * suivants montaient derriere la ligne de flottaison, et le temps qu'on defile
+ * jusqu'a eux ils etaient deja poses. L'animation existait, personne ne la
+ * voyait. GiftView observe donc chaque carte et ne la lance qu'a son entree
+ * dans le champ.
+ *
+ * `is-observee` est pose par le meme code : sans JavaScript — ou sans
+ * IntersectionObserver — la classe n'arrive jamais, la regle ci-dessous ne
+ * s'applique pas, et les cartes restent visibles. Le filet tient.
+ */
+.items.is-revealed.is-observee > li:not(.is-in) {
+  opacity: 0;
+}
+
+.items.is-revealed > li.is-in {
+  opacity: 1;
   animation: card-rise var(--reveal-duration) var(--ease) both;
-  animation-delay: calc(var(--i, 0) * var(--reveal-step) + var(--reveal-delay));
+  /*
+   * Pose par GiftView : l'echelonnement pour les cartes deja visibles quand le
+   * voile se leve, zero pour celles qu'on decouvre en defilant — leur tour est
+   * venu au moment ou elles entrent, pas au moment ou la ceremonie a commence.
+   */
+  animation-delay: var(--card-delay, 0ms);
 }
 
 @keyframes card-rise {

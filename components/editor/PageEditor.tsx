@@ -753,10 +753,19 @@ export default function PageEditor(props: Props) {
             Fermer
           </button>
         </div>
+        {/*
+          Volontairement sans `previewScreen` : l'apercu plein ecran repart
+          toujours du debut, voile compris.
+
+          L'apercu en direct, lui, suit le cadre qu'on regle — regler le titre de
+          l'ecran des cadeaux en voyant le voile serait travailler a l'aveugle.
+          Mais le plein ecran ne sert pas a regler : il sert a voir ce que la
+          personne recevra, et elle, elle commence par le voile. Faire l'un comme
+          l'autre sautait l'ouverture des qu'on avait touche au cadre « Cadeaux ».
+        */}
         <GiftView
           page={previewPage}
           mode="preview"
-          previewScreen={ecranApercu}
           onExitPreview={() => setPreview(false)}
         />
       </div>
