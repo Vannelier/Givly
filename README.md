@@ -402,6 +402,51 @@ entre les deux pans.
 Toutes les fermetures tiennent en **0,95 s**, la durée que `GiftView` attend avant de retirer le
 voile (`COVER_CLOSE_MS`). Allonger l'une sans l'autre couperait l'animation en plein vol.
 
+## Le rythme de l'ouverture
+
+Une cérémonie, pas un écran utilitaire. Mesuré au chronomètre, depuis le clic sur le bouton :
+
+| instant | à |
+|---|---|
+| le voile a fini de se retirer | 1,5 s |
+| le titre de l'écran des cadeaux est posé | 2,2 s |
+| le premier cadeau est là | 3,9 s |
+| le deuxième | 4,3 s |
+
+**Le texte du voile arrive ligne par ligne**, pas d'un bloc : le prénom (0,2 s), l'occasion (0,6 s),
+le message (1 s), et le bouton en dernier (1,6 s). Tout arrivait ensemble en une seconde — il n'y
+avait rien à attendre, et l'invitation à ouvrir était là avant qu'on ait lu à qui la carte
+s'adressait. C'est la lecture qui fait monter l'attente, pas un délai arbitraire.
+
+**Le pas entre deux cadeaux dépend de leur nombre.** 420 ms tient la tension à deux ou trois
+cadeaux, le cas courant. À dix, la seule cascade durerait 3,8 s, et l'attente cesse d'être une
+attente pour devenir une panne. Passé sept cadeaux, le pas se resserre donc pour tenir dans un
+écart total de 2,6 s (`revealStep`). Il est posé en style en ligne par `GiftView` : c'est ce qui
+garantit que le CSS et le minuteur de la barre de confirmation ne peuvent plus diverger.
+
+**Une carte n'entre que lorsqu'elle est réellement à l'écran.** La cascade partait d'un minuteur :
+au-delà de trois ou quatre cadeaux, les suivants montaient derrière la ligne de flottaison et se
+posaient bien avant qu'on ait défilé jusqu'à eux. L'animation existait, personne ne la voyait. Un
+`IntersectionObserver` la déclenche à l'entrée dans le champ. Le premier lot — les cartes déjà
+visibles quand le voile se lève — garde l'échelonnement ; les suivantes entrent sans délai, leur
+tour étant venu au moment où on les atteint.
+
+Trois garde-fous s'y rattachent :
+
+- **`is-in` n'est jamais retiré.** Le nettoyage de l'effet l'effaçait ; si l'effet se relançait
+  pendant qu'on défilait, les cartes passées au-dessus de l'écran redevenaient invisibles — et le
+  restaient, puisqu'elles ne repasseraient plus jamais dans le champ.
+- **La dépendance est `page.items.length`, pas `page.items`.** La liste est recréée à chaque rendu
+  du parent, et l'aperçu de l'éditeur rend à chaque frappe : observer son identité relançait toute
+  la mise en scène entre deux lettres.
+- **`is-observee` est posée par le même code.** Sans JavaScript — ou sans `IntersectionObserver` —
+  la classe n'arrive jamais, la règle qui masque les cartes ne s'applique pas, et elles restent
+  visibles.
+
+**La barre de confirmation suit le dernier cadeau visible**, pas le dernier de la liste. Avec dix
+cadeaux dont deux à l'écran, l'attendre au bout de la cascade complète la faisait arriver une
+seconde et demie après que tout ce qu'on voit se soit posé.
+
 ## Les effets
 
 **Séparés des ouvertures, à dessein.** L'ouverture dit comment le voile se lève ; l'effet, ce qui se
@@ -457,6 +502,11 @@ serveur pour ça.
 Deux aperçus, un seul composant — `GiftView` sert à la fois la page réelle et les deux aperçus,
 donc aucun ne peut mentir.
 
+- **L'aperçu plein écran** repart toujours du début, voile compris : il ne sert pas à régler mais à
+  voir ce que la personne recevra, et elle commence par le voile. L'aperçu en direct, lui, suit le
+  cadre qu'on règle — régler le titre de l'écran des cadeaux en voyant le voile serait travailler à
+  l'aveugle. Faire l'un comme l'autre sautait l'ouverture dès qu'on avait touché au cadre
+  « Cadeaux ».
 - **L'aperçu en direct**, à l'étape « La présentation » : une réduction du rendu réel, qui réagit
   à chaque réglage. **Au-delà de 62 rem seulement** — voir « L'assistant de composition ».
   Colonne collante à partir de 62 rem, bandeau en haut de l'étape en dessous. Il est mis à l'échelle

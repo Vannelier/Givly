@@ -49,9 +49,29 @@ type ReplyPhase = "idle" | "writing" | "sending" | "sent";
  * Tout se compte a partir du retrait du voile, pas du clic : c'est `COVER_CLOSE_MS`
  * qui separe les deux, et l'entree du titre occupe l'intervalle suivant.
  */
-const REVEAL_APRES_TITRE_MS = 1200;
-const REVEAL_STEP_MS = 260;
-const COVER_CLOSE_MS = 950;
+const REVEAL_APRES_TITRE_MS = 1600;
+const REVEAL_STEP_MS = 420;
+const COVER_CLOSE_MS = 1500;
+
+/*
+ * Ecart total maximal entre le premier cadeau et le dernier.
+ *
+ * Un pas fixe de 420 ms tient la tension a deux ou trois cadeaux, le cas
+ * courant. A dix, il ferait durer la seule cascade 3,8 s, et l'attente cesse
+ * d'etre une attente pour devenir une panne — la barre de confirmation ne
+ * monte qu'apres le dernier. Passe sept cadeaux, le pas se resserre donc pour
+ * tenir dans ce budget.
+ */
+const REVEAL_SPREAD_MAX_MS = 2600;
+
+/** Duree d'entree d'une carte. Double `--reveal-duration`. */
+const REVEAL_DURATION_MS = 780;
+
+/** Le pas reellement applique, partage par le CSS et par la barre de confirmation. */
+function revealStep(count: number): number {
+  if (count < 2) return REVEAL_STEP_MS;
+  return Math.min(REVEAL_STEP_MS, Math.round(REVEAL_SPREAD_MAX_MS / (count - 1)));
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -142,6 +162,7 @@ export default function GiftView({
    * qu'il faille faire defiler la page jusqu'en bas.
    */
   const [barIn, setBarIn] = useState(false);
+  const listeRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (!revealing) {
@@ -152,10 +173,99 @@ export default function GiftView({
       setBarIn(true);
       return;
     }
+    // Repli seul : quand l'observateur pilote l'entree, c'est lui qui fait monter
+    // la barre, apres le dernier cadeau *visible*. Ici on suppose que tous
+    // s'animent, ce qui est le cas sans IntersectionObserver.
+    if (typeof IntersectionObserver !== "undefined") return;
+
     const depart = (coverEnabled ? COVER_CLOSE_MS : 0) + REVEAL_APRES_TITRE_MS;
-    const last = depart + Math.max(0, page.items.length - 1) * REVEAL_STEP_MS;
+    const last =
+      depart +
+      Math.max(0, page.items.length - 1) * revealStep(page.items.length) +
+      REVEAL_DURATION_MS;
     const id = setTimeout(() => setBarIn(true), last);
     return () => clearTimeout(id);
+  }, [revealing, coverEnabled, page.items.length]);
+
+  /*
+   * Chaque carte entre quand elle arrive a l'ecran, pas quand le minuteur le dit.
+   *
+   * La cascade etait purement temporelle : passe trois ou quatre cadeaux, les
+   * suivants montaient derriere la ligne de flottaison et se posaient bien avant
+   * qu'on ait defile jusqu'a eux. On ne voyait jamais leur entree.
+   *
+   * Le premier lot que l'observateur signale — les cartes deja visibles quand le
+   * voile se leve — garde l'echelonnement de la ceremonie. Les suivantes entrent
+   * sans delai : leur tour est venu au moment ou on les atteint.
+   */
+  useEffect(() => {
+    const liste = listeRef.current;
+    if (!liste || !revealing) return;
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const cartes = Array.from(liste.children) as HTMLElement[];
+    const reduit = prefersReducedMotion();
+    if (reduit) {
+      for (const c of cartes) c.classList.add("is-in");
+      return;
+    }
+
+    const depart = (coverEnabled ? COVER_CLOSE_MS : 0) + REVEAL_APRES_TITRE_MS;
+    const pas = revealStep(cartes.length);
+    let premierLot = true;
+
+    // Signale au CSS qu'un observateur pilote l'entree : sans elle, les cartes
+    // restent visibles telles quelles.
+    liste.classList.add("is-observee");
+
+    let barre: ReturnType<typeof setTimeout> | undefined;
+
+    const obs = new IntersectionObserver(
+      (entrees) => {
+        let rang = 0;
+        for (const e of entrees) {
+          if (!e.isIntersecting) continue;
+          const el = e.target as HTMLElement;
+          el.style.setProperty("--card-delay", premierLot ? `${depart + rang * pas}ms` : "0ms");
+          el.classList.add("is-in");
+          obs.unobserve(el);
+          rang++;
+        }
+        if (rang === 0) return;
+
+        /*
+         * La barre monte apres le dernier cadeau *visible*, pas apres le dernier
+         * de la liste. Avec dix cadeaux dont deux a l'ecran, l'attendre au bout
+         * de la cascade complete la faisait arriver une seconde et demie apres
+         * que tout ce qu'on voit se soit pose.
+         */
+        if (premierLot) {
+          premierLot = false;
+          barre = setTimeout(() => setBarIn(true), depart + (rang - 1) * pas + REVEAL_DURATION_MS);
+        }
+      },
+      // Une marge basse : la carte s'annonce juste avant d'etre a l'ecran, sinon
+      // son entree commence alors qu'on la regarde deja.
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    for (const c of cartes) obs.observe(c);
+
+    return () => {
+      obs.disconnect();
+      if (barre) clearTimeout(barre);
+      liste.classList.remove("is-observee");
+      /*
+       * `is-in` n'est jamais retire : une carte deja entree reste entree.
+       *
+       * Le nettoyage l'effacait, et si l'effet se relancait pendant qu'on
+       * defilait, les cartes passees au-dessus de l'ecran redevenaient
+       * invisibles — et le restaient, puisqu'elles ne repasseraient plus jamais
+       * dans le champ. Pire que le defaut qu'on corrigeait.
+       */
+    };
+    // `page.items.length` et non `page.items` : la liste est recreee a chaque
+    // rendu du parent, et l'apercu de l'editeur rend a chaque frappe. Observer
+    // son identite relancait toute la mise en scene entre deux lettres.
   }, [revealing, coverEnabled, page.items.length]);
 
   // `useState` ne lit sa valeur initiale qu'au montage. Sans cette synchro, couper
@@ -299,6 +409,12 @@ export default function GiftView({
      * titre puis l'arrivee des cadeaux.
      */
     "--ouverture-delai": coverEnabled ? `${COVER_CLOSE_MS}ms` : "0ms",
+    /*
+     * Le pas depend du nombre de cadeaux : il est donc pose ici, et non fige
+     * dans la feuille de style. C'est aussi ce qui garantit que le CSS et le
+     * minuteur de la barre de confirmation ne peuvent plus diverger.
+     */
+    "--reveal-step": `${revealStep(page.items.length)}ms`,
   } as React.CSSProperties;
   const rootClass = `gift-root${variant === "embedded" ? " gift-root--embedded" : ""}`;
   const motif = page.theme.motif === false ? "none" : occasion.motif;
@@ -446,12 +562,13 @@ export default function GiftView({
         </header>
 
         <ul
+          ref={listeRef}
           className={`items items--${page.theme.layout === "list" ? "list" : "grid"}${
             revealing ? " is-revealed" : ""
           }`}
         >
           {page.items.map((item, index) => (
-            <li key={item.id} style={{ "--i": index } as React.CSSProperties}>
+            <li key={item.id}>
               <GiftCard
                 item={item}
                 selected={!solo && item.id === selectedId}
