@@ -1398,7 +1398,26 @@ select {
    * cascade : l'etirer ferait partir les cartes pendant que le titre bouge
    * encore. Le voile, lui, n'a rien apres lui — il peut prendre son temps.
    */
-  --voile-titre-duree: 3.2s;
+  --voile-titre-duree: 2.5s;
+  /*
+   * Le silence avant le titre.
+   *
+   * Les trois lignes se suivaient a intervalle egal, un `--voile-pas` chacune.
+   * Or elles ne pesent pas le meme poids : le prenom et l'occasion annoncent,
+   * le titre est ce qu'on est venu lire. A cadence reguliere il arrivait comme
+   * une troisieme ligne de liste, et le mot d'ouverture bougeait encore quand
+   * il commencait a paraitre — mesure, ils se chevauchaient de 180 ms.
+   *
+   * Ce temps-ci s'ajoute au pas, rien que devant le titre. Le mot d'ouverture
+   * a fini de se poser depuis 0,6 s quand le titre s'annonce : il y a un
+   * silence, et c'est lui qui fait entendre la phrase.
+   *
+   * 0,95 s et non 0,8 : le titre dure moins longtemps qu'avant, donc il devient
+   * perceptible plus tot pour un meme delai, et le silence se serait raccourci
+   * de lui-meme. Ce qui compte est le blanc entre les deux lignes, pas le
+   * chiffre qui le produit.
+   */
+  --voile-souffle: 0.95s;
 }
 
 .cover__inner > * {
@@ -1417,7 +1436,7 @@ select {
  * C'est la ligne qu'on lit vraiment : elle a la plus longue duree des quatre.
  */
 .cover__title {
-  animation-delay: calc(0.2s + 2 * var(--voile-pas));
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle));
   animation-duration: var(--voile-titre-duree);
 }
 
@@ -1428,11 +1447,22 @@ select {
 .cover__btn,
 .cover__wait {
   /*
-   * 2 s apres le depart du titre : celui-ci n'est vraiment pose qu'a 1,5 s, et
-   * le bouton doit arriver apres, pas dessus. Sa duree suit le meme facteur que
-   * le reste — c'est la derniere chose qui bouge, elle donne le signal.
+   * L'attente du bouton n'est pas un reglage libre : elle est dictee par le
+   * titre.
+   *
+   * Le bouton doit paraitre apres que le titre s'est pose, jamais pendant qu'il
+   * monte encore. Le titre se pose a 73 % de sa duree, le bouton devient
+   * perceptible a 22 % de la sienne ; entre les deux il reste 0,2 s de marge.
+   * Raccourcir cette attente sans raccourcir le titre fait donc remonter le
+   * bouton dans le mouvement de la phrase — c'est ce qui a ete verifie avant de
+   * toucher a quoi que ce soit : a 3,2 s de titre, aucune valeur d'attente ne
+   * laisse la marge positive, pas meme les 2 s d'ou l'on vient.
+   *
+   * Les deux baissent donc ensemble, et le titre s'arrete a 2,5 s : en dessous,
+   * son mouvement visible repasserait sous les 1 200 ms, soit le double de ce
+   * qu'il valait avant la PR #9. C'est la limite qu'on s'est fixee.
    */
-  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 2s);
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle) + 1.6s);
   animation-duration: 1.4s;
 }
 

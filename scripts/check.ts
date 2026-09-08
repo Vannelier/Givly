@@ -1213,6 +1213,20 @@ async function checkImages() {
     assert.doesNotMatch(css, /\.cover__title \{[^}]*var\(--titre-duree\)/);
   });
 
+  test("le titre du voile est precede d'un silence", () => {
+    /*
+     * A cadence reguliere, le titre arrivait comme une troisieme ligne de liste
+     * et chevauchait le mot d'ouverture de 180 ms. `--voile-souffle` s'ajoute au
+     * pas devant lui seul, et le bouton le repercute pour ne pas se rapprocher.
+     */
+    assert.match(css, /--voile-souffle: \d/);
+    assert.match(
+      css,
+      /\.cover__title \{\n\s+animation-delay: calc\(0\.2s \+ 2 \* var\(--voile-pas\) \+ var\(--voile-souffle\)\);/,
+    );
+    assert.match(css, /\.cover__wait \{[\s\S]{0,1400}?var\(--voile-souffle\) \+ [\d.]+s\)/);
+  });
+
   test("la pastille de validation garde de quoi etre composee", () => {
     // Sans `z-index` explicite, le compositeur refuse de lui donner un calque et
     // rabat l'animation sur le fil principal : 11 peintures par clic au lieu de 7.
