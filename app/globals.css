@@ -1399,6 +1399,20 @@ select {
    * encore. Le voile, lui, n'a rien apres lui — il peut prendre son temps.
    */
   --voile-titre-duree: 3.2s;
+  /*
+   * Le silence avant le titre.
+   *
+   * Les trois lignes se suivaient a intervalle egal, un `--voile-pas` chacune.
+   * Or elles ne pesent pas le meme poids : le prenom et l'occasion annoncent,
+   * le titre est ce qu'on est venu lire. A cadence reguliere il arrivait comme
+   * une troisieme ligne de liste, et le mot d'ouverture bougeait encore quand
+   * il commencait a paraitre — mesure, ils se chevauchaient de 180 ms.
+   *
+   * Ce temps-ci s'ajoute au pas, rien que devant le titre. Le mot d'ouverture
+   * a fini de se poser depuis 0,6 s quand le titre s'annonce : il y a un
+   * silence, et c'est lui qui fait entendre la phrase.
+   */
+  --voile-souffle: 0.8s;
 }
 
 .cover__inner > * {
@@ -1417,7 +1431,7 @@ select {
  * C'est la ligne qu'on lit vraiment : elle a la plus longue duree des quatre.
  */
 .cover__title {
-  animation-delay: calc(0.2s + 2 * var(--voile-pas));
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle));
   animation-duration: var(--voile-titre-duree);
 }
 
@@ -1432,7 +1446,7 @@ select {
    * le bouton doit arriver apres, pas dessus. Sa duree suit le meme facteur que
    * le reste — c'est la derniere chose qui bouge, elle donne le signal.
    */
-  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 2s);
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle) + 2s);
   animation-duration: 1.4s;
 }
 
