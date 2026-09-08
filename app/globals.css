@@ -20,6 +20,25 @@
   --shadow-sm: 0 1px 2px rgba(52, 38, 28, 0.05);
   --shadow-md: 0 6px 20px -8px rgba(52, 38, 28, 0.22);
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  /*
+   * Une seconde courbe, pour les seules animations d'arrivee.
+   *
+   * `--ease` est tres en avance sur elle-meme : elle franchit la moitie de son
+   * parcours en 16 % de la duree, et 90 % en 48 %. C'est exactement ce qu'il
+   * faut a une reaction — un bouton qui s'enfonce doit repondre tout de suite —
+   * et c'est le contraire de ce qu'il faut a une mise en scene. Le voile avait
+   * beau annoncer 1,2 s par ligne, l'oeil voyait la ligne posee a 0,58 s : le
+   * ralentissement demande n'existait que dans la feuille de style.
+   *
+   * Celle-ci passe la moitie a 41 % et 90 % a 66 %. Le titre du voile, annonce a
+   * 1,6 s, se pose desormais a 1,06 s au lieu de 0,77 s. La duree declaree et la
+   * duree vue se rejoignent.
+   *
+   * Reservee aux trois entrees en scene — les lignes du voile, les deux titres,
+   * les cartes. Tout le reste garde `--ease` : une interface qui repond doit
+   * repondre vite.
+   */
+  --ease-entree: cubic-bezier(0.5, 0, 0.25, 1);
   color-scheme: light;
 }
 
@@ -257,7 +276,7 @@ select {
  */
 .gift-items-head.is-revealed {
   opacity: 1;
-  animation: titre-entree var(--titre-duree) var(--ease) var(--ouverture-delai) both;
+  animation: titre-entree var(--titre-duree) var(--ease-entree) var(--ouverture-delai) both;
   /*
    * Sans promotion, le navigateur re-rasterise le texte a chaque image de
    * l'agrandissement — c'est de la que venait l'a-coup. Sur sa propre couche, le
@@ -1351,14 +1370,25 @@ select {
  * beaucoup de cadeaux, et le voile accelererait avec eux, ce qui n'a aucun sens.
  */
 .cover {
-  /* Le pas entre deux cadeaux, valeur nominale (REVEAL_STEP_MS). */
-  --voile-pas: 420ms;
+  /*
+   * Le pas valait 420 ms, celui de deux cadeaux. Il tenait tant que chaque
+   * ligne se posait vite : quatre lignes se succedaient sans jamais se
+   * chevaucher. Avec une courbe qui prend son temps, une ligne est encore en
+   * mouvement quand la suivante part, et les quatre se confondent en un bloc
+   * qui monte — l'effet inverse de celui qu'on cherche.
+   *
+   * Ce qui doit s'accorder d'un ecran a l'autre, c'est le langage : meme
+   * courbe, meme amplitude, meme duree pour les deux titres. Pas le pas, qui
+   * repond ici a une lecture (quatre lignes qu'on lit) et la-bas a une cascade
+   * (des cartes qu'on regarde arriver).
+   */
+  --voile-pas: 560ms;
   /* Entre la duree d'une carte (780 ms) et celle du titre (1,6 s). */
-  --voile-duree: 1.2s;
+  --voile-duree: 1.5s;
 }
 
 .cover__inner > * {
-  animation: cover-rise var(--voile-duree) var(--ease) both;
+  animation: cover-rise var(--voile-duree) var(--ease-entree) both;
 }
 
 .cover__to {
@@ -1384,14 +1414,25 @@ select {
  */
 .cover__btn,
 .cover__wait {
-  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 1.1s);
+  /*
+   * 1,3 s apres le depart du titre, et non 1,1 s : avec la nouvelle courbe le
+   * titre n'est vraiment pose qu'a 1,06 s, et le bouton arrivait dessus.
+   */
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 1.3s);
   animation-duration: 0.78s;
 }
 
+/*
+ * 26 px, et non 14.
+ *
+ * Sur plus d'une seconde, quatorze pixels ne se lisent pas comme un mouvement :
+ * la ligne semble apparaitre sur place, et la duree ne s'inscrit nulle part. Il
+ * faut quelque chose a suivre des yeux pour qu'une lenteur se remarque.
+ */
 @keyframes cover-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(26px);
   }
   to {
     opacity: 1;
@@ -1680,7 +1721,7 @@ select {
 
 .items.is-revealed > li.is-in {
   opacity: 1;
-  animation: card-rise var(--reveal-duration) var(--ease) both;
+  animation: card-rise var(--reveal-duration) var(--ease-entree) both;
   /*
    * Pose par GiftView : l'echelonnement pour les cartes deja visibles quand le
    * voile se leve, zero pour celles qu'on decouvre en defilant — leur tour est
@@ -1692,7 +1733,8 @@ select {
 @keyframes card-rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    /* Comme les lignes du voile : de quoi voir la carte venir. */
+    transform: translateY(22px);
   }
   to {
     opacity: 1;
