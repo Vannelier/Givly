@@ -194,7 +194,7 @@ découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse l
 | **Mot du receveur** | Choix | Un bouton, sur l'écran de confirmation, qui ouvre la saisie. Désactivé par défaut. |
 | **Palette** | Thème | Huit palettes. Réglée par l'occasion, modifiable ensuite. |
 | **Police du titre** | Thème | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
-| **Disposition** | Thème | Grille ou liste. |
+| **Disposition** | Thème | Grille à deux colonnes, ou liste. Les deux se distinguent dès le téléphone. |
 | **Décor** | Thème | Le motif de l'occasion, désactivable. |
 | **Effet** | Thème | Confettis, pétales, étincelles ou neige, joués une fois sur la page découverte. Proposé par l'occasion. |
 | **Nom de la carte** | Lien | Jamais montré. Il fabrique l'adresse du lien. |
@@ -391,6 +391,22 @@ entre les deux pans.
 
 Toutes les fermetures tiennent en **0,95 s**, la durée que `GiftView` attend avant de retirer le
 voile (`COVER_CLOSE_MS`). Allonger l'une sans l'autre couperait l'animation en plein vol.
+
+## La grille et la liste
+
+**Deux colonnes dès le téléphone.** La grille n'y passait à deux colonnes qu'à partir de 34 rem,
+soit 544 px — aucun téléphone n'atteint cette largeur. « Grille » et « Liste » y donnaient donc la
+même colonne unique, et le réglage ne servait à rien là où la carte est justement lue.
+
+Ce qui a fait trouver le défaut : **l'aperçu de l'éditeur forçait déjà deux colonnes** dans son
+cadre de 390 px. Il montrait au donneur une disposition que le receveur ne verrait jamais.
+
+**La carte est un `<button>`, et un bouton étiré centre verticalement son contenu.** Dans une rangée
+où les cartes s'alignent sur la plus haute, la plus courte se retrouvait avec autant de blanc
+au-dessus de sa vignette qu'en dessous — mesuré à 26 px de part et d'autre sur un téléphone de
+390 px. Invisible tant que la grille restait à une colonne ; flagrant dès qu'elles se côtoient.
+`.card` passe donc en colonne flex, et `.card__body` prend le mou : la vignette reste en haut, le
+fond blanc descend jusqu'en bas.
 
 ## Le rythme de l'ouverture
 
