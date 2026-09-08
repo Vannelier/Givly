@@ -407,15 +407,42 @@ select {
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition:
-    transform 0.22s var(--ease),
-    box-shadow 0.22s var(--ease),
-    border-color 0.22s var(--ease);
+  /*
+   * Seule la position s'anime. `box-shadow` et `border-color` en sortent : une
+   * ombre portee floue se recalcule a chaque image sur toute la surface de la
+   * carte — photo comprise — et c'etait la source des a-coups au moment de
+   * choisir. L'anneau de selection, lui, passe par l'opacite d'un pseudo-element,
+   * que le compositeur sait faire varier sans repeindre quoi que ce soit.
+   */
+  transition: transform 0.22s var(--ease);
+}
+
+/*
+ * L'anneau de selection, pose par-dessus le contenu.
+ *
+ * Il etait dessine en `box-shadow: inset`, et une ombre interieure se peint sous
+ * le contenu de l'element : la vignette, qui touche les bords haut, gauche et
+ * droit, passait devant. Ne restait visible que le morceau longeant le bandeau
+ * blanc du bas — d'ou un cadre qui semblait coupe au-dessus.
+ *
+ * `inset: 0` colle a la boite de rembourrage, donc juste a l'interieur de la
+ * bordure, et `z-index` le place au-dessus de la vignette. Rien ne peut plus le
+ * recouvrir, et il fait le tour complet.
+ */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--accent);
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s var(--ease);
+  z-index: 2;
 }
 
 .card:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
 
 .card:active:not(:disabled) {
@@ -424,9 +451,10 @@ select {
 
 .card[aria-pressed="true"] {
   border-color: var(--accent);
-  box-shadow:
-    0 0 0 2px var(--accent) inset,
-    var(--shadow-md);
+}
+
+.card[aria-pressed="true"]::after {
+  opacity: 1;
 }
 
 .card:disabled {
@@ -541,6 +569,103 @@ select {
 .card[aria-pressed="true"] .card__check {
   opacity: 1;
   transform: scale(1);
+}
+
+/*
+ * Le bouton d'agrandissement, pose sur la vignette.
+ *
+ * Il est frere de la carte, pas enfant : celle-ci est un <button>, et un bouton
+ * dans un bouton n'est pas du HTML valide. Le `li` lui sert donc de repere.
+ *
+ * En haut a gauche : la pastille de validation occupe deja le coin oppose, et
+ * les deux ne doivent jamais se disputer le meme doigt. 2,2 rem de cote, soit
+ * au-dessus de la cible tactile minimale.
+ */
+.items > li {
+  position: relative;
+}
+
+.zoom-btn {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  z-index: 3;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 250, 0.88);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(52, 38, 28, 0.18);
+  transition: transform 0.16s var(--ease);
+}
+
+.zoom-btn:hover,
+.zoom-btn:focus-visible {
+  transform: scale(1.08);
+}
+
+/* En liste, la vignette ne fait que 7,5 rem : le bouton se resserre avec elle. */
+.items--list .zoom-btn {
+  top: 0.4rem;
+  left: 0.4rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: 0.85rem;
+}
+
+/* --- La photo en grand ----------------------------------------------------- */
+
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 5vw, 2.5rem);
+  /*
+   * Presque opaque : a 0,92 la page restait lisible derriere, et le texte
+   * concurrencait la photo qu'on est venu regarder.
+   */
+  background: rgba(24, 19, 15, 0.97);
+  animation: fade 0.2s var(--ease) both;
+}
+
+.zoom__img {
+  max-width: 100%;
+  /* De la place pour la legende et le bouton, sans jamais rogner la photo. */
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.zoom__legende {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.zoom__fermer {
+  position: absolute;
+  top: clamp(0.75rem, 3vw, 1.25rem);
+  right: clamp(0.75rem, 3vw, 1.25rem);
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .card--dimmed {

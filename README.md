@@ -408,6 +408,25 @@ au-dessus de sa vignette qu'en dessous — mesuré à 26 px de part et d'autre s
 `.card` passe donc en colonne flex, et `.card__body` prend le mou : la vignette reste en haut, le
 fond blanc descend jusqu'en bas.
 
+## La carte d'un cadeau
+
+**L'anneau de sélection fait le tour complet.** Il était dessiné en
+`box-shadow: inset`, et une ombre intérieure se peint *sous* le contenu de l'élément : la vignette,
+qui touche les bords haut, gauche et droit, passait devant. Ne restait visible que le morceau
+longeant le bandeau blanc du bas — d'où un cadre qui semblait coupé au-dessus. C'est désormais un
+pseudo-élément `::after` posé au-dessus du contenu, que rien ne peut recouvrir.
+
+**Seule la position s'anime.** `box-shadow` et `border-color` sont sortis de la transition : une
+ombre portée floue se recalcule à chaque image sur toute la surface de la carte, photo comprise.
+L'anneau passe par l'opacité du pseudo-élément, que le compositeur fait varier sans repeindre.
+
+**La photo s'ouvre en grand** (`GiftZoom`). Une vignette de 168 px ne suffit pas à juger d'un bijou :
+c'est le détail qui décide du choix. Le bouton `⤢` est **frère de la carte, pas enfant** — celle-ci
+est un `<button>`, et un bouton dans un bouton n'est pas du HTML valide ; le navigateur défait
+l'imbrication et le clic devient imprévisible. Posé en absolu par-dessus la vignette, il ne prend le
+clic que sur son propre carré : partout ailleurs, on choisit le cadeau. En haut à gauche, la
+pastille de validation occupant le coin opposé.
+
 ## Le rythme de l'ouverture
 
 Une cérémonie, pas un écran utilitaire — **et un seul rythme du début à la fin**. Mesuré au
