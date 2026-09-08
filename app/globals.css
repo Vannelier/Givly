@@ -1378,13 +1378,27 @@ select {
    * qui monte — l'effet inverse de celui qu'on cherche.
    *
    * Ce qui doit s'accorder d'un ecran a l'autre, c'est le langage : meme
-   * courbe, meme amplitude, meme duree pour les deux titres. Pas le pas, qui
-   * repond ici a une lecture (quatre lignes qu'on lit) et la-bas a une cascade
-   * (des cartes qu'on regarde arriver).
+   * courbe, meme amplitude, meme facon d'arriver. Pas les durees, qui repondent
+   * ici a une lecture (trois lignes qu'on lit avant d'ouvrir) et la-bas a une
+   * cascade (des cartes qu'on regarde arriver). Le voile est le seul moment de
+   * la page ou il n'y a rien d'autre a faire qu'attendre : c'est la qu'une
+   * lenteur se paie en attente et se rend en envie d'ouvrir.
+   *
+   * Les valeurs ci-dessous doublent celles d'avant la PR #9 — 420 ms de pas et
+   * 1,2 s par ligne — parce que le ralentissement demande alors ne se voyait
+   * pas assez.
    */
-  --voile-pas: 560ms;
-  /* Entre la duree d'une carte (780 ms) et celle du titre (1,6 s). */
-  --voile-duree: 1.5s;
+  --voile-pas: 840ms;
+  --voile-duree: 2.4s;
+  /*
+   * Le titre du voile a sa propre duree, et ne suit plus `--titre-duree`.
+   *
+   * Cette variable-la est aussi celle du titre de l'ecran des cadeaux, et
+   * GiftView compte 1 600 ms (REVEAL_APRES_TITRE_MS) avant de lancer la
+   * cascade : l'etirer ferait partir les cartes pendant que le titre bouge
+   * encore. Le voile, lui, n'a rien apres lui — il peut prendre son temps.
+   */
+  --voile-titre-duree: 3.2s;
 }
 
 .cover__inner > * {
@@ -1400,12 +1414,11 @@ select {
 }
 
 /*
- * Le titre du voile est le pendant de celui de l'ecran des cadeaux : meme duree,
- * 1,6 s. C'est la ligne qu'on lit vraiment, elle a droit au meme temps.
+ * C'est la ligne qu'on lit vraiment : elle a la plus longue duree des quatre.
  */
 .cover__title {
   animation-delay: calc(0.2s + 2 * var(--voile-pas));
-  animation-duration: var(--titre-duree);
+  animation-duration: var(--voile-titre-duree);
 }
 
 /*
@@ -1415,24 +1428,26 @@ select {
 .cover__btn,
 .cover__wait {
   /*
-   * 1,3 s apres le depart du titre, et non 1,1 s : avec la nouvelle courbe le
-   * titre n'est vraiment pose qu'a 1,06 s, et le bouton arrivait dessus.
+   * 2 s apres le depart du titre : celui-ci n'est vraiment pose qu'a 1,5 s, et
+   * le bouton doit arriver apres, pas dessus. Sa duree suit le meme facteur que
+   * le reste — c'est la derniere chose qui bouge, elle donne le signal.
    */
-  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 1.3s);
-  animation-duration: 0.78s;
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 2s);
+  animation-duration: 1.4s;
 }
 
 /*
- * 26 px, et non 14.
+ * 34 px, et non 14.
  *
  * Sur plus d'une seconde, quatorze pixels ne se lisent pas comme un mouvement :
  * la ligne semble apparaitre sur place, et la duree ne s'inscrit nulle part. Il
- * faut quelque chose a suivre des yeux pour qu'une lenteur se remarque.
+ * faut quelque chose a suivre des yeux pour qu'une lenteur se remarque, et la
+ * distance doit grandir avec la duree — sinon la ligne rampe.
  */
 @keyframes cover-rise {
   from {
     opacity: 0;
-    transform: translateY(26px);
+    transform: translateY(34px);
   }
   to {
     opacity: 1;
