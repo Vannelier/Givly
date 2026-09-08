@@ -32,6 +32,13 @@ import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug"
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
 import { MEDIA_DIR } from "../lib/mediaStore";
+import {
+  DEFAULT_PRINT_MODEL_ID,
+  PRINT_COMPOSITIONS,
+  PRINT_MODELS,
+  printModelById,
+  stepPrintModel,
+} from "../lib/printModels";
 import sharp from "sharp";
 import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
 import { ValidationError, validateCreate, validatePatch, validateTheme } from "../lib/validation";
@@ -1046,6 +1053,51 @@ test("adresseClient retient le premier maillon de x-forwarded-for", () => {
 
 test("adresseClient a un repli quand aucun en-tete n'est pose", () => {
   assert.equal(adresseClient(new Request("https://exemple.test")), "sans-adresse");
+});
+
+// --- Modeles de carte imprimable -------------------------------------------
+
+test("les identifiants de modele sont uniques", () => {
+  const ids = PRINT_MODELS.map((m) => m.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("chaque modele porte un nom et un decor connus", () => {
+  const decors = ["none", "confetti", "flocons", "coeurs", "etoiles", "guirlande", "feuilles"];
+  for (const m of PRINT_MODELS) {
+    assert.ok(m.nom.trim().length > 0, m.id);
+    assert.ok(decors.includes(m.motif), `${m.id} : decor ${m.motif}`);
+    assert.ok(PRINT_COMPOSITIONS.includes(m.composition), `${m.id} : ${m.composition}`);
+  }
+});
+
+test("les quatre compositions sont toutes representees", () => {
+  for (const c of PRINT_COMPOSITIONS) {
+    assert.ok(
+      PRINT_MODELS.some((m) => m.composition === c),
+      c,
+    );
+  }
+});
+
+test("stepPrintModel avance, recule et boucle", () => {
+  const premier = PRINT_MODELS[0].id;
+  const dernier = PRINT_MODELS[PRINT_MODELS.length - 1].id;
+  assert.equal(stepPrintModel(premier, 1), PRINT_MODELS[1].id);
+  assert.equal(stepPrintModel(premier, -1), dernier);
+  assert.equal(stepPrintModel(dernier, 1), premier);
+  // Deux clics rapproches doivent avancer de deux : c'est tout l'interet de
+  // calculer a partir du modele courant plutot que d'un index memorise.
+  assert.equal(stepPrintModel(stepPrintModel(premier, 1), 1), PRINT_MODELS[2].id);
+  // Un identifiant inconnu part du defaut plutot que de sortir de la liste.
+  assert.equal(stepPrintModel("inconnu", 1), PRINT_MODELS[1].id);
+});
+
+test("printModelById retombe sur le defaut", () => {
+  assert.equal(printModelById("inconnu").id, DEFAULT_PRINT_MODEL_ID);
+  assert.equal(printModelById("").id, DEFAULT_PRINT_MODEL_ID);
+  assert.equal(printModelById(undefined).id, DEFAULT_PRINT_MODEL_ID);
+  assert.equal(printModelById(PRINT_MODELS[2].id).id, PRINT_MODELS[2].id);
 });
 
 // --- Reduction des images --------------------------------------------------
