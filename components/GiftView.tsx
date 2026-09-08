@@ -327,7 +327,53 @@ export default function GiftView({
     };
   }, [opened, variant, mode]);
 
+  /**
+   * Remet la page en haut, sans animation.
+   *
+   * Toute la mise en scene part du haut de l'ecran : le titre monte depuis le
+   * milieu, les cartes se posent l'une apres l'autre. Ouverte a mi-page, elle se
+   * joue hors du champ et le receveur ne voit rien de ce qui a ete prepare.
+   *
+   * Le navigateur restaure la position au rechargement et au retour arriere,
+   * et le voile est `fixed` : rien n'empeche la page derriere d'etre deja
+   * defilee quand on appuie sur « Ouvrir ».
+   *
+   * `instant` et non `smooth` : le voile couvre encore l'ecran, le saut est
+   * invisible, et un defilement doux entrerait en concurrence avec l'ouverture.
+   *
+   * Jamais depuis l'apercu de l'editeur — il ferait sauter le formulaire.
+   */
+  function remonter() {
+    if (mode !== "live" || variant !== "full") return;
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }
+
+  /*
+   * Un rechargement ne doit pas rendre la main au milieu de la page : la
+   * restauration automatique est coupee, et la position remise a zero.
+   */
+  useEffect(() => {
+    if (mode !== "live" || variant !== "full") return;
+    const precedent = history.scrollRestoration;
+    try {
+      history.scrollRestoration = "manual";
+    } catch {
+      /* navigateur sans la propriete : la remontee a l'ouverture suffit */
+    }
+    remonter();
+    return () => {
+      try {
+        history.scrollRestoration = precedent;
+      } catch {
+        /* rien a restaurer */
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, variant]);
+
   function openCover() {
+    remonter();
     if (prefersReducedMotion()) {
       setOpened(true);
       return;
