@@ -408,20 +408,67 @@ au-dessus de sa vignette qu'en dessous — mesuré à 26 px de part et d'autre s
 `.card` passe donc en colonne flex, et `.card__body` prend le mou : la vignette reste en haut, le
 fond blanc descend jusqu'en bas.
 
+## La carte d'un cadeau
+
+**L'anneau de sélection fait le tour complet.** Il était dessiné en
+`box-shadow: inset`, et une ombre intérieure se peint *sous* le contenu de l'élément : la vignette,
+qui touche les bords haut, gauche et droit, passait devant. Ne restait visible que le morceau
+longeant le bandeau blanc du bas — d'où un cadre qui semblait coupé au-dessus. C'est désormais un
+pseudo-élément `::after` posé au-dessus du contenu, que rien ne peut recouvrir.
+
+**Seule la position s'anime.** `box-shadow` et `border-color` sont sortis de la transition : une
+ombre portée floue se recalcule à chaque image sur toute la surface de la carte, photo comprise.
+L'anneau passe par l'opacité du pseudo-élément, que le compositeur fait varier sans repeindre.
+
+**La photo s'ouvre en grand** (`GiftZoom`). Une vignette de 168 px ne suffit pas à juger d'un bijou :
+c'est le détail qui décide du choix. Le bouton `⤢` est **frère de la carte, pas enfant** — celle-ci
+est un `<button>`, et un bouton dans un bouton n'est pas du HTML valide ; le navigateur défait
+l'imbrication et le clic devient imprévisible. Posé en absolu par-dessus la vignette, il ne prend le
+clic que sur son propre carré : partout ailleurs, on choisit le cadeau. En haut à gauche, la
+pastille de validation occupant le coin opposé.
+
 ## Le rythme de l'ouverture
 
-Une cérémonie, pas un écran utilitaire. Mesuré au chronomètre, depuis le clic sur le bouton :
+Une cérémonie, pas un écran utilitaire — **et un seul rythme du début à la fin**. Mesuré au
+chronomètre dans le navigateur :
 
-| instant | à |
+| l'écran d'accueil du receveur | à |
 |---|---|
-| le voile a fini de se retirer | 1,5 s |
-| le titre de l'écran des cadeaux est posé | 2,2 s |
-| le premier cadeau est là | 3,9 s |
-| le deuxième | 4,3 s |
+| le prénom | 1,36 s |
+| le mot d'ouverture | 1,80 s |
+| le titre | 2,60 s |
+| le bouton d'ouverture | 2,88 s |
 
-**Le texte du voile arrive ligne par ligne**, pas d'un bloc : le prénom (0,2 s), l'occasion (0,6 s),
-le message (1 s), et le bouton en dernier (1,6 s). Tout arrivait ensemble en une seconde — il n'y
-avait rien à attendre, et l'invitation à ouvrir était là avant qu'on ait lu à qui la carte
+| après le clic | à |
+|---|---|
+| le voile a fini de se retirer | 1,52 s |
+| le titre de l'écran des cadeaux est posé | 2,20 s |
+| le premier cadeau | 3,92 s |
+| le deuxième | 4,36 s |
+
+**Le voile allait plus vite que ce qu'il annonce.** Le pas entre deux de ses lignes valait déjà
+400 ms, tout près du pas entre deux cadeaux ; c'étaient les durées qui divergeaient — 0,9 s par
+ligne quand le titre des cadeaux met 1,6 s à se poser. L'ouverture cassait le tempo au lieu de le
+prolonger. Les lignes prennent 1,2 s, le titre du voile la même durée que celui des cadeaux
+(`--titre-duree`), et le pas est exactement celui des cartes : **441 ms mesurés sur le voile,
+440 ms sur les cadeaux**.
+
+`--titre-duree` est déclarée sur `.gift-root` et non sur `.gift-items-head` : le voile s'en sert
+aussi, et il n'en est pas un descendant. Deux titres, une seule valeur — c'est ce qui les empêche de
+dériver l'un de l'autre. Le pas, lui, ne peut pas être `--reveal-step` : `GiftView` le resserre
+quand il y a beaucoup de cadeaux, et le voile accélérerait avec eux.
+
+**La page s'ouvre toujours en haut.** Toute la mise en scène part du haut de l'écran — le titre
+monte depuis le milieu, les cartes se posent l'une après l'autre. Ouverte à mi-page, elle se joue
+hors du champ. Or le navigateur restaure la position au rechargement et au retour arrière, et le
+voile est `fixed` : rien n'empêchait la page derrière d'être déjà défilée au moment d'appuyer sur
+« Ouvrir ». `history.scrollRestoration` passe donc en `manual`, et la position est remise à zéro au
+montage puis à l'ouverture — en `instant`, le voile couvrant encore l'écran, un défilement doux
+entrerait en concurrence avec l'animation. Jamais depuis l'aperçu de l'éditeur, qui ferait sauter le
+formulaire.
+
+**Le texte du voile arrive ligne par ligne**, pas d'un bloc. Tout arrivait ensemble en une seconde —
+il n'y avait rien à attendre, et l'invitation à ouvrir était là avant qu'on ait lu à qui la carte
 s'adressait. C'est la lecture qui fait monter l'attente, pas un délai arbitraire.
 
 **Le pas entre deux cadeaux dépend de leur nombre.** 420 ms tient la tension à deux ou trois

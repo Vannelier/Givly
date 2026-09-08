@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GiftCover from "@/components/GiftCover";
 import GiftEffect from "@/components/GiftEffect";
 import GiftMotif from "@/components/GiftMotif";
+import GiftZoom from "@/components/GiftZoom";
 import {
   ITEMS_MESSAGE_HINT,
   ITEMS_TITLE_HINT,
@@ -162,6 +163,8 @@ export default function GiftView({
    * qu'il faille faire defiler la page jusqu'en bas.
    */
   const [barIn, setBarIn] = useState(false);
+  /** Le cadeau dont on regarde la photo en grand, s'il y en a un. */
+  const [zoom, setZoom] = useState<Item | null>(null);
   const listeRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
@@ -327,7 +330,53 @@ export default function GiftView({
     };
   }, [opened, variant, mode]);
 
+  /**
+   * Remet la page en haut, sans animation.
+   *
+   * Toute la mise en scene part du haut de l'ecran : le titre monte depuis le
+   * milieu, les cartes se posent l'une apres l'autre. Ouverte a mi-page, elle se
+   * joue hors du champ et le receveur ne voit rien de ce qui a ete prepare.
+   *
+   * Le navigateur restaure la position au rechargement et au retour arriere,
+   * et le voile est `fixed` : rien n'empeche la page derriere d'etre deja
+   * defilee quand on appuie sur « Ouvrir ».
+   *
+   * `instant` et non `smooth` : le voile couvre encore l'ecran, le saut est
+   * invisible, et un defilement doux entrerait en concurrence avec l'ouverture.
+   *
+   * Jamais depuis l'apercu de l'editeur — il ferait sauter le formulaire.
+   */
+  function remonter() {
+    if (mode !== "live" || variant !== "full") return;
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }
+
+  /*
+   * Un rechargement ne doit pas rendre la main au milieu de la page : la
+   * restauration automatique est coupee, et la position remise a zero.
+   */
+  useEffect(() => {
+    if (mode !== "live" || variant !== "full") return;
+    const precedent = history.scrollRestoration;
+    try {
+      history.scrollRestoration = "manual";
+    } catch {
+      /* navigateur sans la propriete : la remontee a l'ouverture suffit */
+    }
+    remonter();
+    return () => {
+      try {
+        history.scrollRestoration = precedent;
+      } catch {
+        /* rien a restaurer */
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, variant]);
+
   function openCover() {
+    remonter();
     if (prefersReducedMotion()) {
       setOpened(true);
       return;
@@ -567,7 +616,7 @@ export default function GiftView({
             revealing ? " is-revealed" : ""
           }`}
         >
-          {page.items.map((item, index) => (
+          {page.items.map((item) => (
             <li key={item.id}>
               <GiftCard
                 item={item}
@@ -575,6 +624,23 @@ export default function GiftView({
                 disabled={solo}
                 onSelect={solo ? undefined : () => setSelectedId(item.id)}
               />
+              {/*
+                Frere de la carte, et non enfant : la carte est un <button>, et
+                imbriquer un bouton dans un bouton n'est pas du HTML valide — le
+                navigateur defait l'imbrication et le clic devient imprevisible.
+                Pose en absolu par-dessus la vignette, il ne prend le clic que
+                sur son propre carre ; partout ailleurs, on choisit le cadeau.
+              */}
+              {item.image_url && (
+                <button
+                  type="button"
+                  className="zoom-btn"
+                  aria-label={`Voir la photo de ${item.label} en grand`}
+                  onClick={() => setZoom(item)}
+                >
+                  <span aria-hidden="true">⤢</span>
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -610,6 +676,10 @@ export default function GiftView({
           </button>
         </div>
       </div>
+
+      {zoom?.image_url && (
+        <GiftZoom url={zoom.image_url} label={zoom.label} onClose={() => setZoom(null)} />
+      )}
 
       {!opened && (
         <GiftCover

@@ -139,6 +139,12 @@ select {
    */
   --reveal-step: 420ms;
   --reveal-duration: 780ms;
+  /*
+   * Duree d'entree d'un titre. Declaree ici et non sur `.gift-items-head` :
+   * le voile s'en sert aussi, et il n'en est pas un descendant. Deux titres,
+   * une seule valeur — c'est ce qui les empeche de deriver l'un de l'autre.
+   */
+  --titre-duree: 1.6s;
   position: relative;
   min-height: 100dvh;
   background: var(--paper);
@@ -237,7 +243,6 @@ select {
  */
 .gift-items-head {
   --titre-montee: 30vh;
-  --titre-duree: 1.6s;
 }
 
 /* Avant la revelation, le titre est cache derriere le voile : rien a peindre. */
@@ -402,15 +407,42 @@ select {
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition:
-    transform 0.22s var(--ease),
-    box-shadow 0.22s var(--ease),
-    border-color 0.22s var(--ease);
+  /*
+   * Seule la position s'anime. `box-shadow` et `border-color` en sortent : une
+   * ombre portee floue se recalcule a chaque image sur toute la surface de la
+   * carte — photo comprise — et c'etait la source des a-coups au moment de
+   * choisir. L'anneau de selection, lui, passe par l'opacite d'un pseudo-element,
+   * que le compositeur sait faire varier sans repeindre quoi que ce soit.
+   */
+  transition: transform 0.22s var(--ease);
+}
+
+/*
+ * L'anneau de selection, pose par-dessus le contenu.
+ *
+ * Il etait dessine en `box-shadow: inset`, et une ombre interieure se peint sous
+ * le contenu de l'element : la vignette, qui touche les bords haut, gauche et
+ * droit, passait devant. Ne restait visible que le morceau longeant le bandeau
+ * blanc du bas — d'ou un cadre qui semblait coupe au-dessus.
+ *
+ * `inset: 0` colle a la boite de rembourrage, donc juste a l'interieur de la
+ * bordure, et `z-index` le place au-dessus de la vignette. Rien ne peut plus le
+ * recouvrir, et il fait le tour complet.
+ */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--accent);
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s var(--ease);
+  z-index: 2;
 }
 
 .card:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
 
 .card:active:not(:disabled) {
@@ -419,9 +451,10 @@ select {
 
 .card[aria-pressed="true"] {
   border-color: var(--accent);
-  box-shadow:
-    0 0 0 2px var(--accent) inset,
-    var(--shadow-md);
+}
+
+.card[aria-pressed="true"]::after {
+  opacity: 1;
 }
 
 .card:disabled {
@@ -536,6 +569,103 @@ select {
 .card[aria-pressed="true"] .card__check {
   opacity: 1;
   transform: scale(1);
+}
+
+/*
+ * Le bouton d'agrandissement, pose sur la vignette.
+ *
+ * Il est frere de la carte, pas enfant : celle-ci est un <button>, et un bouton
+ * dans un bouton n'est pas du HTML valide. Le `li` lui sert donc de repere.
+ *
+ * En haut a gauche : la pastille de validation occupe deja le coin oppose, et
+ * les deux ne doivent jamais se disputer le meme doigt. 2,2 rem de cote, soit
+ * au-dessus de la cible tactile minimale.
+ */
+.items > li {
+  position: relative;
+}
+
+.zoom-btn {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  z-index: 3;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 250, 0.88);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(52, 38, 28, 0.18);
+  transition: transform 0.16s var(--ease);
+}
+
+.zoom-btn:hover,
+.zoom-btn:focus-visible {
+  transform: scale(1.08);
+}
+
+/* En liste, la vignette ne fait que 7,5 rem : le bouton se resserre avec elle. */
+.items--list .zoom-btn {
+  top: 0.4rem;
+  left: 0.4rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: 0.85rem;
+}
+
+/* --- La photo en grand ----------------------------------------------------- */
+
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 5vw, 2.5rem);
+  /*
+   * Presque opaque : a 0,92 la page restait lisible derriere, et le texte
+   * concurrencait la photo qu'on est venu regarder.
+   */
+  background: rgba(24, 19, 15, 0.97);
+  animation: fade 0.2s var(--ease) both;
+}
+
+.zoom__img {
+  max-width: 100%;
+  /* De la place pour la legende et le bouton, sans jamais rogner la photo. */
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.zoom__legende {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.zoom__fermer {
+  position: absolute;
+  top: clamp(0.75rem, 3vw, 1.25rem);
+  right: clamp(0.75rem, 3vw, 1.25rem);
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .card--dimmed {
@@ -766,7 +896,7 @@ select {
   place-items: center;
   padding: clamp(1.5rem, 6vw, 3rem);
   perspective: 1400px;
-  animation: cover-in 0.7s var(--ease) both;
+  animation: cover-in 1s var(--ease) both;
 }
 
 /*
@@ -1132,9 +1262,27 @@ select {
  * ligne prend maintenant son tour — le prenom, l'occasion, le message — et
  * l'invitation a ouvrir ferme la marche. C'est la lecture qui fait monter
  * l'attente, pas un delai arbitraire.
+ *
+ * Le rythme est celui de la page-cadeau qui suit, pas un rythme a lui.
+ *
+ * Le pas entre deux lignes valait deja 400 ms, tout pres du pas entre deux
+ * cadeaux — c'etaient les durees qui divergeaient : 0,9 s par ligne quand le
+ * titre des cadeaux met 1,6 s a se poser. Le voile passait donc plus vite que
+ * ce qu'il annonce, et l'ouverture cassait le tempo au lieu de le prolonger.
+ *
+ * Les deux valeurs ci-dessous reprennent les constantes de l'ecran suivant. Le
+ * pas ne peut pas etre `--reveal-step` : GiftView le resserre quand il y a
+ * beaucoup de cadeaux, et le voile accelererait avec eux, ce qui n'a aucun sens.
  */
+.cover {
+  /* Le pas entre deux cadeaux, valeur nominale (REVEAL_STEP_MS). */
+  --voile-pas: 420ms;
+  /* Entre la duree d'une carte (780 ms) et celle du titre (1,6 s). */
+  --voile-duree: 1.2s;
+}
+
 .cover__inner > * {
-  animation: cover-rise 0.9s var(--ease) both;
+  animation: cover-rise var(--voile-duree) var(--ease) both;
 }
 
 .cover__to {
@@ -1142,21 +1290,26 @@ select {
 }
 
 .cover__intro {
-  animation-delay: 0.6s;
-}
-
-.cover__title {
-  animation-delay: 1s;
+  animation-delay: calc(0.2s + var(--voile-pas));
 }
 
 /*
- * Le bouton en dernier, et d'une entree plus breve que les lignes de texte :
- * il doit se poser franchement, pas ramper apres une longue attente.
+ * Le titre du voile est le pendant de celui de l'ecran des cadeaux : meme duree,
+ * 1,6 s. C'est la ligne qu'on lit vraiment, elle a droit au meme temps.
+ */
+.cover__title {
+  animation-delay: calc(0.2s + 2 * var(--voile-pas));
+  animation-duration: var(--titre-duree);
+}
+
+/*
+ * Le bouton ferme la marche, une fois le titre pose. Sa duree est celle d'une
+ * carte : il doit arriver franchement, pas ramper apres une longue attente.
  */
 .cover__btn,
 .cover__wait {
-  animation-delay: 1.6s;
-  animation-duration: 0.6s;
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + 1.1s);
+  animation-duration: 0.78s;
 }
 
 @keyframes cover-rise {
