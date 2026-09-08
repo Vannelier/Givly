@@ -13,6 +13,7 @@ import "./globals.css";
 import "./editor.css";
 import "./landing.css";
 import "./legal.css";
+import "./print.css";
 
 const display = Fraunces({
   subsets: ["latin"],

@@ -1,0 +1,351 @@
+/* ---------------------------------------------------------------------------
+   La carte a imprimer : une feuille A4 paysage, pliee en deux -> carte A5.
+
+   Le pliage de la carte de voeux classique : aucun reglage d'imprimante, aucun
+   decoupage, et l'interieur reste vierge pour un mot ecrit a la main. La version
+   precedente forcait `@page { size: A6 }` tout en invitant a plier — il n'y
+   avait rien a plier, et une imprimante chargee en A4 calait la carte dans un
+   coin.
+   --------------------------------------------------------------------------- */
+
+.print-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  gap: 1.25rem;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  align-content: center;
+}
+
+.print-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 40rem;
+  text-align: center;
+}
+
+.print-bar p {
+  flex: 1 1 16rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+/*
+ * A l'ecran la feuille est reduite pour tenir dans la fenetre, mais elle garde
+ * ses dimensions reelles en millimetres : c'est la meme boite qui part a
+ * l'impression, donc l'apercu ne peut pas mentir sur les proportions.
+ * `--zoom` est pose par le composant, qui mesure le cadre.
+ */
+.feuille-cadre {
+  width: 100%;
+  max-width: 297mm;
+  aspect-ratio: 297 / 210;
+  position: relative;
+}
+
+.feuille {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 297mm;
+  height: 210mm;
+  transform: scale(var(--zoom, 1));
+  transform-origin: top left;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 18px 44px -20px rgba(52, 38, 28, 0.4);
+}
+
+/* Les deux moities. La droite se retrouve devant une fois la carte pliee. */
+.feuille__panneau {
+  position: relative;
+  padding: 16mm 13mm;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3mm;
+  text-align: center;
+}
+
+/*
+ * Le decor est pose en `position: absolute` dans le panneau ; le texte, lui,
+ * n'est pas positionne et se peindrait donc dessous. On remonte tout ce qui
+ * n'est pas le decor.
+ */
+.feuille__panneau > *:not(.motif) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Deux traits courts sur les bords, pas une ligne en pointilles d'un bord a
+ * l'autre : celle-ci resterait visible sur la carte finie.
+ */
+.feuille__pli {
+  position: absolute;
+  left: 50%;
+  width: 0.25mm;
+  height: 7mm;
+  margin-left: -0.125mm;
+  background: var(--line);
+  z-index: 2;
+}
+
+.feuille__pli--haut {
+  top: 0;
+}
+
+.feuille__pli--bas {
+  bottom: 0;
+}
+
+/* --- Contenu commun aux quatre compositions -------------------------------- */
+
+.feuille__to {
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 15pt;
+  color: var(--accent-dark);
+}
+
+.feuille__intro {
+  font-size: 8pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.feuille__titre {
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 22pt;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/*
+ * Le QR est toujours pose sur une plage blanche : la norme demande quatre
+ * modules de zone de silence, et le code ne peut pas etre pose directement sur
+ * un aplat de couleur ou un decor.
+ */
+.feuille__qr {
+  width: 46mm;
+  height: 46mm;
+  padding: 3mm;
+  background: #fff;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+}
+
+.feuille__qr svg,
+.feuille__qr > div {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.feuille__qr-vide {
+  width: 100%;
+  height: 100%;
+  background: var(--paper-warm);
+  border-radius: 3px;
+}
+
+.feuille__cta {
+  font-size: 8pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.feuille__signature {
+  font-family: var(--font-title, var(--font-display, Georgia, serif));
+  font-size: 11pt;
+  color: var(--ink-soft);
+}
+
+/* --- Les quatre compositions ----------------------------------------------- */
+
+/*
+ * `centre` est la disposition d'origine, portee sur deux panneaux : tout centre
+ * verticalement, le QR de taille moyenne au dos. Elle sert de base, les trois
+ * autres ne font que s'en ecarter.
+ */
+
+/* Cadre : un filet interieur, et le decor seme a l'interieur. */
+.feuille--cadre .feuille__panneau::after {
+  content: "";
+  position: absolute;
+  inset: 8mm;
+  border: 0.4mm solid var(--accent-soft);
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.feuille--cadre .feuille__titre {
+  font-size: 19pt;
+}
+
+.feuille--cadre .feuille__qr {
+  width: 42mm;
+  height: 42mm;
+}
+
+/*
+ * Bandeau : un aplat d'accent occupe le tiers superieur de la couverture et
+ * porte le mot d'ouverture en reserve. Le titre vient dessous, sur le papier.
+ */
+.feuille--bandeau .feuille__couv {
+  align-content: start;
+  padding-top: 0;
+}
+
+.feuille--bandeau .feuille__couv::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62mm;
+  background: var(--accent);
+}
+
+.feuille--bandeau .feuille__to,
+.feuille--bandeau .feuille__intro {
+  color: #fff;
+}
+
+.feuille--bandeau .feuille__to {
+  margin-top: 18mm;
+}
+
+.feuille--bandeau .feuille__titre {
+  margin-top: 26mm;
+}
+
+.feuille--bandeau .feuille__dos {
+  align-content: start;
+  padding-top: 24mm;
+}
+
+/*
+ * Affiche : le titre prend la couverture, aligne a gauche. Le QR passe pleine
+ * largeur au dos — c'est le plus grand des quatre.
+ */
+.feuille--affiche .feuille__couv {
+  justify-items: start;
+  text-align: left;
+  align-content: center;
+}
+
+.feuille--affiche .feuille__titre {
+  font-size: 34pt;
+  line-height: 1.05;
+}
+
+.feuille--affiche .feuille__to {
+  font-size: 13pt;
+}
+
+.feuille--affiche .feuille__qr {
+  width: 60mm;
+  height: 60mm;
+}
+
+/* --- Le carrousel de modeles ----------------------------------------------- */
+
+.carrousel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carrousel__fleche {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    border-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.carrousel__fleche:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.carrousel__nom {
+  min-width: 10rem;
+  text-align: center;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.carrousel__nom span {
+  display: block;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Impression ------------------------------------------------------------ */
+
+/*
+ * Il ne reste que la feuille : ni commandes, ni ombre, ni reduction. Le
+ * `print-color-adjust` force le navigateur a imprimer les aplats, qu'il
+ * supprime par defaut pour economiser l'encre.
+ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .print-bar,
+  .carrousel {
+    display: none;
+  }
+
+  .print-page {
+    min-height: 0;
+    padding: 0;
+    display: block;
+  }
+
+  .feuille-cadre {
+    max-width: none;
+    width: 297mm;
+    height: 210mm;
+    aspect-ratio: auto;
+  }
+
+  .feuille {
+    position: static;
+    transform: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
