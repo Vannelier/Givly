@@ -31,6 +31,7 @@ export default async function PrintRoute({ params }: Props) {
       title={page.welcome_message}
       signature={page.signature}
       theme={page.theme}
+      slug={page.slug}
       backHref={`/admin/${token}`}
     />
   );

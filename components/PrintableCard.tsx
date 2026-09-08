@@ -8,6 +8,13 @@ import PrintCarousel from "@/components/PrintCarousel";
 import { fontById } from "@/lib/occasions";
 import { paletteStyle } from "@/lib/palettes";
 import { DEFAULT_PRINT_MODEL_ID, printModelById, stepPrintModel } from "@/lib/printModels";
+import {
+  CTA_DEFAUT,
+  PRINT_LIMITS,
+  ecrirePrintTexts,
+  lirePrintTexts,
+  type PrintTexts,
+} from "@/lib/printTexts";
 import type { Theme } from "@/lib/types";
 
 /**
@@ -29,6 +36,8 @@ export default function PrintableCard({
   signature,
   theme,
   backHref,
+  variante = "page",
+  slug,
 }: {
   url: string;
   to: string;
@@ -36,11 +45,55 @@ export default function PrintableCard({
   title: string;
   signature: string;
   theme: Theme;
-  backHref: string;
+  /** Absent en encart : il n'y a nulle part ou revenir depuis l'ecran de fin. */
+  backHref?: string;
+  /**
+   * « page » : la feuille occupe l'ecran, avec sa barre et son lien de retour.
+   * « encart » : la meme feuille, posee dans une page qui a deja son propre fil
+   * — l'ecran qui suit la creation. Le rendu imprime est identique ; seule la
+   * chrome autour change.
+   */
+  variante?: "page" | "encart";
+  /** Sert de cle au stockage des mots de la carte : un donneur en a plusieurs. */
+  slug: string;
 }) {
   const [svg, setSvg] = useState<string | null>(null);
   const [modelId, setModelId] = useState(DEFAULT_PRINT_MODEL_ID);
   const modele = printModelById(modelId);
+
+  /*
+   * Les mots de la carte imprimee : ceux de la page-cadeau au depart, modifiables
+   * ensuite. Une page qu'on ouvre au telephone et une carte qu'on tient dans la
+   * main n'appellent pas la meme formule.
+   */
+  const defauts: PrintTexts = { to, intro, title, signature, cta: CTA_DEFAUT };
+  const [mots, setMots] = useState<PrintTexts>(defauts);
+  const [ouvert, setOuvert] = useState(false);
+
+  /*
+   * Relu apres le montage, jamais dans l'initialisation du `useState` :
+   * `localStorage` n'existe pas au rendu serveur, et le lire la ferait diverger
+   * l'hydratation.
+   */
+  useEffect(() => {
+    const garde = lirePrintTexts(slug);
+    if (garde) setMots(garde);
+    // Les defauts changent avec la page, pas avec le rendu : slug seul suffit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  function changer(champ: keyof PrintTexts, valeur: string) {
+    setMots((prev) => {
+      const suivant = { ...prev, [champ]: valeur };
+      ecrirePrintTexts(slug, suivant);
+      return suivant;
+    });
+  }
+
+  function reinitialiser() {
+    setMots(defauts);
+    ecrirePrintTexts(slug, defauts);
+  }
 
   useEffect(() => {
     QRCode.toString(url, {
@@ -87,11 +140,13 @@ export default function PrintableCard({
   } as React.CSSProperties;
 
   return (
-    <div className="print-page">
+    <div className={`print-page${variante === "encart" ? " print-page--encart" : ""}`}>
       <div className="print-bar">
-        <Link className="btn btn--ghost btn--sm" href={backHref}>
-          ← Retour
-        </Link>
+        {backHref && (
+          <Link className="btn btn--ghost btn--sm" href={backHref}>
+            ← Retour
+          </Link>
+        )}
         <p>
           Feuille A4, pliée en deux. Rabats la moitié gauche derrière la droite : la couverture se
           retrouve devant, le QR code au dos.
@@ -105,6 +160,92 @@ export default function PrintableCard({
         modelId={modelId}
         onStep={(pas) => setModelId((prev) => stepPrintModel(prev, pas))}
       />
+
+      {/*
+        Les mots de la carte, replies par defaut : neuf fois sur dix ceux de la
+        page conviennent, et un formulaire ouvert d'office ferait croire qu'il y
+        a quelque chose a remplir avant d'imprimer.
+
+        Masque a l'impression avec la barre et le carrousel : rien de tout ceci
+        ne part sur le papier.
+      */}
+      <div className="mots-carte">
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          aria-expanded={ouvert}
+          onClick={() => setOuvert((v) => !v)}
+        >
+          {ouvert ? "Masquer les mots" : "Modifier les mots de la carte"}
+        </button>
+
+        {ouvert && (
+          <div className="mots-carte__corps">
+            <p className="mots-carte__aide">
+              Ils reprennent ceux de la page-cadeau, et s&apos;en détachent dès que tu y touches. La
+              page, elle, ne bouge pas. Gardés sur cet appareil, jamais envoyés.
+            </p>
+
+            <label className="mots-carte__champ">
+              <span>Destinataire</span>
+              <input
+                type="text"
+                value={mots.to}
+                maxLength={PRINT_LIMITS.to}
+                placeholder="Sophie"
+                onChange={(e) => changer("to", e.target.value)}
+              />
+            </label>
+
+            <label className="mots-carte__champ">
+              <span>Mot d&apos;ouverture</span>
+              <input
+                type="text"
+                value={mots.intro}
+                maxLength={PRINT_LIMITS.intro}
+                placeholder="Joyeux anniversaire"
+                onChange={(e) => changer("intro", e.target.value)}
+              />
+            </label>
+
+            <label className="mots-carte__champ">
+              <span>Titre</span>
+              <textarea
+                rows={2}
+                value={mots.title}
+                maxLength={PRINT_LIMITS.title}
+                onChange={(e) => changer("title", e.target.value)}
+              />
+            </label>
+
+            <label className="mots-carte__champ">
+              <span>Signature</span>
+              <input
+                type="text"
+                value={mots.signature}
+                maxLength={PRINT_LIMITS.signature}
+                placeholder="Avec toute mon affection, Nathan"
+                onChange={(e) => changer("signature", e.target.value)}
+              />
+            </label>
+
+            <label className="mots-carte__champ">
+              <span>Ligne sous le QR code</span>
+              <input
+                type="text"
+                value={mots.cta}
+                maxLength={PRINT_LIMITS.cta}
+                placeholder={CTA_DEFAUT}
+                onChange={(e) => changer("cta", e.target.value)}
+              />
+            </label>
+
+            <button type="button" className="btn btn--ghost btn--sm" onClick={reinitialiser}>
+              Reprendre les mots de la page
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="feuille-cadre" ref={cadre}>
         <div className={`feuille feuille--${modele.composition}`} style={skin}>
@@ -123,16 +264,16 @@ export default function PrintableCard({
                 <div className="feuille__qr-vide" />
               )}
             </div>
-            <p className="feuille__cta">Scanne pour ouvrir ta carte</p>
-            {signature && <p className="feuille__signature">{signature}</p>}
+            {mots.cta.trim() && <p className="feuille__cta">{mots.cta}</p>}
+            {mots.signature.trim() && <p className="feuille__signature">{mots.signature}</p>}
           </div>
 
           {/* Panneau droit : la couverture, devant une fois pliee. */}
           <div className="feuille__panneau feuille__couv">
             <GiftMotif kind={modele.motif} />
-            {to && <p className="feuille__to">Pour {to}</p>}
-            {intro && <p className="feuille__intro">{intro}</p>}
-            <h1 className="feuille__titre">{title}</h1>
+            {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
+            {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
+            <h1 className="feuille__titre">{mots.title}</h1>
           </div>
         </div>
       </div>

@@ -262,6 +262,73 @@
 
 /* --- Le carrousel de modeles ----------------------------------------------- */
 
+/*
+ * Variante encart : la feuille est posee dans une page qui a deja son fil, elle
+ * ne doit donc plus s'y centrer verticalement ni occuper tout l'ecran.
+ */
+.print-page--encart {
+  min-height: 0;
+  padding: 0;
+  margin-top: 1.5rem;
+  gap: 0.9rem;
+}
+
+/* --- Les mots de la carte imprimee ---------------------------------------- */
+
+.mots-carte {
+  width: 100%;
+  max-width: 34rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+}
+
+.mots-carte__corps {
+  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: stretch;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.15rem 1.25rem;
+}
+
+.mots-carte__aide {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.mots-carte__champ {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.mots-carte__champ > span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.mots-carte__champ input,
+.mots-carte__champ textarea {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.mots-carte__champ input:focus,
+.mots-carte__champ textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .carrousel {
   display: flex;
   align-items: center;
@@ -322,7 +389,8 @@
   }
 
   .print-bar,
-  .carrousel {
+  .carrousel,
+  .mots-carte {
     display: none;
   }
 

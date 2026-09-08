@@ -1235,6 +1235,47 @@ label.btn.is-disabled {
   background: rgba(176, 132, 40, 0.05);
 }
 
+/*
+ * Le pouls du lien de recuperation.
+ *
+ * Pas un clignotement : la boite ne disparait jamais, elle respire. Ce qui varie
+ * est l'intensite du halo et du liseré, entre deux etats tous deux visibles —
+ * un passage de 0 a 1 accrocherait l'oeil une fois puis deviendrait penible a
+ * lire, et donnerait a la page un air de panne.
+ *
+ * Six secondes, et une courbe douce aux deux extremites : assez lent pour se
+ * remarquer sans se regarder. Seules `box-shadow` et `border-color` bougent, ni
+ * l'opacite du texte ni la mise en page.
+ */
+.link-box--pulse {
+  animation: link-pulse 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes link-pulse {
+  0%,
+  100% {
+    border-color: rgba(176, 132, 40, 0.35);
+    box-shadow: 0 0 0 0 rgba(176, 132, 40, 0);
+  }
+  50% {
+    border-color: rgba(176, 132, 40, 0.85);
+    box-shadow: 0 0 0 5px rgba(176, 132, 40, 0.13);
+  }
+}
+
+/*
+ * Mouvement reduit : le halo ne bat plus, mais le lien garde l'etat haut. Il
+ * doit rester le plus visible des deux — c'est le seul qu'on ne peut pas
+ * retrouver.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .link-box--pulse {
+    animation: none;
+    border-color: rgba(176, 132, 40, 0.85);
+    box-shadow: 0 0 0 5px rgba(176, 132, 40, 0.13);
+  }
+}
+
 .reply-quote {
   margin: 1rem 0 0;
   padding: 0.8rem 1rem;

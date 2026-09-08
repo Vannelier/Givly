@@ -137,7 +137,7 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | route | rôle |
 |---|---|
 | `/` | accueil — invite à composer |
-| `/creer` | formulaire de création |
+| `/creer` | formulaire de création, puis l'écran « Ta page est prête » |
 | `/questions` | questions fréquentes — la page faite pour être trouvée |
 | `/contact` | comment nous joindre |
 | `/confidentialite` | politique de confidentialité |
@@ -194,7 +194,7 @@ découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse l
 | **Mot du receveur** | Choix | Un bouton, sur l'écran de confirmation, qui ouvre la saisie. Désactivé par défaut. |
 | **Palette** | Thème | Huit palettes. Réglée par l'occasion, modifiable ensuite. |
 | **Police du titre** | Thème | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
-| **Disposition** | Thème | Grille ou liste. |
+| **Disposition** | Thème | Grille à deux colonnes, ou liste. Les deux se distinguent dès le téléphone. |
 | **Décor** | Thème | Le motif de l'occasion, désactivable. |
 | **Effet** | Thème | Confettis, pétales, étincelles ou neige, joués une fois sur la page découverte. Proposé par l'occasion. |
 | **Nom de la carte** | Lien | Jamais montré. Il fabrique l'adresse du lien. |
@@ -333,43 +333,33 @@ pas glisser un texte dans une carte qui ne l'a pas demandé.
 
 ## La carte à imprimer
 
-`/admin/[token]/imprimer` : une **feuille A4 paysage, pliée en deux** — le pliage de la carte de
-vœux classique. Aucun réglage d'imprimante, aucun découpage, et l'intérieur reste vierge pour un
-mot écrit à la main.
+`/admin/[token]/imprimer` : une feuille A4 paysage pliée en deux, avec le QR code au dos et la
+couverture devant. Dix modèles au carrousel, tout en CSS et en SVG.
 
-Le panneau **droit** porte la couverture (le prénom, le mot d'ouverture, le titre), le **gauche**
-le dos (le QR code, la légende, la signature). On rabat le gauche derrière le droit : le pli tombe
-à gauche, la couverture est devant.
+**Elle est aussi proposée dès l'écran « Ta page est prête »**, en encart (`variante="encart"` :
+même feuille, même rendu imprimé, sans la barre de retour ni le centrage plein écran). Elle
+n'était accessible qu'en passant par l'administration puis par « Imprimer » — le donneur qui veut
+glisser un QR dans une vraie carte ne découvrait qu'il pouvait la styler qu'après l'avoir cherchée.
+Les données de présentation lui viennent de l'éditeur, qui vient de les envoyer : aucun aller-retour
+serveur, et les replis d'occasion sont déjà résolus par `payload()`.
 
-Le format précédent ne tenait pas ses promesses : le bandeau invitait à plier, mais la feuille de
-style forçait `@page { size: A6 }` et la carte faisait exactement 105 × 148 mm — il n'y avait rien
-à plier, et une imprimante chargée en A4 la calait dans un coin.
+### Ses mots lui appartiennent
 
-**Dix modèles, au carrousel.** Quatre compositions — `centre`, `cadre`, `bandeau`, `affiche` —
-déclinées sur les décors existants. La liste est plate (`lib/printModels.ts`) : chaque entrée est
-une combinaison déjà arbitrée, pas deux sélecteurs à croiser, parce qu'un carrousel qu'on parcourt
-à la flèche doit être court. Comme les palettes et les occasions, seul l'identifiant compte ; tout
-le rendu vit dans `app/print.css`, et ajouter un modèle coûte une ligne et un bloc de style.
+Ils reprennent d'abord ceux de la page-cadeau, et s'en détachent dès qu'on y touche — la page, elle,
+ne bouge pas. Une page qu'on ouvre au téléphone et une carte qu'on tient dans la main n'appellent
+pas la même formule. Cinq champs : destinataire, mot d'ouverture, titre, signature, et la ligne sous
+le QR code.
 
-Le choix **n'est pas enregistré** : il vit dans l'état de la page. Le persister demanderait une
-colonne, une migration et une règle de validation, pour un geste qu'on fait une fois.
+**Gardés sur l'appareil, pas en base** (`lib/printTexts.ts`). Les persister demanderait cinq
+colonnes, une migration et autant de règles de validation, pour un texte qu'on écrit une fois juste
+avant d'imprimer. `localStorage` couvre le vrai risque — recharger la page, ou revenir imprimer un
+deuxième exemplaire — sans rien ajouter au schéma. C'est le même arbitrage que pour le modèle de
+carte, et le même mécanisme que le brouillon de composition : une clé par carte, une version qui
+invalide les formes anciennes, une péremption à 30 jours (la durée de vie d'une page gratuite), et
+tous les accès enveloppés dans des `try` — en navigation privée, lire `localStorage` lève.
 
-Le carrousel émet une **direction**, pas un identifiant, et le parent calcule le voisin en forme
-fonctionnelle. Sans ça, deux clics rapprochés partaient du même état — la seconde flèche
-recalculait le voisin de l'ancien modèle et n'avançait pas.
-
-À l'écran, la feuille garde ses dimensions réelles en millimètres et se réduit par un facteur
-mesuré, pas deviné : c'est la même boîte qui part à l'impression, donc l'aperçu ne peut pas mentir
-sur les proportions. Le QR passe en correction d'erreur **Q** — sur papier il sera plié, manipulé,
-parfois imprimé à court d'encre.
-
-Les commandes disparaissent à l'impression ; `print-color-adjust: exact` force le navigateur à
-imprimer les aplats de couleur, qu'il supprime par défaut. La composition `bandeau` consomme donc
-franchement de l'encre.
-
-⚠️ **Ce qu'aucune vérification ne couvre** : le rendu papier, le sens du pli, les marges réelles de
-l'imprimante et la lisibilité du QR une fois imprimé. La géométrie à l'écran est contrôlée ; le
-premier tirage reste à faire.
+Le panneau est replié par défaut : neuf fois sur dix les mots de la page conviennent, et un
+formulaire ouvert d'office ferait croire qu'il y a quelque chose à remplir avant d'imprimer.
 
 ## L'ouverture de la carte
 
@@ -401,6 +391,22 @@ entre les deux pans.
 
 Toutes les fermetures tiennent en **0,95 s**, la durée que `GiftView` attend avant de retirer le
 voile (`COVER_CLOSE_MS`). Allonger l'une sans l'autre couperait l'animation en plein vol.
+
+## La grille et la liste
+
+**Deux colonnes dès le téléphone.** La grille n'y passait à deux colonnes qu'à partir de 34 rem,
+soit 544 px — aucun téléphone n'atteint cette largeur. « Grille » et « Liste » y donnaient donc la
+même colonne unique, et le réglage ne servait à rien là où la carte est justement lue.
+
+Ce qui a fait trouver le défaut : **l'aperçu de l'éditeur forçait déjà deux colonnes** dans son
+cadre de 390 px. Il montrait au donneur une disposition que le receveur ne verrait jamais.
+
+**La carte est un `<button>`, et un bouton étiré centre verticalement son contenu.** Dans une rangée
+où les cartes s'alignent sur la plus haute, la plus courte se retrouvait avec autant de blanc
+au-dessus de sa vignette qu'en dessous — mesuré à 26 px de part et d'autre sur un téléphone de
+390 px. Invisible tant que la grille restait à une colonne ; flagrant dès qu'elles se côtoient.
+`.card` passe donc en colonne flex, et `.card__body` prend le mou : la vignette reste en haut, le
+fond blanc descend jusqu'en bas.
 
 ## Le rythme de l'ouverture
 

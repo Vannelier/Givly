@@ -63,6 +63,19 @@ export type CreateResult = {
   adminUrl: string;
   expiresAt: string | null;
   warnings: { message: string }[];
+  /*
+   * De quoi dessiner la carte a imprimer sur l'ecran de fin, sans rien
+   * redemander au serveur : l'editeur vient d'envoyer ces valeurs, il les a
+   * sous la main. Les replis d'occasion sont deja resolus par `payload()`,
+   * donc c'est bien ce qui a ete enregistre.
+   */
+  carte: {
+    to: string;
+    intro: string;
+    title: string;
+    signature: string;
+    theme: Theme;
+  };
 };
 
 type Props =
@@ -718,7 +731,17 @@ export default function PageEditor(props: Props) {
         // La page existe : le brouillon n'a plus de raison d'etre, et le laisser
         // ferait resurgir la carte precedente a la composition suivante.
         effacerBrouillon();
-        props.onCreated(data as unknown as CreateResult);
+        const envoye = payload();
+        props.onCreated({
+          ...(data as unknown as Omit<CreateResult, "carte">),
+          carte: {
+            to: envoye.recipient_name,
+            intro: envoye.intro_message || current.intro,
+            title: envoye.welcome_message,
+            signature: envoye.signature,
+            theme: envoye.theme,
+          },
+        });
       } else {
         // Le serveur a pu réécrire les items : ids attribués aux nouvelles lignes,
         // image_url pointant désormais vers Blob. Sans cette resynchronisation, une

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CopyLine from "@/components/CopyLine";
-import QrCard from "@/components/QrCard";
+import PrintableCard from "@/components/PrintableCard";
 import PageEditor, { type CreateResult, type EditorInitial } from "@/components/editor/PageEditor";
 import { DEFAULT_THEME } from "@/lib/types";
 
@@ -58,21 +58,46 @@ function Created({ result }: { result: CreateResult }) {
         </div>
         <h1 style={{ textAlign: "center" }}>Ta page est prête</h1>
 
+        {/*
+          Le lien de recuperation passe devant, et pulse.
+
+          C'est le seul des deux qu'on ne peut pas retrouver : le lien public
+          part dans une conversation, celui-ci n'existe que sur cet ecran. Il
+          etait en troisieme position, sous un QR code qui prend toute la
+          largeur — c'est-a-dire souvent hors de l'ecran au telephone, la ou on
+          ferme l'onglet en croyant avoir fini.
+        */}
+        <div className="link-box link-box--admin link-box--pulse">
+          <span className="link-box__label">Ton lien de récupération</span>
+          <span className="link-box__help">
+            <strong>Garde-le maintenant</strong> : il n&apos;est affiché qu&apos;ici, et c&apos;est
+            le seul moyen de revenir voir le cadeau choisi.
+          </span>
+          <CopyLine value={result.adminUrl} />
+        </div>
+
         <div className="link-box">
           <span className="link-box__label">Lien à envoyer</span>
           <span className="link-box__help">C&apos;est ce que reçoit la personne.</span>
           <CopyLine value={result.publicUrl} />
         </div>
 
-        <QrCard url={result.publicUrl} />
-
-        <div className="link-box link-box--admin">
-          <span className="link-box__label">Ton lien de récupération</span>
-          <span className="link-box__help">
-            Garde-le bien : c&apos;est le seul moyen de voir le cadeau choisi.
-          </span>
-          <CopyLine value={result.adminUrl} />
-        </div>
+        {/*
+          La carte a imprimer, avec son carrousel de modeles, des cet ecran.
+          Elle n'etait accessible qu'en passant par l'administration puis par
+          « Imprimer » : le donneur qui veut glisser un QR dans une vraie carte
+          ne decouvrait qu'il pouvait la styler qu'apres avoir cherche.
+        */}
+        <PrintableCard
+          url={result.publicUrl}
+          to={result.carte.to}
+          intro={result.carte.intro}
+          title={result.carte.title}
+          signature={result.carte.signature}
+          theme={result.carte.theme}
+          slug={result.slug}
+          variante="encart"
+        />
 
         {result.warnings?.length > 0 && (
           <div style={{ marginTop: "1rem" }}>

@@ -353,13 +353,24 @@ select {
   height: auto;
 }
 
+/*
+ * Deux colonnes des le telephone.
+ *
+ * La grille n'y passait a deux colonnes qu'a partir de 34rem, soit 544 px :
+ * aucun telephone n'atteint cette largeur. « Grille » et « Liste » y donnaient
+ * donc la meme colonne unique, et le reglage ne servait a rien la ou la carte
+ * est justement lue.
+ *
+ * L'apercu de l'editeur, lui, forcait deja deux colonnes dans son cadre de
+ * 390 px : il montrait au donneur une disposition que le receveur ne verrait
+ * jamais. C'est ce desaccord qui a fait trouver le defaut.
+ */
 .items--grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 @media (min-width: 34rem) {
   .items--grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 1.1rem;
   }
 }
@@ -370,7 +381,18 @@ select {
 
 .card {
   position: relative;
-  display: block;
+  /*
+   * Colonne, et non bloc.
+   *
+   * La carte est un <button>, et un bouton etire centre verticalement son
+   * contenu — comportement du navigateur, pas du CSS d'ici. Dans une rangee ou
+   * les cartes s'alignent sur la plus haute, la plus courte se retrouvait donc
+   * avec une bande blanche au-dessus de sa vignette comme en dessous : sur la
+   * grille a deux colonnes du telephone, les vignettes d'une meme rangee ne
+   * tombaient pas au meme niveau.
+   */
+  display: flex;
+  flex-direction: column;
   width: 100%;
   text-align: left;
   background: var(--card);
@@ -474,6 +496,8 @@ select {
 }
 
 .card__body {
+  /* Prend le mou : la vignette reste en haut, le fond blanc descend jusqu'en bas. */
+  flex: 1 1 auto;
   padding: 0.95rem 1.05rem 1.1rem;
 }
 
@@ -1498,8 +1522,8 @@ select {
  * deux colonnes pour que le choix Grille / Liste reste visible dans l'apercu,
  * quelle que soit la largeur de l'ecran du donneur.
  */
+/* Les deux colonnes viennent desormais de la regle commune ; seul l'ecart change. */
 .gift-root--embedded .items--grid {
-  grid-template-columns: repeat(2, 1fr);
   gap: 0.7rem;
 }
 
