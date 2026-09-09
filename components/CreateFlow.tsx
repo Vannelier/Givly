@@ -59,6 +59,19 @@ function Created({ result }: { result: CreateResult }) {
         <h1 style={{ textAlign: "center" }}>Ta page est prête</h1>
 
         {/*
+          Creer n'est pas valider.
+          Le bouton « Creer la page » est le plus gros de la barre d'action, et
+          il se touche par erreur en visant « Apercu » juste a cote. Cet ecran
+          n'offrait alors aucun retour : le formulaire avait disparu, et rien ne
+          disait que tout restait modifiable. Il le dit maintenant, et le bouton
+          du bas ramene directement a l'editeur.
+        */}
+        <p className="state__note">
+          Rien n&apos;est figé : tant que personne n&apos;a choisi, tu peux tout modifier — les
+          textes, les cadeaux, le thème. Les deux liens ci-dessous ne changeront pas.
+        </p>
+
+        {/*
           Le lien de recuperation passe devant, et pulse.
 
           C'est le seul des deux qu'on ne peut pas retrouver : le lien public
@@ -111,9 +124,16 @@ function Created({ result }: { result: CreateResult }) {
           </div>
         )}
 
+        {/*
+          « Reprendre la modification » plutot que « Ouvrir l'administration ».
+          Les deux menent au meme endroit — l'editeur vit dans l'administration —
+          mais a cet instant precis personne n'a encore rien choisi : il n'y a
+          rien a administrer, et tout a reprendre. L'ancre depose sur l'editeur
+          plutot qu'en haut de page.
+        */}
         <div className="btn-row" style={{ marginTop: "1.75rem" }}>
-          <a className="btn btn--sm" href={result.adminUrl}>
-            Ouvrir l&apos;administration
+          <a className="btn btn--sm" href={`${result.adminUrl}#modifier`}>
+            Reprendre la modification
           </a>
           <a className="btn btn--ghost btn--sm" href={result.publicUrl} target="_blank" rel="noreferrer">
             Voir la page publique

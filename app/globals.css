@@ -905,6 +905,21 @@ select {
   color: var(--ink-soft);
 }
 
+/*
+ * La ligne qui desamorce l'ecran de fin.
+ *
+ * Le titre « Ta page est prete » se lit comme un point final, alors que rien
+ * n'est fige tant que personne n'a choisi. Elle est centree comme le titre —
+ * `.state p` aligne a gauche dans ce conteneur-la, qui force `text-align: left`
+ * pour ses boites de liens.
+ */
+.state__note {
+  max-width: 34rem;
+  margin-inline: auto;
+  text-align: center;
+  text-wrap: pretty;
+}
+
 .state__seal {
   width: 3.6rem;
   height: 3.6rem;
