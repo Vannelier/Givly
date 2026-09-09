@@ -926,6 +926,24 @@ son `2` désignait la présentation, devenue la troisième. `lireBrouillon` le f
 cadeaux plutôt que de le promouvoir — mieux vaut revoir une étape déjà remplie que d'en sauter une
 qui ne l'est pas.
 
+**La barre d'action est une barre, pas un dégradé.** Ses boutons secondaires portaient un fond
+`--card` et un bord `--line` : **1,06:1** et **1,23:1** de contraste avec le papier, quand la règle
+1.4.11 des WCAG en demande 3:1 pour la limite d'une commande. Sans contour perceptible,
+« Précédent » et « Aperçu » ne se lisaient pas comme des boutons mais comme du texte posé là, et la
+seule chose visible de la barre était l'action principale. Le bord est passé à `--ink-soft`, soit
+**5,47:1**. Ils mesuraient aussi 40 px de haut — hérités de `.btn--sm`, contre les 44 px minimum
+d'une cible tactile (WCAG 2.5.8) — et touchaient l'action principale : 10 px à 1440, 9,6 px en
+dessous de 62 rem où la barre passe à deux rangées. Mesuré après correction : **44 px** de haut,
+**24 px** d'écart horizontal, **16 px** vertical. Le fond opaque, le filet et l'ombre portée
+remplacent le dégradé, qui laissait la barre se fondre dans le contenu défilant dessous.
+
+**Créer n'est pas valider.** L'écran « Ta page est prête » ne le disait pas et n'offrait aucun
+retour : le formulaire avait disparu, et rien ne signalait que tout restait modifiable jusqu'au
+choix. Il porte maintenant cette phrase, et **« Reprendre la modification »** remplace « Ouvrir
+l'administration » — même destination, mais à cet instant précis personne n'a encore rien choisi :
+il n'y a rien à administrer et tout à reprendre. L'ancre `#modifier` dépose sur le panneau de
+l'éditeur plutôt qu'en haut de la vue admin, les trois étapes cliquables juste en dessous.
+
 **L'aperçu en direct n'existe qu'au-delà de 62 rem.** Son cadre mesure 300 × 525 px pour une
 page-cadeau réduite à la même hauteur : au téléphone, en colonne unique, il n'en montrait qu'une
 tranche coupée en haut comme en bas, et s'installait avant les réglages — le formulaire commençait
