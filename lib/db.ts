@@ -62,7 +62,7 @@ function getPool(): Pool {
       connectionTimeoutMillis: 10_000,
     });
     // Sans ce garde, une erreur sur une connexion au repos fait tomber le process.
-    pool.on("error", (err) => console.error("[givly] pool postgres", err.message));
+    pool.on("error", (err) => console.error("[mypresentsforyou] pool postgres", err.message));
   }
   return pool;
 }

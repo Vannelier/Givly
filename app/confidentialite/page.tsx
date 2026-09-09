@@ -6,9 +6,9 @@ import { SITE, aRemplir } from "@/lib/site";
 const MISE_A_JOUR = "2026-09-07";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité — Givly",
+  title: "Politique de confidentialité — MyPresentsForYou",
   description:
-    "Givly ne pose aucun cookie, n'utilise aucun traqueur et ne demande aucun compte. Ce qui est stocké, pour combien de temps, et comment tout effacer.",
+    "MyPresentsForYou ne pose aucun cookie, n'utilise aucun traqueur et ne demande aucun compte. Ce qui est stocké, pour combien de temps, et comment tout effacer.",
   alternates: { canonical: "/confidentialite" },
 };
 
@@ -16,7 +16,7 @@ export default function Confidentialite() {
   return (
     <TextPage
       titre="Politique de confidentialité"
-      chapo="Givly est construit pour avoir le moins de données possible à protéger. Cette page dit exactement lesquelles, et pourquoi elles existent."
+      chapo="MyPresentsForYou est construit pour avoir le moins de données possible à protéger. Cette page dit exactement lesquelles, et pourquoi elles existent."
       miseAJour={MISE_A_JOUR}
     >
       <h2>Aucun cookie, aucun traqueur</h2>
@@ -44,7 +44,7 @@ export default function Confidentialite() {
       </p>
       <p>
         Les polices de caractères sont servies depuis notre propre domaine, pas depuis Google Fonts :
-        afficher une page Givly n&apos;envoie aucune requête à un tiers, et donc pas ton adresse IP.
+        afficher une page MyPresentsForYou n&apos;envoie aucune requête à un tiers, et donc pas ton adresse IP.
       </p>
 
       <h2>Ce qui est enregistré quand tu crées une carte</h2>

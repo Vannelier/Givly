@@ -1,4 +1,4 @@
-# Travailler sur Givly
+# Travailler sur MyPresentsForYou
 
 Ce fichier s'adresse à un agent. Le `README.md` explique **ce que fait** le produit et **pourquoi**
 chaque décision a été prise ; celui-ci dit **comment travailler** dessus. Les deux se lisent, mais
@@ -6,7 +6,7 @@ c'est le README qui fait foi sur le produit.
 
 ## En une phrase
 
-Givly renverse la liste de souhaits : **c'est le donneur qui propose deux à dix idées, et le
+MyPresentsForYou renverse la liste de souhaits : **c'est le donneur qui propose deux à dix idées, et le
 receveur qui choisit**. Tout le reste — la mise en scène, le voile, les décors, la carte à imprimer
 — sert ce renversement. Une proposition qui l'affaiblit est probablement une mauvaise proposition,
 même si elle est bien faite.
@@ -15,7 +15,7 @@ même si elle est bien faite.
 
 | commande | à lancer |
 |---|---|
-| `npm run check` | **avant chaque commit** — 157 vérifications, sans base de données |
+| `npm run check` | **avant chaque commit** — la suite complète, sans base de données |
 | `npx tsc --noEmit` | avant chaque commit |
 | `npm run build` | avant chaque commit |
 | `npm run dev` | développement |

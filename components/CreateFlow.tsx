@@ -35,7 +35,7 @@ export default function CreateFlow({ baseUrlLabel }: { baseUrlLabel: string }) {
     <div className="shell shell--wide">
       <header className="hero">
         <Link className="back-link" href="/">
-          ← Givly
+          ← MyPresentsForYou
         </Link>
         <h1>Compose ta page-cadeau</h1>
         <p>

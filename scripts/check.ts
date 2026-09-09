@@ -737,7 +737,7 @@ test("sslFor : TLS pour les hotes distants, rien en local ou reseau interne", ()
     rejectUnauthorized: false,
   });
   assert.equal(sslFor("postgres://u:p@postgres.railway.internal:5432/railway"), undefined);
-  assert.equal(sslFor("postgres://u:p@localhost:5432/givly"), undefined);
+  assert.equal(sslFor("postgres://u:p@localhost:5432/mypresentsforyou"), undefined);
   assert.equal(sslFor("pas une url"), undefined);
 });
 
@@ -788,7 +788,7 @@ test("boot.mjs et lib/db.ts decident du TLS de la meme maniere", () => {
     "postgres://u:p@ep-x.eu-central-1.aws.neon.tech/db",
     "postgres://u:p@monorail.proxy.rlwy.net:1234/railway",
     "postgres://u:p@postgres.railway.internal:5432/railway",
-    "postgres://u:p@localhost:5432/givly",
+    "postgres://u:p@localhost:5432/mypresentsforyou",
     "pas une url",
   ]) {
     assert.deepEqual(bootSslFor(url), sslFor(url), url);
@@ -1420,6 +1420,47 @@ async function checkImages() {
     assert.notEqual(presentation, -1, "etape de presentation absente");
     assert.ok(selecteur < cadeaux, "le selecteur d'occasion a quitte la premiere etape");
     assert.ok(cadeaux < presentation, "les cadeaux doivent preceder la presentation");
+  });
+
+  test("l'ancien nom du site ne traine plus dans les sources", () => {
+    /*
+     * Le site a ete renomme, et un renommage se rate par les bords.
+     *
+     * Le premier passage n'a couvert que .tsx/.ts/.css/.json/.md : il a laisse
+     * l'ancien nom dans `scripts/boot.mjs` (onze lignes de journal), dans
+     * `scripts/brand.mjs` (donc dans `app/icon.svg`, qui en est engendre) et dans
+     * `db/schema.sql`. Aucun de ces trois ne casse quoi que ce soit — c'est bien
+     * le probleme : rien ne s'en serait plaint.
+     *
+     * Les deux cles de `localStorage` d'avant le renommage sont les seules
+     * exceptions permises : elles doivent porter l'ancien nom, sans quoi les
+     * brouillons deja ecrits sur les appareils deviennent illisibles.
+     */
+    const racines = ["app", "components", "lib", "scripts", "db"];
+    const suffixes = [".ts", ".tsx", ".css", ".mjs", ".sql", ".svg", ".json"];
+    const permis = ["givly:brouillon", "givly:carte:"];
+
+    const fichiers: string[] = [];
+    const descendre = (dossier: string) => {
+      for (const e of readdirSync(dossier, { withFileTypes: true })) {
+        const chemin = `${dossier}/${e.name}`;
+        if (e.isDirectory()) descendre(chemin);
+        // Ce fichier-ci s'exclut : il doit citer l'ancien nom pour le chercher.
+        else if (chemin === "scripts/check.ts") continue;
+        else if (suffixes.some((f) => e.name.endsWith(f))) fichiers.push(chemin);
+      }
+    };
+    for (const r of racines) descendre(r);
+    assert.ok(fichiers.length > 40, `parcours trop court : ${fichiers.length} fichiers`);
+
+    for (const chemin of fichiers) {
+      let contenu = readFileSync(chemin, "utf8");
+      for (const p of permis) contenu = contenu.split(p).join("");
+      assert.ok(
+        !/givly/i.test(contenu),
+        `l'ancien nom du site subsiste dans ${chemin}`,
+      );
+    }
   });
 
   test("le README annonce le bon nombre d'etapes", () => {

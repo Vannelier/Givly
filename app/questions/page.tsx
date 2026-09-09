@@ -4,7 +4,7 @@ import TextPage from "@/components/TextPage";
 import { LIMITS } from "@/lib/limits";
 
 export const metadata: Metadata = {
-  title: "Questions fréquentes — Givly",
+  title: "Questions fréquentes — MyPresentsForYou",
   description:
     "Offrir en laissant choisir : comment ça marche, combien ça coûte, ce que voit la personne qui reçoit, et que faire si une image ne se récupère pas.",
   alternates: { canonical: "/questions" },
@@ -30,9 +30,9 @@ const QUESTIONS: { q: string; r: string[] }[] = [
     ],
   },
   {
-    q: "Givly est-il gratuit ?",
+    q: "MyPresentsForYou est-il gratuit ?",
     r: [
-      "Oui, entièrement. Aucun paiement ne transite par le site, et il n'y a rien à payer pour créer une carte. Tu achètes le cadeau retenu chez le marchand de ton choix, exactement comme tu l'aurais fait sans Givly.",
+      "Oui, entièrement. Aucun paiement ne transite par le site, et il n'y a rien à payer pour créer une carte. Tu achètes le cadeau retenu chez le marchand de ton choix, exactement comme tu l'aurais fait sans MyPresentsForYou.",
     ],
   },
   {
@@ -86,7 +86,7 @@ const QUESTIONS: { q: string; r: string[] }[] = [
     q: "En quoi est-ce différent d'une liste de souhaits ?",
     r: [
       "Sur une liste de souhaits, c'est elle qui écrit ce qu'elle veut, et toi qui y pioches. Ici, c'est toi qui proposes et elle qui choisit.",
-      "Et contrairement à une liste de mariage ou une cagnotte, rien n'est encaissé ici : Givly ne touche jamais à l'argent.",
+      "Et contrairement à une liste de mariage ou une cagnotte, rien n'est encaissé ici : MyPresentsForYou ne touche jamais à l'argent.",
     ],
   },
   {

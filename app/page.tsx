@@ -5,13 +5,13 @@ import SiteFooter from "@/components/SiteFooter";
 /*
  * Le titre porte ce qu'on cherche, pas ce qu'on est.
  *
- * « Givly — offre le choix » ne se trouve qu'en tapant « Givly », c'est-à-dire
+ * « MyPresentsForYou — offre le choix » ne se trouve qu'en tapant « MyPresentsForYou », c'est-à-dire
  * en connaissant déjà le site. Le titre décrit donc d'abord l'action — offrir en
  * laissant choisir — et garde la marque en fin de ligne, là où elle ne prend pas
  * la place des mots utiles. Environ 60 signes : au-delà, Google coupe.
  */
 export const metadata: Metadata = {
-  title: "Offrir en laissant choisir le cadeau — Givly",
+  title: "Offrir en laissant choisir le cadeau — MyPresentsForYou",
   description:
     "Réunis quelques idées de cadeau sur une page, envoie le lien, découvre celle qui a été retenue. Gratuit, sans compte et sans paiement.",
   alternates: { canonical: "/" },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const DONNEES_STRUCTUREES = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Givly",
+  name: "MyPresentsForYou",
   applicationCategory: "LifestyleApplication",
   operatingSystem: "Tout navigateur web",
   inLanguage: "fr",
@@ -58,7 +58,7 @@ export default function LandingPage() {
       {/* --- Accroche : la promesse, la preuve, l'action, en un seul écran. --- */}
       <section className="lp-hero">
         <div className="lp-hero__text">
-          <p className="eyebrow">Givly</p>
+          <p className="eyebrow">MyPresentsForYou</p>
           <h1>Offrir sans se tromper.</h1>
           <p className="lp-sub">
             Tu réunis quelques idées de cadeaux sur une jolie page, tu envoies le lien. La personne
@@ -186,7 +186,7 @@ export default function LandingPage() {
       <section className="lp-notes">
         <div>
           <p className="lp-notes__title">Rien à payer ici</p>
-          <p>Aucun paiement ne transite par Givly. Tu achètes le cadeau comme tu l&apos;aurais fait sans.</p>
+          <p>Aucun paiement ne transite par MyPresentsForYou. Tu achètes le cadeau comme tu l&apos;aurais fait sans.</p>
         </div>
         <div>
           <p className="lp-notes__title">Aucune donnée demandée</p>

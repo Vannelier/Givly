@@ -8,7 +8,7 @@ import { occasionById } from "@/lib/occasions";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Carte à imprimer — Givly",
+  title: "Carte à imprimer — MyPresentsForYou",
   robots: { index: false, follow: false, nocache: true },
 };
 

@@ -18,7 +18,18 @@
  * serait bien plus.
  */
 
-const CLE = "givly:brouillon";
+const CLE = "mypresentsforyou:brouillon";
+
+/*
+ * L'ancienne cle, du temps ou le site portait un autre nom.
+ *
+ * Renommer une cle de `localStorage` jette sans bruit ce qu'elle contenait — ici
+ * une carte a demi composee, ecrite au pire moment : celui ou l'on vient de
+ * partir chez le marchand chercher une image. On relit donc l'ancienne quand la
+ * nouvelle est vide, et le premier enregistrement bascule tout seul. A retirer
+ * une fois les sept jours de `DUREE_MS` ecoules pour tout le monde.
+ */
+const CLE_ANCIENNE = "givly:brouillon";
 
 /**
  * Change des que la forme du brouillon change. Un brouillon d'une version
@@ -102,6 +113,8 @@ export function brouillonUtile(b: Brouillon): boolean {
 export function ecrireBrouillon(b: Brouillon): void {
   try {
     localStorage.setItem(CLE, JSON.stringify({ ...b, version: VERSION, a: Date.now() }));
+    // Un seul exemplaire : sinon l'ancien ressuscite des qu'on vide le nouveau.
+    localStorage.removeItem(CLE_ANCIENNE);
   } catch {
     /* quota plein, navigation privee : on continue sans filet */
   }
@@ -110,6 +123,7 @@ export function ecrireBrouillon(b: Brouillon): void {
 export function effacerBrouillon(): void {
   try {
     localStorage.removeItem(CLE);
+    localStorage.removeItem(CLE_ANCIENNE);
   } catch {
     /* rien a faire de plus */
   }
@@ -127,7 +141,7 @@ export function effacerBrouillon(): void {
 export function lireBrouillon(): Brouillon | null {
   let brut: unknown;
   try {
-    const texte = localStorage.getItem(CLE);
+    const texte = localStorage.getItem(CLE) ?? localStorage.getItem(CLE_ANCIENNE);
     if (!texte) return null;
     brut = JSON.parse(texte);
   } catch {

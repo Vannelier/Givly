@@ -1,5 +1,5 @@
 /**
- * Fabrique la marque Givly : le SVG, les PNG et le favicon.ico.
+ * Fabrique la marque MyPresentsForYou : le SVG, les PNG et le favicon.ico.
  *
  * Une seule description géométrique, plus bas, sert de source à tout le reste —
  * le SVG est écrit à partir d'elle, et le rasteriseur redessine exactement les
@@ -63,7 +63,7 @@ function markSvg({ radius = RADIUS } = {}) {
     );
   };
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VB} ${VB}" width="${VB}" height="${VB}" role="img" aria-label="Givly">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VB} ${VB}" width="${VB}" height="${VB}" role="img" aria-label="MyPresentsForYou">
   <defs>
     <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${hex(INK_TOP)}"/>
@@ -314,7 +314,7 @@ function write(relative, data) {
   console.log(`  ${relative.padEnd(34)} ${(data.length / 1024).toFixed(1)} Ko`);
 }
 
-console.log("Marque Givly :");
+console.log("Marque MyPresentsForYou :");
 
 write("app/icon.svg", markSvg());
 

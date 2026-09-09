@@ -14,8 +14,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Givly — offre le choix",
-    short_name: "Givly",
+    name: "MyPresentsForYou — offre le choix",
+    short_name: "MyPresentsForYou",
     description: "Compose une petite page-cadeau, envoie le lien, laisse la personne choisir.",
     lang: "fr",
     start_url: "/",

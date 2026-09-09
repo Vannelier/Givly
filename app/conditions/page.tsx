@@ -5,9 +5,9 @@ import TextPage from "@/components/TextPage";
 const MISE_A_JOUR = "2026-09-07";
 
 export const metadata: Metadata = {
-  title: "Conditions d'utilisation — Givly",
+  title: "Conditions d'utilisation — MyPresentsForYou",
   description:
-    "Ce que Givly fait, ce qu'il ne fait pas, et ce qu'on attend de toi. Service gratuit, sans compte, sans paiement.",
+    "Ce que MyPresentsForYou fait, ce qu'il ne fait pas, et ce qu'on attend de toi. Service gratuit, sans compte, sans paiement.",
   alternates: { canonical: "/conditions" },
 };
 
@@ -18,10 +18,10 @@ export default function Conditions() {
       chapo="Le service est gratuit et sans compte. Voici ce sur quoi nous nous engageons, et ce que nous te demandons en retour."
       miseAJour={MISE_A_JOUR}
     >
-      <h2>Ce qu&apos;est Givly</h2>
+      <h2>Ce qu&apos;est MyPresentsForYou</h2>
       <p>
         Un outil pour composer une page présentant plusieurs idées de cadeau, en envoyer le lien, et
-        savoir laquelle a été retenue. <strong>Givly ne vend rien</strong> : il n&apos;encaisse aucun
+        savoir laquelle a été retenue. <strong>MyPresentsForYou ne vend rien</strong> : il n&apos;encaisse aucun
         paiement, ne livre rien, et n&apos;intervient à aucun moment entre toi et le marchand chez
         qui tu achèteras. C&apos;est un aide-mémoire partagé, pas une boutique.
       </p>

@@ -1,4 +1,4 @@
-# Givly
+# MyPresentsForYou
 
 Composer une petite page-cadeau, envoyer un lien, laisser la personne choisir.
 
@@ -816,8 +816,8 @@ l'outil : l'accueil, le formulaire, et surtout `/questions`.
   six pages publiques ; y inscrire les cartes reviendrait à publier la liste des liens envoyés.
 - **Une adresse canonique par page** (`alternates.canonical`), pour qu'une même page atteinte par
   deux chemins ne se fasse pas concurrence à elle-même.
-- **Des titres qui portent ce qu'on cherche, pas ce qu'on est.** « Givly — offre le choix » ne se
-  trouve qu'en tapant « Givly », c'est-à-dire en connaissant déjà le site. L'accueil annonce donc
+- **Des titres qui portent ce qu'on cherche, pas ce qu'on est.** « MyPresentsForYou — offre le choix » ne se
+  trouve qu'en tapant « MyPresentsForYou », c'est-à-dire en connaissant déjà le site. L'accueil annonce donc
   « Offrir en laissant choisir le cadeau ». Tous les titres tiennent sous 60 signes, toutes les
   descriptions sous 160 — au-delà, Google coupe.
 - **Données structurées** : `WebApplication` sur l'accueil, avec un `offers` à zéro qui est la façon
@@ -907,7 +907,7 @@ Le démarrage annonce le chemin retenu et vérifie qu'il est accessible en écri
 pour qu'un montage posé à côté se voie tout de suite :
 
 ```
-[givly] Images : dossier /app/.media.
+[mypresentsforyou] Images : dossier /app/.media.
 ```
 
 ## L'assistant de composition
@@ -976,15 +976,15 @@ stuffing, les redirections forcées, avec fermeture de compte annoncée pour tou
 est la perte du canal entier.
 
 **Le cookie de 24 h contre un parcours asynchrone.** Le cookie Amazon dure 24 h (90 jours si le
-produit part au panier), or Givly est asynchrone par construction : création, envoi, choix du
+produit part au panier), or MyPresentsForYou est asynchrone par construction : création, envoi, choix du
 receveur des jours plus tard, achat après. Contrainte de conception qui en découle : **le lien
-d'achat final doit être servi par Givly** depuis l'écran d'administration, pas copié-collé.
+d'achat final doit être servi par MyPresentsForYou** depuis l'écran d'administration, pas copié-collé.
 
-**Ce que l'affiliation impliquerait sur le produit.** Givly repose sur un renversement : *c'est le
-donneur qui propose, pas le receveur qui demande*. Si Givly propose les cadeaux, la prémisse devient
-« Givly me dit quoi offrir », et l'on entre frontalement sur le marché des sites d'idées cadeaux.
+**Ce que l'affiliation impliquerait sur le produit.** MyPresentsForYou repose sur un renversement : *c'est le
+donneur qui propose, pas le receveur qui demande*. Si MyPresentsForYou propose les cadeaux, la prémisse devient
+« MyPresentsForYou me dit quoi offrir », et l'on entre frontalement sur le marché des sites d'idées cadeaux.
 Les listes multi-enseignes gratuites existent déjà en France — The Good List, Listy, MyLittleWishList,
-Milirose — et ce qui distingue Givly n'est pas la liste, c'est le renversement et la mise en scène.
+Milirose — et ce qui distingue MyPresentsForYou n'est pas la liste, c'est le renversement et la mise en scène.
 
 **L'ordre à suivre, si la question revient :**
 
