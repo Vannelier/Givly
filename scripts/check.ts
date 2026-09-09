@@ -1379,6 +1379,25 @@ async function checkImages() {
     assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
   });
 
+  test("le README connait tous les effets et tous les decors", () => {
+    /*
+     * La documentation derive en silence, et l'a fait : elle a annonce « dix
+     * modeles », « huit palettes » et « quinze occasions » longtemps apres que
+     * ces nombres aient change. Compter serait fragile a la reformulation ; on
+     * verifie donc que chaque nom du catalogue apparait quelque part, ce qui
+     * attrape le vrai defaut — un effet ou un decor ajoute sans un mot.
+     */
+    const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8").toLowerCase();
+    for (const e of EFFECTS) {
+      if (e.id === "aucun") continue;
+      assert.ok(readme.includes(e.name.toLowerCase()), `effet absent du README : ${e.name}`);
+    }
+    for (const m of PRINT_MOTIFS) {
+      if (m.id === "none") continue;
+      assert.ok(readme.includes(m.nom.toLowerCase()), `decor absent du README : ${m.nom}`);
+    }
+  });
+
   test("l'occasion se choisit avant les cadeaux", () => {
     /*
      * L'occasion est un preset : la choisir repose palette, decor, effet et

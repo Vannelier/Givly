@@ -112,16 +112,19 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `app/admin/[token]/page.tsx` | vue admin : cadeau choisi, liens, édition, clôture |
 | `components/GiftView.tsx` | le rendu que voit le receveur — **le même** composant sert à l'aperçu |
 | `components/editor/PageEditor.tsx` | assistant partagé création / édition |
-| `lib/palettes.ts` | les huit palettes ; seul leur identifiant est stocké |
+| `lib/palettes.ts` | les neuf palettes ; seul leur identifiant est stocké |
 | `lib/occasions.ts` | occasions et polices ; idem, seuls les identifiants sont stockés |
 | `components/GiftMotif.tsx` | décors SVG des occasions |
 | `components/GiftCover.tsx` | voile d'ouverture et compte à rebours |
-| `components/QrCard.tsx` | QR code du lien public |
 | `scripts/brand.mjs` | fabrique la marque : `app/icon.svg`, `app/favicon.ico`, les PNG |
 | `app/opengraph-image.tsx` | la bannière de partage du site (1200 × 630) |
-| `components/PrintableCard.tsx` | la feuille A4 pliable : deux panneaux, le pli, le QR |
-| `components/PrintCarousel.tsx` | les flèches qui font défiler les modèles |
-| `lib/printModels.ts` | les dix modèles ; seul l'identifiant est retenu |
+| `components/PrintableCard.tsx` | l'atelier d'impression : la feuille A4 pliable et ses réglages |
+| `components/CardPreview.tsx` | l'aperçu de la carte + « Carte à imprimer » / « Télécharger le QR » |
+| `components/PrintCarousel.tsx` | les flèches qui font défiler le pictogramme de fond |
+| `components/PrintColorSlider.tsx` | le curseur de teinte de la carte |
+| `components/PrintSlider.tsx` | les curseurs de taille et de contraste du décor |
+| `lib/printModels.ts` | les trois dispositions et les douze pictogrammes |
+| `lib/carteCouleur.ts` | la rotation de teinte : hex ↔ HSL, et les variables surchargées |
 | `lib/mediaStore.ts` | où atterrissent les images : Vercel Blob, ou disque en développement |
 | `lib/extract.ts` | lecture des métadonnées OG, best-effort |
 | `lib/blob.ts` | recopie des images vers Vercel Blob |
@@ -172,13 +175,13 @@ français, avant toute validation — voir « Les routes anonymes et leurs quota
 
 ## Ce qui est personnalisable
 
-L'assistant tient en **deux étapes** : les cadeaux, puis la présentation. Cette seconde étape est
-découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse la personne qui reçoit —
-**Intro**, **Cadeaux**, **Choix** — précédés de l'occasion et suivis du thème et du lien.
+L'assistant tient en **deux étapes** : l'occasion et les cadeaux, puis la présentation. Cette
+seconde étape est découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse la
+personne qui reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
 
 | réglage | cadre | effet |
 |---|---|---|
-| **Occasion** | Occasion | Preset complet : palette, décor et formulations de départ d'un coup. Quinze occasions, rangées par rubrique. |
+| **Occasion** | *étape 1* | Preset complet : palette, décor, effet et formulations de départ d'un coup. Seize occasions, rangées en quatre rubriques. |
 | **Prénom** | Intro | « Pour Sophie », tout en haut du voile. |
 | **Mot d'ouverture** | Intro | La ligne au-dessus du titre. Vide = celle de l'occasion. |
 | **Message principal** | Intro | Le grand titre du voile, et le titre de l'aperçu de lien. |
@@ -192,11 +195,11 @@ découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse l
 | **Signature** | Cadeaux | Une ligne en bas de page. Facultative. |
 | **Message de fin** | Choix | Après la confirmation du choix. |
 | **Mot du receveur** | Choix | Un bouton, sur l'écran de confirmation, qui ouvre la saisie. Désactivé par défaut. |
-| **Palette** | Thème | Huit palettes. Réglée par l'occasion, modifiable ensuite. |
+| **Palette** | Thème | Neuf palettes. Réglée par l'occasion, modifiable ensuite. |
 | **Police du titre** | Thème | Sept : Élégant, Classique, Délicat, Net, Rond, Manuscrit, Calligraphie. |
 | **Disposition** | Thème | Grille à deux colonnes, ou liste. Les deux se distinguent dès le téléphone. |
 | **Décor** | Thème | Le motif de l'occasion, désactivable. |
-| **Effet** | Thème | Confettis, pétales, étincelles ou neige, joués une fois sur la page découverte. Proposé par l'occasion. |
+| **Effet** | Thème | Neuf effets, joués une fois sur la page découverte. Proposé par l'occasion. |
 | **Nom de la carte** | Lien | Jamais montré. Il fabrique l'adresse du lien. |
 | **Personnaliser le lien** | Lien | Le texte cliquable et l'image que montrent WhatsApp et les SMS. |
 
@@ -222,9 +225,24 @@ l'occasion, un cadeau sans titre devient « Sans titre », et le nom de la carte
 de l'occasion et du prénom. Il ne reste qu'une exigence, structurelle : il faut au moins un cadeau
 à choisir.
 
-**Une occasion est un preset, pas une contrainte.** La choisir repose palette et décor, et met à jour
-le mot d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un texte
-écrit à la main n'est jamais écrasé.
+**Une occasion est un preset, pas une contrainte.** La choisir repose palette, décor et effet, et met
+à jour le mot d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un
+texte écrit à la main n'est jamais écrasé.
+
+**Elle se choisit avant les cadeaux, en tête de l'étape 1.** Elle vivait à l'étape 2, donc après la
+saisie : un preset qui arrive après coup écrase ce qu'on vient d'écrire, et la règle ci-dessus est
+née de là. Elle reste utile — on peut changer d'occasion en cours de route — mais elle n'est plus
+le rempart qu'elle était.
+
+Le sélecteur **se replie en un résumé** dès qu'un choix est fait : seize occasions en quatre
+rubriques, c'est le plus gros bloc de l'éditeur, et déplié en permanence il repousserait la liste de
+cadeaux hors de l'écran à chaque retour à l'étape 1 — alors qu'on n'y revient pas pour changer
+d'occasion, mais pour ajouter un cadeau. Mesuré : le titre « Les cadeaux » passe de 1 211 px à
+481 px du haut sur un 1440, de 1 337 px à 418 px sur un 390.
+
+Il reste **dans la même étape que la liste de cadeaux**, et non dans une troisième à lui : c'est là
+que des suggestions par occasion devraient un jour apparaître, et il faudrait alors qu'ajouter une
+suggestion remplisse une ligne juste en dessous.
 
 Les suggestions du titre et du contenu de l'écran des cadeaux, elles, sont **communes à toutes les
 occasions** (`ITEMS_TITLE_HINT`, `ITEMS_MESSAGE_HINT`) : cet écran est fonctionnel, le décorum de
@@ -233,6 +251,29 @@ l'occasion vit sur le voile juste avant.
 **Le décor est un SVG en `currentColor`**, pas une image : il suit la palette sans code de couleur
 en dur, ne coûte aucun téléchargement, et se désactive en une case à cocher. Il n'apparaît que pour
 les occasions qui en proposent un.
+
+Douze décors, tous dans `components/GiftMotif.tsx` : confettis, flocons, cœurs, étoiles, guirlande,
+feuilles, pattes, pas de bébé, bougies, cadeaux, alliances — plus « aucun ». Le même composant sert
+la page-cadeau, le voile **et** la carte à imprimer : en ajouter un le rend disponible partout d'un
+coup.
+
+Trois d'entre eux illustrent ce qui fait qu'un pictogramme se lit ou non :
+
+- **Les cadeaux laissent le ruban en creux.** Tout est peint dans la même couleur ; un ruban plein
+  sur une boîte pleine ne se verrait pas. Ce sont les deux fentes entre les quatre quartiers qui
+  font lire « paquet » plutôt que « rectangle ».
+- **Les alliances sont en trait** — un anneau plein n'est plus un anneau — et c'est leur
+  chevauchement qui dit l'union.
+- **La bougie n'a pas de mèche.** Une première version en avait une : peinte de la même couleur,
+  elle soudait la flamme au corps, et l'ensemble se lisait comme une balle de fusil. C'est le vide
+  entre les deux qui dit que ça brûle.
+
+Un garde-fou dans `npm run check` exige que **`GiftMotif` porte un tracé pour chaque décor du
+catalogue** : un `MotifKind` ajouté sans son `case` compile sans broncher et rend un `<pattern>`
+vide — le décor serait proposable, sélectionnable, et invisible.
+
+`--motif-opacite` porte l'opacité du décor, avec `0.11` en repli. La page-cadeau ne la pose nulle
+part et garde donc exactement le décor qu'elle avait ; seule la carte à imprimer la règle.
 
 **En base, seuls les identifiants sont stockés** (`theme.occasion`, `theme.palette.id`,
 `theme.font`, `theme.opening`, `theme.effect`). Les couleurs et les motifs vivent dans
@@ -334,14 +375,77 @@ pas glisser un texte dans une carte qui ne l'a pas demandé.
 ## La carte à imprimer
 
 `/admin/[token]/imprimer` : une feuille A4 paysage pliée en deux, avec le QR code au dos et la
-couverture devant. Dix modèles au carrousel, tout en CSS et en SVG.
+couverture devant. Tout en CSS et en SVG — rien à télécharger, et l'impression sort nette à
+n'importe quelle taille.
 
-**Elle est aussi proposée dès l'écran « Ta page est prête »**, en encart (`variante="encart"` :
-même feuille, même rendu imprimé, sans la barre de retour ni le centrage plein écran). Elle
-n'était accessible qu'en passant par l'administration puis par « Imprimer » — le donneur qui veut
-glisser un QR dans une vraie carte ne découvrait qu'il pouvait la styler qu'après l'avoir cherchée.
-Les données de présentation lui viennent de l'éditeur, qui vient de les envoyer : aucun aller-retour
-serveur, et les replis d'occasion sont déjà résolus par `payload()`.
+### Trois axes indépendants, et non une liste de modèles
+
+Il y avait dix combinaisons figées, parcourues à la flèche : une **disposition** et un **décor**
+changeaient ensemble, sans qu'on puisse dire lequel on voulait, et l'immense majorité des
+croisements étaient inatteignables. Les axes sont séparés :
+
+| axe | valeurs | commande |
+|---|---|---|
+| **Disposition** | Classique, Affiche, Sobre | une rangée de trois |
+| **Pictogramme de fond** | douze, ceux de `GiftMotif` | un carrousel, avec vignette |
+| **Couleur** | teinte libre | un curseur, centré sur la couleur du thème |
+| **Taille du décor** | ×0,4 à ×2,2 | un curseur |
+| **Contraste du décor** | 2 % à 40 % | un curseur |
+
+Deux dispositions ont disparu en chemin. **« Bandeau »** : son aplat d'accent était posé en
+`::before` sans `z-index`, donc peint après le fond mais avant le contenu positionné — et le contenu
+de la feuille l'est tout entier. L'aplat passait derrière le titre qu'il devait souligner.
+**« Encadrée »** : retirée sur demande, son filet n'apportant rien que le décor de fond ne fasse
+mieux depuis qu'on en règle la taille et le contraste.
+
+**Le curseur de couleur ne fait tourner que la teinte.** Saturation et clarté restent celles de la
+palette, couleur par couleur : c'est ce qui garde la carte dans le registre papier au lieu de la
+faire virer au fluo. Sa course est **centrée sur la teinte du thème** et non calée sur 0-359 — la
+teinte est un cercle, et une palette terracotta (accent à 13°) ouvrait avec le curseur collé contre
+la butée gauche, ce qui se lit comme un réglage à zéro. Sur sa valeur d'origine, il ne surcharge
+rien du tout : réécrire les mêmes couleurs à un arrondi près ferait dériver une carte qu'on n'a pas
+touchée.
+
+### Un seul décor pour la feuille entière
+
+Chaque panneau portait le sien. Or un `<pattern>` commence son pavage au coin du dessin qui le
+porte : la tuile repartait de zéro au milieu de la feuille, et le motif se cassait net sur le pli.
+Il en faut **un seul**, posé sur la feuille.
+
+L'ampleur de la rupture dépendait du réglage de taille, ce qui explique qu'elle passe parfois
+inaperçue : à ×1 la tuile de confettis fait 140 px et le panneau 431, le saut ne valait donc que
+11 px ; à ×2,2 la tuile monte à 308 et le saut à 123 — un tiers de tuile, en plein milieu.
+
+### L'atelier : la carte et ses réglages à l'écran en même temps
+
+La page empilait la barre, les réglages, les mots, puis la feuille, en une seule colonne. Le défaut
+n'était pas que l'aperçu soit « en dessous » : c'est que **les réglages et l'objet qu'ils règlent
+n'étaient jamais visibles ensemble**.
+
+| mesuré | avant | après |
+|---|---|---|
+| défilement avant d'atteindre la carte (390 × 844) | 710 px | 76 px |
+| défilement avant d'atteindre la carte (1440 × 900) | 657 px | 100 px |
+| part de la carte visible au repos (1440) | 31 % | 100 % |
+| largeur de fenêtre inutilisée (1440) | 62 % | 0 % |
+
+Au-delà de **62 rem** : réglages à gauche sur 22 rem, carte à droite sur le reste. Les colonnes sont
+posées **explicitement** (`grid-column: 1` / `2`) et non déduites de l'ordre du DOM — la carte y est
+écrite en premier pour le téléphone, et sans cette consigne elle héritait de la colonne étroite.
+
+En dessous : deux étages, la carte au-dessus et **collée en haut**, pour rester sous les yeux
+pendant qu'on glisse un curseur. En `flex` et non en `grid` : le bloc englobant d'un élément collant
+est sa zone de grille, et une zone de grille ne dépasse pas sa rangée — en grille à une colonne, la
+carte se serait décollée au bout de ses propres 253 px.
+
+**Le cadre de la feuille rogne** (`overflow: hidden`). `transform: scale()` réduit ce qu'on voit,
+pas la boîte mise en page : celle-ci mesure toujours 297 mm, soit 1 122 px, et gonflait la largeur
+du document à cette valeur pour une fenêtre de 430. Rien ne dépassait au `getBoundingClientRect` —
+les rectangles rendus sont bien dans la fenêtre — ce qui rendait le défaut invisible à la relecture
+comme à l'œil, mais la page défilait latéralement dans le vide.
+
+**L'écran « Ta page est prête » et la vue admin ne montrent pas l'atelier**, mais un aperçu : voir
+« L'aperçu de la carte » ci-dessous.
 
 ### Ses mots lui appartiennent
 
@@ -512,10 +616,34 @@ reste utile quand le donneur a coupé le voile.
 | **Pétales** | Ovales dans le ton de la palette, plus lents. |
 | **Étincelles** | Elles montent depuis le bas et s'éteignent. |
 | **Neige** | Disques pâles, chute droite et posée. |
+| **Notes de musique** | Croche isolée et croches liées, qui descendent en se balançant. |
+| **Bulles** | Elles montent, grossissent, et éclatent en fin de course. |
+| **Feuilles** | Chute lente, avec un tournoiement sur deux axes. |
+| **Ballons** | Sept seulement, gros et lents, avec leur ficelle. |
+| **Poussière d'or** | Un scintillement sur place, sans chute. |
 
 Comme la palette et le décor, **l'occasion en propose un** : neige pour Noël, confettis pour un
-anniversaire, pétales pour la Saint-Valentin. Il suit l'occasion tant que le donneur n'en a pas
+anniversaire, pétales pour la Saint-Valentin, bulles pour une naissance, ballons pour une
+crémaillère, poussière d'or pour un mariage. Il suit l'occasion tant que le donneur n'en a pas
 choisi un autre.
+
+**Quatre d'entre eux ne se contentent pas d'une variante de la chute**, et c'est ce qui a demandé le
+plus de soin :
+
+- **Les notes sont un masque, pas un glyphe.** `content: "♪"` aurait laissé la police de l'appareil
+  décider du dessin — une croche fine ici, un pavé carré là, un rectangle vide en cas de manque.
+  Le masque porte notre propre tracé, découpé dans un aplat qui suit le thème. Même mécanique pour
+  les feuilles et les ballons.
+- **Les feuilles tournent en `rotate3d`.** Une feuille qui tombe se retourne, elle ne pivote pas à
+  plat comme un confetti, et c'est le passage par la tranche — où elle disparaît presque — qui rend
+  la chute crédible.
+- **Les ballons sont sept, pas vingt-six.** Vingt-six ballons ne sont pas une fête, c'est un lâcher.
+  Le compte est réduit **en CSS** (`:nth-child(4n + 2)`) et non dans le composant, qui sert les dix
+  effets et n'a pas à connaître les besoins de chacun.
+- **La poussière d'or ne traverse rien.** Tous les autres entrent par un bord et ressortent par
+  l'autre ; celle-ci se pose où elle tombe et scintille sur place. D'où `--y`, la hauteur de départ
+  que le composant tire pour chaque grain, et trois grains par `<span>` posés en `box-shadow` :
+  vingt-six points sur un écran entier, c'est un désert.
 
 Trois règles de fabrication :
 
@@ -527,6 +655,14 @@ Trois règles de fabrication :
 - **Seuls `transform` et `opacity` sont animés**, sur 26 `<span>` vides : le compositeur les déplace
   sans repasser par la mise en page ni la peinture. Sous `prefers-reduced-motion`, l'effet n'est pas
   ralenti mais retiré — c'est du décor pur.
+- **Le calque est ancré à l'écran, pas au document** (`position: fixed`). En `absolute` il couvrait
+  toute la page-cadeau — plus de deux mille pixels avec huit cadeaux — si bien que les étincelles
+  partaient de sous le bas du *document* et finissaient leur course avant d'atteindre la fenêtre.
+  Mesuré : 0 particule visible sur 26 depuis le haut de la page, contre 26 sur 26 après correction.
+
+Un garde-fou dans `npm run check` exige que **chaque effet du catalogue ait sa règle
+`.fx--<id> span {`**. `GiftEffect` pose une classe sur des spans vides et s'arrête là : sans règle,
+l'effet est proposable, activable, et absolument invisible.
 
 ## La date de révélation
 
@@ -541,14 +677,28 @@ Deux garde-fous à la création : la date doit être au format ISO — `new Date
 « le 25 décembre » devenait 2001-12-24, accepté en silence — et elle doit tomber avant l'expiration
 de la page, sans quoi la carte ne s'ouvrirait jamais.
 
-## Le QR code
+## L'aperçu de la carte
 
-La vue admin et l'écran de fin de création affichent le QR code du lien public, en SVG (net à
-n'importe quelle taille d'impression) et téléchargeable. L'idée : l'imprimer et le glisser dans une
-vraie carte en papier, que la personne scanne.
+La vue admin et l'écran de fin de création montrent **la feuille telle qu'elle sortira** — le dos
+avec son QR à gauche, la couverture à droite, marques de pli comprises — et dessous deux gestes :
+**Carte à imprimer** et **Télécharger le QR code** (`components/CardPreview.tsx`).
 
-Il est généré dans le navigateur, à partir d'une URL que le client possède déjà — pas d'aller-retour
-serveur pour ça.
+Il y avait à cette place un damier noir et blanc pleine largeur. Il ne disait rien de ce qu'on va
+tenir dans la main : ni le prénom, ni le thème, ni même qu'il existe une carte derrière — et le
+bouton « Carte à imprimer » vivait dessous, dans une rangée séparée où personne ne faisait le lien
+entre les deux.
+
+L'écran de fin portait, lui, **l'atelier complet déplié** : carrousel, champs de texte, feuille
+pleine largeur. Bonne intention, mauvais format — sur un écran où l'on vient chercher deux liens, il
+prenait plus de place que les liens et repoussait les boutons hors de vue.
+
+La vignette est bornée à 15 rem et la colonne d'actions à 22 rem : sans plafond les deux boutons
+s'étiraient sur près de 700 px, et une pilule de cette longueur pour trois mots ne ressemble plus à
+un bouton. Sous 32 rem, la carte repasse au-dessus et les boutons en dessous.
+
+Le QR est **généré dans le navigateur**, à partir d'une URL que le client possède déjà — pas
+d'aller-retour serveur pour ça — en SVG, net à n'importe quelle taille d'impression, et
+téléchargeable pour qui veut seulement le coller ailleurs.
 
 ## L'aperçu
 
@@ -762,11 +912,12 @@ pour qu'un montage posé à côté se voie tout de suite :
 
 Création et édition passent par le même composant, en deux étapes :
 
-1. **Les cadeaux** — de 1 à 10 propositions, avec extraction depuis une URL ou saisie manuelle.
-   Le minimum est bien **un** : voir « Le cadeau unique ».
-2. **La présentation** — l'occasion, puis un cadre par écran que traverse la personne qui reçoit
-   (**Intro**, **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté
-   des réglages, sur écran large.
+1. **L'occasion et les cadeaux** — l'occasion d'abord, repliée en résumé dès qu'elle est choisie,
+   puis de 1 à 10 propositions, avec extraction depuis une URL ou saisie manuelle. Le minimum est
+   bien **un** : voir « Le cadeau unique ».
+2. **La présentation** — un cadre par écran que traverse la personne qui reçoit (**Intro**,
+   **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté des réglages,
+   sur écran large.
 
 **L'aperçu en direct n'existe qu'au-delà de 62 rem.** Son cadre mesure 300 × 525 px pour une
 page-cadeau réduite à la même hauteur : au téléphone, en colonne unique, il n'en montrait qu'une
@@ -794,6 +945,54 @@ concernée** — sinon le message parlerait d'un champ invisible. L'aperçu rest
 
 En création, l'assistant avance pas à pas. En édition tout est déverrouillé : on saute d'une étape
 à l'autre par les puces du haut, et le bouton d'enregistrement est présent sur chacune.
+
+## Modèle économique
+
+**Rien n'est décidé, et rien n'est implémenté.** Cette section existe pour que l'analyse ne se
+reperde pas, pas pour acter un choix.
+
+La piste étudiée est l'**affiliation** : le donneur colle des liens produit, un achat s'ensuit,
+une commission tombe. Trois réserves, par ordre de gravité.
+
+**Le volume est structurellement minuscule.** Une page-cadeau, c'est **un** acheteur. Pas mille
+visiteurs dont 2 % convertissent : une personne, dont la conversion est presque certaine mais dont
+la base est 1. *Estimation, hypothèses explicites* — panier de 45 €, commission moyenne 4,5 %
+(Amazon FR : 3-4 % high-tech, 6-7 % maison/beauté), 70 % des pages aboutissant à un achat traçable
+— soit **≈ 1,40 € par page créée**, et **~7 000 pages/an** pour 10 000 € de revenu. La question
+n'est donc pas « quel taux ? » mais « peut-on faire 7 000 pages ? ».
+
+**Récrire les liens collés par le donneur est une zone grise.** L'injection d'un tag dans une URL
+que l'utilisateur a fournie n'est pas explicitement traitée par l'*Associates Operating Agreement*
+d'Amazon ; ce qui l'est : l'injection de tags sans intention de clic authentique, le cookie
+stuffing, les redirections forcées, avec fermeture de compte annoncée pour toute violation
+« however minor ». **À vérifier auprès d'Amazon avant de construire dessus** — le coût d'une erreur
+est la perte du canal entier.
+
+**Le cookie de 24 h contre un parcours asynchrone.** Le cookie Amazon dure 24 h (90 jours si le
+produit part au panier), or Givly est asynchrone par construction : création, envoi, choix du
+receveur des jours plus tard, achat après. Contrainte de conception qui en découle : **le lien
+d'achat final doit être servi par Givly** depuis l'écran d'administration, pas copié-collé.
+
+**Ce que l'affiliation impliquerait sur le produit.** Givly repose sur un renversement : *c'est le
+donneur qui propose, pas le receveur qui demande*. Si Givly propose les cadeaux, la prémisse devient
+« Givly me dit quoi offrir », et l'on entre frontalement sur le marché des sites d'idées cadeaux.
+Les listes multi-enseignes gratuites existent déjà en France — The Good List, Listy, MyLittleWishList,
+Milirose — et ce qui distingue Givly n'est pas la liste, c'est le renversement et la mise en scène.
+
+**L'ordre à suivre, si la question revient :**
+
+1. **Instrumenter avant de construire.** Trois chiffres manquent : pages créées, choix confirmés,
+   clics vers la boutique depuis l'admin. Sans eux, tout calcul de revenu est de la fiction — y
+   compris celui ci-dessus.
+2. **Des suggestions complémentaires, jamais substitutives.** Le donneur a mis deux cadeaux →
+   « trois idées de plus pour un anniversaire », qu'il *ajoute* s'il veut. L'affiliation devient
+   propre — notre lien, notre produit, pas de récriture — et la prémisse du produit reste intacte.
+3. **Regarder un modèle qui ne dépend pas d'un tiers qui peut bannir.** La carte à imprimer est déjà
+   une valeur réelle. *Spéculation, à valider* : une carte imprimée et postée se vend au moment où
+   le donneur est le plus engagé, sans cookie et sans compte à faire fermer.
+
+**Le seul changement déjà fait au titre de cette réflexion** est le déplacement de l'occasion avant
+les cadeaux (voir « Ce qui est personnalisable »). Il est bon en soi, et n'engage rien.
 
 ## Décisions structurantes
 
