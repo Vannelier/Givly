@@ -1379,6 +1379,25 @@ async function checkImages() {
     assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
   });
 
+  test("l'occasion se choisit avant les cadeaux", () => {
+    /*
+     * L'occasion est un preset : la choisir repose palette, decor, effet et
+     * formulations de depart. Posee apres la saisie, elle ecrase ce qu'on vient
+     * d'ecrire — `chooseOccasion` porte encore la rustine qui n'efface le
+     * message que s'il valait toujours le defaut precedent. Le selecteur doit
+     * donc rester dans l'etape 1, avant la liste de cadeaux.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    const selecteur = editeur.indexOf('className="occasion-groups"');
+    const etape2 = editeur.indexOf("{step === 2 && (");
+    assert.notEqual(selecteur, -1, "selecteur d'occasion absent");
+    assert.notEqual(etape2, -1, "etape 2 absente");
+    assert.ok(selecteur < etape2, "le selecteur d'occasion est retombe dans l'etape 2");
+  });
+
   test("chaque effet du catalogue est dessine quelque part", () => {
     /*
      * `GiftEffect` pose une classe `fx--<id>` sur un calque de spans vides et

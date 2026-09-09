@@ -113,7 +113,7 @@ const EFFECT_GLYPHS: Record<EffectId, string> = {
 };
 
 const STEPS = [
-  { n: 1, title: "Les cadeaux", short: "Cadeaux" },
+  { n: 1, title: "L'occasion et les cadeaux", short: "Cadeaux" },
   { n: 2, title: "La présentation", short: "Présentation" },
 ] as const;
 
@@ -152,6 +152,15 @@ export default function PageEditor(props: Props) {
   const router = useRouter();
 
   const [step, setStep] = useState<StepNumber>(1);
+  /*
+   * Le selecteur d'occasion se replie en un resume des qu'un choix est fait.
+   *
+   * Seize occasions en quatre rubriques, c'est le plus gros bloc de l'editeur ;
+   * le laisser deplie pousserait la liste de cadeaux hors de l'ecran a chaque
+   * retour a l'etape 1. En modification, l'occasion est deja choisie : on ouvre
+   * directement sur le resume.
+   */
+  const [choix, setChoix] = useState(mode === "edit");
   // En édition, tout est déjà rempli : on autorise à sauter d'une étape à l'autre.
   const [furthest, setFurthest] = useState<StepNumber>(mode === "edit" ? 2 : 1);
 
@@ -285,6 +294,9 @@ export default function PageEditor(props: Props) {
 
     setStep(b.etape === 2 ? 2 : 1);
     setFurthest(b.etape === 2 ? 2 : 1);
+    // Un brouillon porte deja une occasion : on le retrouve sur le resume, pas
+    // sur les seize pastilles.
+    setChoix(true);
     setName(b.name);
     setIntro(b.intro);
     setSignature(b.signature);
@@ -361,6 +373,7 @@ export default function PageEditor(props: Props) {
     effacerBrouillon();
     setBrouillonRetrouve(false);
     setStep(1);
+    setChoix(false);
     setFurthest(1);
     setName("");
     setIntro("");
@@ -851,6 +864,78 @@ export default function PageEditor(props: Props) {
       )}
 
       {step === 1 && (
+        <>
+          {/*
+            L'occasion vient avant les cadeaux, et non plus a l'etape suivante.
+
+            C'est un preset : la choisir repose d'un coup la palette, le decor,
+            l'effet et les formulations de depart. Posee apres, elle ecrasait ce
+            qu'on venait d'ecrire — `chooseOccasion` porte encore la rustine qui
+            n'efface le message que s'il valait toujours le defaut precedent.
+            Posee avant, la question ne se pose plus.
+
+            Elle reste dans la meme etape que la liste de cadeaux, et non dans
+            une troisieme a elle : c'est la que des suggestions par occasion
+            devraient un jour apparaitre, et il faudrait alors qu'ajouter une
+            suggestion remplisse une ligne juste en dessous. Les separer
+            imposerait un aller-retour, ou un second selecteur.
+          */}
+          <section className="panel occasion-panel">
+            {choix ? (
+              <div className="occasion-choisie">
+                <span className="occasion-choisie__icon" aria-hidden="true">
+                  {current.icon}
+                </span>
+                <span className="occasion-choisie__texte">
+                  <span className="occasion-choisie__label">L&apos;occasion</span>
+                  <strong>{current.name}</strong>
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setChoix(false)}
+                >
+                  Changer
+                </button>
+              </div>
+            ) : (
+              <>
+                <h2>L&apos;occasion</h2>
+                <p className="help">
+                  Elle pose d&apos;un coup une palette, un décor et des formulations de départ.
+                  Tout reste modifiable à l&apos;étape suivante.
+                </p>
+                <div className="occasion-groups" role="radiogroup" aria-label="Occasion">
+                  {OCCASION_GROUPS.map((groupe) => (
+                    <div key={groupe.label ?? "base"}>
+                      {groupe.label && <p className="occasion-group__title">{groupe.label}</p>}
+                      <div className="occasions">
+                        {groupe.items.map((o) => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={occasion === o.id}
+                            className={`occasion${occasion === o.id ? " is-on" : ""}`}
+                            onClick={() => {
+                              chooseOccasion(o.id);
+                              setChoix(true);
+                            }}
+                          >
+                            <span className="occasion__icon" aria-hidden="true">
+                              {o.icon}
+                            </span>
+                            <span className="occasion__name">{o.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+
         <section className="panel">
           <div className="panel__head">
             <h2>Les cadeaux</h2>
@@ -1026,6 +1111,7 @@ export default function PageEditor(props: Props) {
             + Ajouter un cadeau
           </button>
         </section>
+        </>
       )}
 
       {step === 2 && (
@@ -1064,39 +1150,7 @@ export default function PageEditor(props: Props) {
           </aside>
 
           <div className="compose__main">
-            <section className="panel">
-              <h2>L&apos;occasion</h2>
-              <p className="help">
-                Elle pose d&apos;un coup une palette, un décor et des formulations de départ. Tout
-                reste modifiable juste en dessous.
-              </p>
-              <div className="occasion-groups" role="radiogroup" aria-label="Occasion">
-                {OCCASION_GROUPS.map((groupe) => (
-                  <div key={groupe.label ?? "base"}>
-                    {groupe.label && <p className="occasion-group__title">{groupe.label}</p>}
-                    <div className="occasions">
-                      {groupe.items.map((o) => (
-                        <button
-                          key={o.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={occasion === o.id}
-                          className={`occasion${occasion === o.id ? " is-on" : ""}`}
-                          onClick={() => chooseOccasion(o.id)}
-                        >
-                          <span className="occasion__icon" aria-hidden="true">
-                            {o.icon}
-                          </span>
-                          <span className="occasion__name">{o.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Les trois cadres suivants suivent l'ordre des écrans que traverse la
+            {/* Les trois cadres suivent l'ordre des écrans que traverse la
                 personne qui reçoit : ce qu'elle voit en arrivant, les cadeaux, puis
                 l'écran qui suit son choix. */}
             <section
