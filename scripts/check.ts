@@ -1398,23 +1398,60 @@ async function checkImages() {
     }
   });
 
-  test("l'occasion se choisit avant les cadeaux", () => {
+  test("l'occasion est la premiere des trois etapes", () => {
     /*
      * L'occasion est un preset : la choisir repose palette, decor, effet et
      * formulations de depart. Posee apres la saisie, elle ecrase ce qu'on vient
      * d'ecrire — `chooseOccasion` porte encore la rustine qui n'efface le
-     * message que s'il valait toujours le defaut precedent. Le selecteur doit
-     * donc rester dans l'etape 1, avant la liste de cadeaux.
+     * message que s'il valait toujours le defaut precedent.
+     *
+     * Le selecteur doit donc rester dans l'etape 1, avant le marqueur de
+     * l'etape des cadeaux.
      */
     const editeur = readFileSync(
       new URL("../components/editor/PageEditor.tsx", import.meta.url),
       "utf8",
     );
     const selecteur = editeur.indexOf('className="occasion-groups"');
-    const etape2 = editeur.indexOf("{step === 2 && (");
+    const cadeaux = editeur.indexOf("{step === 2 && (");
+    const presentation = editeur.indexOf("{step === 3 && (");
     assert.notEqual(selecteur, -1, "selecteur d'occasion absent");
-    assert.notEqual(etape2, -1, "etape 2 absente");
-    assert.ok(selecteur < etape2, "le selecteur d'occasion est retombe dans l'etape 2");
+    assert.notEqual(cadeaux, -1, "etape des cadeaux absente");
+    assert.notEqual(presentation, -1, "etape de presentation absente");
+    assert.ok(selecteur < cadeaux, "le selecteur d'occasion a quitte la premiere etape");
+    assert.ok(cadeaux < presentation, "les cadeaux doivent preceder la presentation");
+  });
+
+  test("le README annonce le bon nombre d'etapes", () => {
+    /*
+     * Le nombre d'etapes est ecrit en toutes lettres a trois endroits du README,
+     * et il vient de derailler : l'assistant est passe a trois etapes pendant
+     * que la doc en annonçait encore deux, dans la carte du code comme dans la
+     * section « Ce qui est personnalisable ». Rien ne s'en plaignait.
+     *
+     * On compte les entrees de `STEPS` dans l'editeur — la source — et on exige
+     * que le README emploie le meme mot. La forme « du temps des deux etapes »
+     * reste permise : elle raconte l'ancien decoupage, elle ne l'annonce pas.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    const bloc = /const STEPS = \[(.*?)\] as const;/s.exec(editeur);
+    assert.ok(bloc, "tableau STEPS introuvable dans l'editeur");
+    const combien = (bloc[1].match(/\{ n: \d+,/g) ?? []).length;
+    assert.ok(combien >= 2, "STEPS parait vide");
+
+    const mots: Record<number, string> = { 2: "deux", 3: "trois", 4: "quatre" };
+    const attendu = mots[combien];
+    assert.ok(attendu, `pas de mot pour ${combien} etapes`);
+
+    const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+    const annonces = readme.match(/en \*{0,2}(deux|trois|quatre)\*{0,2} étapes/g) ?? [];
+    assert.ok(annonces.length >= 2, "le README n'annonce plus le nombre d'etapes");
+    for (const a of annonces) {
+      assert.ok(a.includes(attendu), `le README annonce « ${a} » pour ${combien} etapes`);
+    }
   });
 
   test("chaque effet du catalogue est dessine quelque part", () => {

@@ -113,11 +113,12 @@ const EFFECT_GLYPHS: Record<EffectId, string> = {
 };
 
 const STEPS = [
-  { n: 1, title: "L'occasion et les cadeaux", short: "Cadeaux" },
-  { n: 2, title: "La présentation", short: "Présentation" },
+  { n: 1, title: "L'occasion", short: "Occasion" },
+  { n: 2, title: "Les cadeaux", short: "Cadeaux" },
+  { n: 3, title: "La présentation", short: "Présentation" },
 ] as const;
 
-type StepNumber = 1 | 2;
+type StepNumber = 1 | 2 | 3;
 
 let keySeed = 0;
 const nextKey = () => `row_${++keySeed}`;
@@ -152,17 +153,8 @@ export default function PageEditor(props: Props) {
   const router = useRouter();
 
   const [step, setStep] = useState<StepNumber>(1);
-  /*
-   * Le selecteur d'occasion se replie en un resume des qu'un choix est fait.
-   *
-   * Seize occasions en quatre rubriques, c'est le plus gros bloc de l'editeur ;
-   * le laisser deplie pousserait la liste de cadeaux hors de l'ecran a chaque
-   * retour a l'etape 1. En modification, l'occasion est deja choisie : on ouvre
-   * directement sur le resume.
-   */
-  const [choix, setChoix] = useState(mode === "edit");
   // En édition, tout est déjà rempli : on autorise à sauter d'une étape à l'autre.
-  const [furthest, setFurthest] = useState<StepNumber>(mode === "edit" ? 2 : 1);
+  const [furthest, setFurthest] = useState<StepNumber>(mode === "edit" ? 3 : 1);
 
   const [name, setName] = useState(initial.name);
   const [intro, setIntro] = useState(initial.intro_message);
@@ -292,11 +284,9 @@ export default function PageEditor(props: Props) {
     const b = lireBrouillon();
     if (!b || !brouillonUtile(b)) return;
 
-    setStep(b.etape === 2 ? 2 : 1);
-    setFurthest(b.etape === 2 ? 2 : 1);
-    // Un brouillon porte deja une occasion : on le retrouve sur le resume, pas
-    // sur les seize pastilles.
-    setChoix(true);
+    const etape = (b.etape === 3 ? 3 : b.etape === 2 ? 2 : 1) as StepNumber;
+    setStep(etape);
+    setFurthest(etape);
     setName(b.name);
     setIntro(b.intro);
     setSignature(b.signature);
@@ -373,7 +363,6 @@ export default function PageEditor(props: Props) {
     effacerBrouillon();
     setBrouillonRetrouve(false);
     setStep(1);
-    setChoix(false);
     setFurthest(1);
     setName("");
     setIntro("");
@@ -470,7 +459,7 @@ export default function PageEditor(props: Props) {
       showError(invalid);
       return;
     }
-    goTo(Math.min(2, step + 1) as StepNumber);
+    goTo(Math.min(3, step + 1) as StepNumber);
   }
 
   function patchItem(key: string, patch: Partial<DraftItem>) {
@@ -641,7 +630,15 @@ export default function PageEditor(props: Props) {
    * que ce qui est structurel — il faut bien au moins un cadeau à choisir.
    */
   function validateStep(which: StepNumber): string | null {
-    if (which === 1) {
+    /*
+     * L'etape de l'occasion n'a rien a valider : une occasion est toujours
+     * posee, « Sans occasion » comprise, et aucun choix n'y est invalide.
+     * Elle existe pour l'ordre — un preset se choisit avant ce qu'il repose —
+     * pas pour poser une question a laquelle on pourrait mal repondre.
+     */
+    if (which === 1) return null;
+
+    if (which === 2) {
       const filled = filledItems();
       if (filled.length < LIMITS.itemsMin) return "Il faut au moins un cadeau.";
       if (filled.length > LIMITS.itemsMax) return `Pas plus de ${LIMITS.itemsMax} cadeaux.`;
@@ -709,7 +706,7 @@ export default function PageEditor(props: Props) {
 
     // Une erreur sur une étape en amont doit ramener le donneur sur cette étape,
     // sinon le message parle d'un champ qu'il n'a pas sous les yeux.
-    for (const which of [1, 2] as StepNumber[]) {
+    for (const which of [1, 2, 3] as StepNumber[]) {
       const invalid = validateStep(which);
       if (invalid) {
         goTo(which);
@@ -735,7 +732,7 @@ export default function PageEditor(props: Props) {
 
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        if ((data.field as string) === "slug") goTo(2);
+        if ((data.field as string) === "slug") goTo(3);
         showError((data.error as string) ?? "L'enregistrement a échoué.");
         return;
       }
@@ -813,7 +810,7 @@ export default function PageEditor(props: Props) {
     );
   }
 
-  const isLast = step === 2;
+  const isLast = step === 3;
   const filledCount = filledItems().length;
 
   return (
@@ -864,78 +861,54 @@ export default function PageEditor(props: Props) {
       )}
 
       {step === 1 && (
-        <>
+        <section className="panel">
           {/*
-            L'occasion vient avant les cadeaux, et non plus a l'etape suivante.
+            L'occasion est la premiere des trois etapes.
 
             C'est un preset : la choisir repose d'un coup la palette, le decor,
-            l'effet et les formulations de depart. Posee apres, elle ecrasait ce
-            qu'on venait d'ecrire — `chooseOccasion` porte encore la rustine qui
+            l'effet et les formulations de depart. Elle vivait a la fin, donc
+            posee apres la saisie — un preset qui arrive apres coup ecrase ce
+            qu'on vient d'ecrire, et `chooseOccasion` porte encore la rustine qui
             n'efface le message que s'il valait toujours le defaut precedent.
-            Posee avant, la question ne se pose plus.
 
-            Elle reste dans la meme etape que la liste de cadeaux, et non dans
-            une troisieme a elle : c'est la que des suggestions par occasion
-            devraient un jour apparaitre, et il faudrait alors qu'ajouter une
-            suggestion remplisse une ligne juste en dessous. Les separer
-            imposerait un aller-retour, ou un second selecteur.
+            Une etape a elle, et non un cadre en tete des cadeaux : seize
+            occasions en quatre rubriques, c'est le plus gros bloc de l'editeur,
+            et le poser au-dessus de la liste repoussait celle-ci a plus de
+            1 200 px du haut. Isolee, elle tient dans un ecran et ne gene rien.
           */}
-          <section className="panel occasion-panel">
-            {choix ? (
-              <div className="occasion-choisie">
-                <span className="occasion-choisie__icon" aria-hidden="true">
-                  {current.icon}
-                </span>
-                <span className="occasion-choisie__texte">
-                  <span className="occasion-choisie__label">L&apos;occasion</span>
-                  <strong>{current.name}</strong>
-                </span>
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => setChoix(false)}
-                >
-                  Changer
-                </button>
-              </div>
-            ) : (
-              <>
-                <h2>L&apos;occasion</h2>
-                <p className="help">
-                  Elle pose d&apos;un coup une palette, un décor et des formulations de départ.
-                  Tout reste modifiable à l&apos;étape suivante.
-                </p>
-                <div className="occasion-groups" role="radiogroup" aria-label="Occasion">
-                  {OCCASION_GROUPS.map((groupe) => (
-                    <div key={groupe.label ?? "base"}>
-                      {groupe.label && <p className="occasion-group__title">{groupe.label}</p>}
-                      <div className="occasions">
-                        {groupe.items.map((o) => (
-                          <button
-                            key={o.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={occasion === o.id}
-                            className={`occasion${occasion === o.id ? " is-on" : ""}`}
-                            onClick={() => {
-                              chooseOccasion(o.id);
-                              setChoix(true);
-                            }}
-                          >
-                            <span className="occasion__icon" aria-hidden="true">
-                              {o.icon}
-                            </span>
-                            <span className="occasion__name">{o.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+          <h2>L&apos;occasion</h2>
+          <p className="help">
+            Elle pose d&apos;un coup une palette, un décor et des formulations de départ. Tout reste
+            modifiable à la dernière étape.
+          </p>
+          <div className="occasion-groups" role="radiogroup" aria-label="Occasion">
+            {OCCASION_GROUPS.map((groupe) => (
+              <div key={groupe.label ?? "base"}>
+                {groupe.label && <p className="occasion-group__title">{groupe.label}</p>}
+                <div className="occasions">
+                  {groupe.items.map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={occasion === o.id}
+                      className={`occasion${occasion === o.id ? " is-on" : ""}`}
+                      onClick={() => chooseOccasion(o.id)}
+                    >
+                      <span className="occasion__icon" aria-hidden="true">
+                        {o.icon}
+                      </span>
+                      <span className="occasion__name">{o.name}</span>
+                    </button>
                   ))}
                 </div>
-              </>
-            )}
-          </section>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
+      {step === 2 && (
         <section className="panel">
           <div className="panel__head">
             <h2>Les cadeaux</h2>
@@ -1111,10 +1084,9 @@ export default function PageEditor(props: Props) {
             + Ajouter un cadeau
           </button>
         </section>
-        </>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <div className="compose">
           {/* Aperçu vivant : le même composant que la page réelle, en réduction.
               Il réagit à chaque réglage, sans passer par le plein écran. */}
