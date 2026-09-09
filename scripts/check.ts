@@ -1376,6 +1376,23 @@ async function checkImages() {
     assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
   });
 
+  test("le decor court d'un bord a l'autre de la feuille", () => {
+    /*
+     * Un `<pattern>` commence son pavage au coin du dessin qui le porte. Un
+     * decor par panneau faisait donc repartir la tuile a zero au milieu de la
+     * feuille, et le motif se cassait net sur le pli. Il en faut un seul, pose
+     * sur la feuille elle-meme.
+     */
+    for (const fichier of ["PrintableCard", "CardPreview"]) {
+      const source = readFileSync(
+        new URL(`../components/${fichier}.tsx`, import.meta.url),
+        "utf8",
+      );
+      const decors = source.match(/<GiftMotif /g) ?? [];
+      assert.equal(decors.length, 1, `${fichier} : ${decors.length} decors au lieu d'un`);
+    }
+  });
+
   test("l'atelier garde la carte a l'ecran avec ses reglages", () => {
     /*
      * Trois pieces tiennent ensemble, et retirer l'une suffit a rendre la page

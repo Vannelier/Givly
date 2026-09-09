@@ -205,7 +205,7 @@
   bottom: 0;
 }
 
-/* --- Contenu commun aux deux dispositions -------------------------------- */
+/* --- Contenu commun aux trois dispositions -------------------------------- */
 
 .feuille__to {
   font-family: var(--font-title, var(--font-display, Georgia, serif));
@@ -269,12 +269,12 @@
   color: var(--ink-soft);
 }
 
-/* --- Les deux dispositions ----------------------------------------------- */
+/* --- Les trois dispositions ----------------------------------------------- */
 
 /*
  * `centre` est la disposition d'origine, portee sur deux panneaux : tout centre
  * verticalement, le QR de taille moyenne au dos. Elle sert de base, « Affiche »
- * ne fait que s'en ecarter.
+ * et « Sobre » ne font que s'en ecarter.
  *
  * Deux autres ont disparu. « Bandeau » : un aplat d'accent pose en `::before`,
  * donc peint apres le fond mais avant le contenu positionne — et le contenu de
@@ -286,7 +286,7 @@
 
 /*
  * Affiche : le titre prend la couverture, aligne a gauche. Le QR passe pleine
- * largeur au dos — c'est le plus grand des deux.
+ * largeur au dos — c'est le plus grand des trois.
  */
 .feuille--affiche .feuille__couv {
   justify-items: start;
@@ -306,6 +306,41 @@
 .feuille--affiche .feuille__qr {
   width: 60mm;
   height: 60mm;
+}
+
+/*
+ * Sobre : le texte descend au bas de la couverture, et laisse respirer au-dessus.
+ *
+ * Elle occupe la troisieme place, restee vide depuis le retrait d'« Encadree ».
+ * Ni « Classique », qui centre tout, ni « Affiche », qui remplit : ici le vide
+ * fait le travail, et c'est la seule des trois ou le decor de fond se voit
+ * vraiment — d'ou son interet maintenant qu'on en regle la taille et le
+ * contraste.
+ *
+ * Au dos, le QR remonte en tete et retrecit : c'est le pendant de la couverture,
+ * une fois la carte retournee.
+ */
+.feuille--sobre .feuille__couv {
+  align-content: end;
+  padding-bottom: 30mm;
+}
+
+.feuille--sobre .feuille__titre {
+  font-size: 20pt;
+}
+
+.feuille--sobre .feuille__to {
+  font-size: 13pt;
+}
+
+.feuille--sobre .feuille__dos {
+  align-content: start;
+  padding-top: 28mm;
+}
+
+.feuille--sobre .feuille__qr {
+  width: 38mm;
+  height: 38mm;
 }
 
 /* --- L'habillage : disposition, pictogramme, couleur ----------------------------------------------- */
