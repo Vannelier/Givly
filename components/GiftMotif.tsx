@@ -43,7 +43,54 @@ export default function GiftMotif({
 
 /** Une tuile large aere le decor : sur un grand ecran, un motif serre devient bruyant. */
 function patternSize(kind: MotifKind): number {
-  return kind === "confetti" ? 140 : 124;
+  if (kind === "confetti") return 140;
+  // Empreintes et pattes se lisent par paires, qui prennent plus de place qu'un
+  // signe isole : une tuile de 124 les serrait au point de brouiller la marche.
+  if (kind === "pattes" || kind === "pieds") return 150;
+  return 124;
+}
+
+/*
+ * Une patte : le coussinet, et quatre doigts en arc au-dessus.
+ *
+ * Dessinee autour de son propre zero pour que l'appelant n'ait qu'a la
+ * translater, la tourner et la mettre a l'echelle, comme les autres signes.
+ */
+function patte(cle: string, x: number, y: number, s: number, r: number) {
+  return (
+    <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}>
+      {/* Le coussinet, un peu plus large que haut. */}
+      <ellipse cx="0" cy="3.4" rx="5.1" ry="4.3" />
+      {/* Les quatre doigts, inclines vers l'exterieur. */}
+      <ellipse cx="-4.7" cy="-3.2" rx="1.7" ry="2.1" transform="rotate(-24 -4.7 -3.2)" />
+      <ellipse cx="-1.7" cy="-6.1" rx="1.7" ry="2.2" transform="rotate(-8 -1.7 -6.1)" />
+      <ellipse cx="1.7" cy="-6.1" rx="1.7" ry="2.2" transform="rotate(8 1.7 -6.1)" />
+      <ellipse cx="4.7" cy="-3.2" rx="1.7" ry="2.1" transform="rotate(24 4.7 -3.2)" />
+    </g>
+  );
+}
+
+/*
+ * Une empreinte de pied de bebe : la plante, le talon, cinq orteils.
+ *
+ * `sens` vaut 1 pour un pied gauche et -1 pour un droit — un miroir horizontal,
+ * qui remet le gros orteil du bon cote. C'est ce decalage entre les deux pieds
+ * qui fait lire une marche plutot qu'une collection de taches.
+ */
+function pied(cle: string, x: number, y: number, s: number, r: number, sens: 1 | -1) {
+  return (
+    <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s * sens} ${s})`}>
+      {/* La plante, puis le talon, plus petit et legerement decale. */}
+      <ellipse cx="0" cy="0" rx="4.5" ry="5.3" />
+      <ellipse cx="0.7" cy="8.1" rx="3" ry="3.5" />
+      {/* Les cinq orteils, du gros au petit. */}
+      <circle cx="-3.4" cy="-6.3" r="1.55" />
+      <circle cx="-0.5" cy="-7.5" r="1.15" />
+      <circle cx="1.9" cy="-7.1" r="1" />
+      <circle cx="3.9" cy="-6" r="0.85" />
+      <circle cx="5.5" cy="-4.4" r="0.7" />
+    </g>
+  );
 }
 
 function shapes(kind: MotifKind) {
@@ -150,6 +197,47 @@ function shapes(kind: MotifKind) {
             <circle cx="24" cy="81" r="2.4" />
             <circle cx="72" cy="81" r="2.4" />
           </g>
+        </g>
+      );
+
+    /*
+     * Pattes : trois empreintes en diagonale, orientees comme si l'animal
+     * traversait la tuile. Les rotations alternent legerement — une patte gauche
+     * ne se pose pas au meme angle qu'une droite.
+     */
+    case "pattes":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["a", 28, 30, 1, -14],
+              ["b", 76, 66, 0.82, 16],
+              ["c", 46, 110, 0.9, -8],
+              ["d", 116, 20, 0.62, 24],
+            ] as const
+          ).map(([cle, x, y, s, r]) => patte(cle, x, y, s, r))}
+          <circle cx="108" cy="112" r="1.8" />
+          <circle cx="12" cy="76" r="1.5" />
+        </g>
+      );
+
+    /*
+     * Pieds : deux paires de pas, gauche puis droit, decalees l'une par rapport
+     * a l'autre. C'est le decalage qui raconte la marche.
+     */
+    case "pieds":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["g1", 24, 26, 0.95, -12, 1],
+              ["d1", 44, 40, 0.95, -12, -1],
+              ["g2", 86, 88, 0.8, 14, 1],
+              ["d2", 106, 74, 0.8, 14, -1],
+            ] as const
+          ).map(([cle, x, y, s, r, sens]) => pied(cle, x, y, s, r, sens))}
+          <circle cx="118" cy="24" r="1.6" />
+          <circle cx="16" cy="112" r="1.4" />
         </g>
       );
 

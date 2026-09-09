@@ -8,7 +8,7 @@ import type { MotifKind } from "./occasions";
  * dispositions et six motifs, donc l'immense majorité des croisements
  * inatteignables, et une flèche qui changeait les deux à la fois sans qu'on
  * puisse dire lequel on voulait. Séparés, sept motifs et trois dispositions
- * donnent quatorze cartes au lieu de dix, et chacune se règle encore en taille,
+ * donnent dix-huit cartes au lieu de dix, et chacune se règle encore en taille,
  * en contraste et en couleur.
  *
  * Deux compositions sont tombées en chemin. « Bandeau » d'abord : son aplat
@@ -57,6 +57,8 @@ export const PRINT_MOTIFS: { id: MotifKind; nom: string }[] = [
   { id: "feuilles", nom: "Feuilles" },
   { id: "confetti", nom: "Confettis" },
   { id: "guirlande", nom: "Guirlande" },
+  { id: "pattes", nom: "Pattes" },
+  { id: "pieds", nom: "Pas de bébé" },
 ];
 
 export const DEFAULT_PRINT_MOTIF: MotifKind = PRINT_MOTIFS[0].id;

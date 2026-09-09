@@ -669,6 +669,7 @@ test("le socle d'occasions est present", () => {
     "aucune", "anniversaire", "noel", "saint-valentin", "naissance",
     "felicitations", "merci", "fete-des-meres", "fete-des-peres", "nouvel-an",
     "mariage", "reussite", "cremaillere", "retraite", "pot-de-depart",
+    "animaux",
   ];
   for (const id of attendues) assert.equal(occasionById(id).id, id, id);
   assert.equal(OCCASIONS.length, attendues.length);
@@ -1060,6 +1061,25 @@ test("adresseClient a un repli quand aucun en-tete n'est pose", () => {
 
 // --- Habillage de la carte imprimable --------------------------------------
 
+/*
+ * La liste des decors, ecrite ici a la main et non importee de `lib/occasions`.
+ *
+ * C'est tout l'interet : elle vient d'ailleurs que la source, donc un decor
+ * ajoute d'un cote et oublie de l'autre se voit. L'importer ferait passer les
+ * deux tests ci-dessous quoi qu'il arrive.
+ */
+const DECORS = [
+  "none",
+  "confetti",
+  "flocons",
+  "coeurs",
+  "etoiles",
+  "guirlande",
+  "feuilles",
+  "pattes",
+  "pieds",
+];
+
 test("les identifiants de disposition et de motif sont uniques", () => {
   const dispositions = PRINT_LAYOUTS.map((l) => l.id);
   assert.equal(new Set(dispositions).size, dispositions.length);
@@ -1068,19 +1088,37 @@ test("les identifiants de disposition et de motif sont uniques", () => {
 });
 
 test("chaque entree porte un nom, et chaque motif un decor connu", () => {
-  const decors = ["none", "confetti", "flocons", "coeurs", "etoiles", "guirlande", "feuilles"];
   for (const l of PRINT_LAYOUTS) assert.ok(l.nom.trim().length > 0, l.id);
   for (const m of PRINT_MOTIFS) {
     assert.ok(m.nom.trim().length > 0, m.id);
-    assert.ok(decors.includes(m.id), `motif inconnu : ${m.id}`);
+    assert.ok(DECORS.includes(m.id), `motif inconnu : ${m.id}`);
+  }
+});
+
+test("GiftMotif sait dessiner chaque decor du catalogue", () => {
+  /*
+   * Un `MotifKind` ajoute sans son `case` compile sans broncher et rend un
+   * `<pattern>` vide : le decor est proposable, selectionnable, et invisible.
+   * Le composant est lu comme du texte, faute de rendu React dans ce harnais —
+   * ce qui suffit a attraper l'oubli.
+   */
+  const source = readFileSync(new URL("../components/GiftMotif.tsx", import.meta.url), "utf8");
+  for (const d of DECORS) {
+    if (d === "none") continue;
+    assert.ok(source.includes(`case "${d}":`), `aucun trace pour ${d}`);
+  }
+});
+
+test("chaque occasion pointe vers un decor connu", () => {
+  for (const o of OCCASIONS) {
+    assert.ok(DECORS.includes(o.motif), `${o.id} : decor ${o.motif}`);
   }
 });
 
 test("les motifs couvrent tous ceux que GiftMotif sait dessiner", () => {
   // Un decor ajoute a la page-cadeau et oublie ici serait dessinable mais
   // inatteignable au carrousel.
-  const decors = ["none", "confetti", "flocons", "coeurs", "etoiles", "guirlande", "feuilles"];
-  for (const d of decors) {
+  for (const d of DECORS) {
     assert.ok(
       PRINT_MOTIFS.some((m) => m.id === d),
       `${d} absent du carrousel`,
