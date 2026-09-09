@@ -63,13 +63,20 @@ export default function PrintCarousel({
         « Confettis » ne se distinguent qu'une fois vus, et la carte est trop
         grande pour qu'on percoive le changement d'un coup d'oeil sur le fond.
       */}
+      {/*
+        Vignette et texte cote a cote, et non l'une au-dessus de l'autre : empile,
+        ce bloc faisait 89 px, le plus haut des cinq reglages, pour une image de
+        40 px et deux lignes de texte.
+      */}
       <p className="carrousel__nom" aria-live="polite">
         <span className="carrousel__vignette" aria-hidden="true">
           <GiftMotif kind={PRINT_MOTIFS[index].id} echelle={0.3} />
         </span>
-        {PRINT_MOTIFS[index].nom}
-        <span className="carrousel__rang">
-          {index + 1} / {PRINT_MOTIFS.length}
+        <span className="carrousel__texte">
+          {PRINT_MOTIFS[index].nom}
+          <span className="carrousel__rang">
+            {index + 1} / {PRINT_MOTIFS.length}
+          </span>
         </span>
       </p>
 

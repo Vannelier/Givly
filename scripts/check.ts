@@ -1293,6 +1293,7 @@ async function checkImages() {
  */
 {
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const impression = readFileSync(new URL("../app/print.css", import.meta.url), "utf8");
   const bloc = (selecteur: string) => {
     const i = css.indexOf(`\n${selecteur} {`);
     assert.notEqual(i, -1, `regle absente : ${selecteur}`);
@@ -1375,6 +1376,36 @@ async function checkImages() {
     assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
   });
 
+  test("l'atelier garde la carte a l'ecran avec ses reglages", () => {
+    /*
+     * Trois pieces tiennent ensemble, et retirer l'une suffit a rendre la page
+     * au defaut mesure — 710 px a defiler au telephone avant d'apercevoir la
+     * carte, 657 sur un 1440.
+     *
+     * 1. La carte est ecrite avant les reglages : c'est ce qui la met en tete au
+     *    telephone, ou l'ordre du DOM fait la mise en page.
+     * 2. Elle est collante, sinon elle sort du champ des qu'on descend vers les
+     *    curseurs.
+     * 3. Sur grand ecran les colonnes sont posees explicitement — sans cela, la
+     *    carte, ecrite en premier, heritait de la colonne etroite des reglages.
+     */
+    const carte = readFileSync(new URL("../components/PrintableCard.tsx", import.meta.url), "utf8");
+    const scene = carte.indexOf('className="print-scene"');
+    const reglages = carte.indexOf('className="print-reglages"');
+    assert.notEqual(scene, -1, "print-scene absent");
+    assert.notEqual(reglages, -1, "print-reglages absent");
+    assert.ok(scene < reglages, "la carte doit preceder les reglages dans le DOM");
+
+    const bloc = (selecteur: string) => {
+      const i = impression.indexOf(`\n${selecteur} {`);
+      assert.notEqual(i, -1, `regle absente : ${selecteur}`);
+      return impression.slice(i, impression.indexOf("\n}", i));
+    };
+    assert.match(bloc(".print-scene"), /position: sticky;/);
+    assert.match(impression, /\.print-scene \{[^}]*grid-column: 2;/);
+    assert.match(impression, /\.print-reglages \{[^}]*grid-column: 1;/);
+  });
+
   test("une feuille reduite est rognee par son cadre", () => {
     /*
      * `transform: scale()` reduit ce qu'on voit, pas la boite mise en page : la
@@ -1383,7 +1414,6 @@ async function checkImages() {
      * dans le vide — rien ne depassait a l'oeil, ce qui rend le defaut d'autant
      * plus facile a reintroduire.
      */
-    const impression = readFileSync(new URL("../app/print.css", import.meta.url), "utf8");
     for (const selecteur of [".feuille-cadre", ".carte-apercu__scene"]) {
       const i = impression.indexOf(`\n${selecteur} {`);
       assert.notEqual(i, -1, `regle absente : ${selecteur}`);
