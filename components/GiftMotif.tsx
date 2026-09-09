@@ -53,25 +53,45 @@ function patternSize(kind: MotifKind): number {
 /*
  * Une patte : le coussinet, et quatre doigts en arc au-dessus.
  *
+ * Le coussinet est un trace, pas une ellipse. Un coussinet reel s'evase vers le
+ * bas et s'y termine en deux lobes separes par une petite echancrure ; l'ellipse
+ * donnait une tache ovale qui ne ressemblait a rien de particulier. Les deux
+ * dernieres courbes du trace se rejoignent au milieu du bord bas : c'est cette
+ * rencontre qui creuse l'echancrure, et c'est elle qui fait lire « patte ».
+ *
+ * Les doigts sont gradues — les deux du milieu plus gros et plus hauts, les deux
+ * exterieurs plus petits et plus bas — et chacun pointe vers l'exterieur. Quatre
+ * ovales identiques poses en arc donnaient une rangee de perles.
+ *
  * Dessinee autour de son propre zero pour que l'appelant n'ait qu'a la
  * translater, la tourner et la mettre a l'echelle, comme les autres signes.
  */
 function patte(cle: string, x: number, y: number, s: number, r: number) {
   return (
     <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}>
-      {/* Le coussinet, un peu plus large que haut. */}
-      <ellipse cx="0" cy="3.4" rx="5.1" ry="4.3" />
-      {/* Les quatre doigts, inclines vers l'exterieur. */}
-      <ellipse cx="-4.7" cy="-3.2" rx="1.7" ry="2.1" transform="rotate(-24 -4.7 -3.2)" />
-      <ellipse cx="-1.7" cy="-6.1" rx="1.7" ry="2.2" transform="rotate(-8 -1.7 -6.1)" />
-      <ellipse cx="1.7" cy="-6.1" rx="1.7" ry="2.2" transform="rotate(8 1.7 -6.1)" />
-      <ellipse cx="4.7" cy="-3.2" rx="1.7" ry="2.1" transform="rotate(24 4.7 -3.2)" />
+      <path d="M0-1.3c3.7 0 6.4 2.5 6.4 5.6 0 2.6-1.7 4.7-3.8 4.7-1.2 0-1.9-.6-2.6-.6s-1.4.6-2.6.6c-2.1 0-3.8-2.1-3.8-4.7C-6.4 1.2-3.7-1.3 0-1.3z" />
+      <ellipse cx="-6" cy="-2.9" rx="1.5" ry="2" transform="rotate(-34 -6 -2.9)" />
+      <ellipse cx="-2.3" cy="-6" rx="1.75" ry="2.35" transform="rotate(-13 -2.3 -6)" />
+      <ellipse cx="2.3" cy="-6" rx="1.75" ry="2.35" transform="rotate(13 2.3 -6)" />
+      <ellipse cx="6" cy="-2.9" rx="1.5" ry="2" transform="rotate(34 6 -2.9)" />
     </g>
   );
 }
 
 /*
  * Une empreinte de pied de bebe : la plante, le talon, cinq orteils.
+ *
+ * La plante est un trace en haricot, plus large du cote du gros orteil et
+ * legerement creuse de l'autre : c'est la voute, qui ne touche pas le sol et ne
+ * s'imprime donc pas. Deux ellipses concentriques donnaient un bonhomme de
+ * neige, sans cote ni orientation.
+ *
+ * Le talon est distinct et decale vers l'exterieur — sur une vraie empreinte,
+ * plante et talon sont deux marques separees.
+ *
+ * Les cinq orteils decroissent vite : le gros fait plus du double du petit, et
+ * ils s'inclinent en s'ecartant. Cinq disques de tailles voisines donnaient une
+ * chenille.
  *
  * `sens` vaut 1 pour un pied gauche et -1 pour un droit — un miroir horizontal,
  * qui remet le gros orteil du bon cote. C'est ce decalage entre les deux pieds
@@ -80,15 +100,13 @@ function patte(cle: string, x: number, y: number, s: number, r: number) {
 function pied(cle: string, x: number, y: number, s: number, r: number, sens: 1 | -1) {
   return (
     <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s * sens} ${s})`}>
-      {/* La plante, puis le talon, plus petit et legerement decale. */}
-      <ellipse cx="0" cy="0" rx="4.5" ry="5.3" />
-      <ellipse cx="0.7" cy="8.1" rx="3" ry="3.5" />
-      {/* Les cinq orteils, du gros au petit. */}
-      <circle cx="-3.4" cy="-6.3" r="1.55" />
-      <circle cx="-0.5" cy="-7.5" r="1.15" />
-      <circle cx="1.9" cy="-7.1" r="1" />
-      <circle cx="3.9" cy="-6" r="0.85" />
-      <circle cx="5.5" cy="-4.4" r="0.7" />
+      <path d="M-.6-5.7c3 0 5.3 2.2 5.3 5.1 0 3-1.9 5.5-4.5 5.5-2.7 0-4.8-2.3-5-5.3-.2-3 1.4-5.3 4.2-5.3z" />
+      <ellipse cx="1.5" cy="10.4" rx="2.6" ry="3.1" transform="rotate(8 1.5 10.4)" />
+      <ellipse cx="-3.2" cy="-8.4" rx="1.7" ry="2" transform="rotate(-18 -3.2 -8.4)" />
+      <ellipse cx="-.2" cy="-9.4" rx="1.25" ry="1.5" transform="rotate(-6 -.2 -9.4)" />
+      <ellipse cx="2.2" cy="-9" rx="1.1" ry="1.35" transform="rotate(6 2.2 -9)" />
+      <ellipse cx="4.1" cy="-7.9" rx=".95" ry="1.15" transform="rotate(16 4.1 -7.9)" />
+      <ellipse cx="5.5" cy="-6.3" rx=".8" ry=".95" transform="rotate(28 5.5 -6.3)" />
     </g>
   );
 }
