@@ -93,11 +93,20 @@ function patte(cle: string, x: number, y: number, s: number, r: number) {
  * ils s'inclinent en s'ecartant. Cinq disques de tailles voisines donnaient une
  * chenille.
  *
- * `sens` vaut 1 pour un pied gauche et -1 pour un droit — un miroir horizontal,
- * qui remet le gros orteil du bon cote. C'est ce decalage entre les deux pieds
- * qui fait lire une marche plutot qu'une collection de taches.
+ * Le cote est nomme, et non code en 1 ou -1.
+ *
+ * Les deux valeurs numeriques etaient inversees : les gros orteils partaient
+ * vers l'exterieur de la paire, ce qu'aucun pied ne fait. Un pied gauche a son
+ * gros orteil du cote droit de l'empreinte, un pied droit du cote gauche — ils
+ * se font face. En nommant le cote, l'erreur ne peut plus se glisser dans la
+ * table des positions sans se voir.
+ *
+ * Le trace de base porte le gros orteil a gauche, ce qui est deja un pied
+ * droit ; un pied gauche est son miroir horizontal. C'est ce decalage entre les
+ * deux pieds qui fait lire une marche plutot qu'une collection de taches.
  */
-function pied(cle: string, x: number, y: number, s: number, r: number, sens: 1 | -1) {
+function pied(cle: string, x: number, y: number, s: number, r: number, cote: "gauche" | "droit") {
+  const sens = cote === "gauche" ? -1 : 1;
   return (
     <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s * sens} ${s})`}>
       <path d="M-.6-5.7c3 0 5.3 2.2 5.3 5.1 0 3-1.9 5.5-4.5 5.5-2.7 0-4.8-2.3-5-5.3-.2-3 1.4-5.3 4.2-5.3z" />
@@ -248,12 +257,13 @@ function shapes(kind: MotifKind) {
         <g fill="currentColor">
           {(
             [
-              ["g1", 24, 26, 0.95, -12, 1],
-              ["d1", 44, 40, 0.95, -12, -1],
-              ["g2", 86, 88, 0.8, 14, 1],
-              ["d2", 106, 74, 0.8, 14, -1],
+              // Dans une paire, le pied le plus a gauche est le gauche.
+              ["g1", 24, 26, 0.95, -12, "gauche"],
+              ["d1", 44, 40, 0.95, -12, "droit"],
+              ["g2", 86, 88, 0.8, 14, "gauche"],
+              ["d2", 106, 74, 0.8, 14, "droit"],
             ] as const
-          ).map(([cle, x, y, s, r, sens]) => pied(cle, x, y, s, r, sens))}
+          ).map(([cle, x, y, s, r, cote]) => pied(cle, x, y, s, r, cote))}
           <circle cx="118" cy="24" r="1.6" />
           <circle cx="16" cy="112" r="1.4" />
         </g>

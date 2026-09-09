@@ -1624,6 +1624,52 @@ select {
   animation-duration: calc(var(--dur) * 1.6);
 }
 
+/*
+ * Notes de musique : elles tombent en se balancant, sans tournoyer.
+ *
+ * Le signe est un masque, pas un glyphe.
+ *
+ * `content: "♪"` aurait ete plus court, mais la note serait alors dessinee par
+ * la police disponible sur l'appareil : une croche fine ici, un pave carre la,
+ * et parfois un rectangle vide. Le masque porte notre propre trace, decoupe
+ * dans un aplat de couleur qui suit le theme — c'est le seul moyen d'obtenir la
+ * meme note partout tout en gardant `currentColor`.
+ *
+ * Deux signes alternes, une croche isolee et deux croches liees, pour que la
+ * pluie ne soit pas une repetition du meme objet.
+ */
+.fx--notes span {
+  background: var(--accent-dark);
+  border-radius: 0;
+  /*
+   * Plus grosses que les autres particules : un confetti est une tache, une
+   * note est un signe qu'il faut reconnaitre. A 1,15 les plus petites tombaient
+   * a 7 px et se lisaient comme des poussieres.
+   */
+  width: calc(var(--size) * 1.7);
+  height: calc(var(--size) * 1.7);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  animation-name: fx-notes;
+  animation-duration: calc(var(--dur) * 1.15);
+}
+
+/* Une croche : tete ovale inclinee, hampe, crochet. */
+.fx--notes span:nth-child(odd) {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13 3v10.6a4.2 4.2 0 1 0 2 3.6V8.3c2 .5 3.4 1.9 3.6 3.9h1.4C19.8 7.9 17.3 5 13 3z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13 3v10.6a4.2 4.2 0 1 0 2 3.6V8.3c2 .5 3.4 1.9 3.6 3.9h1.4C19.8 7.9 17.3 5 13 3z'/%3E%3C/svg%3E");
+}
+
+/* Deux croches liees par leur barre. */
+.fx--notes span:nth-child(even) {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9 4.6 20 2.4v3l-11 2.2z'/%3E%3Cpath fill='%23000' d='M9 4.6v9.9a3.3 3.3 0 1 0 1.6 2.9V6z'/%3E%3Cpath fill='%23000' d='M20 2.4v9.2a3.3 3.3 0 1 0 1.6 2.9V3.7z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9 4.6 20 2.4v3l-11 2.2z'/%3E%3Cpath fill='%23000' d='M9 4.6v9.9a3.3 3.3 0 1 0 1.6 2.9V6z'/%3E%3Cpath fill='%23000' d='M20 2.4v9.2a3.3 3.3 0 1 0 1.6 2.9V3.7z'/%3E%3C/svg%3E");
+}
+
 /* Etincelles : elles partent du bas et s'eteignent en montant. */
 .fx--etincelles span {
   top: auto;
@@ -1667,6 +1713,34 @@ select {
   100% {
     opacity: 0;
     transform: translate3d(calc(var(--drift) * 0.5), 108vh, 0);
+  }
+}
+
+/*
+ * Une note ne tournoie pas comme un confetti : elle se balance.
+ *
+ * D'ou une rotation ramenee au douzieme de `--spin`, soit une trentaine de
+ * degres au plus, et un ecart lateral qui part d'un cote pour revenir de
+ * l'autre. Reutiliser `fx-fall` aurait fait tourner les notes sur elles-memes,
+ * ce qui les rend illisibles et un peu betes.
+ */
+@keyframes fx-notes {
+  0% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.5), 0, 0) rotate(calc(var(--spin) * -0.04));
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(calc(var(--drift) * 0.6), 54vh, 0) rotate(calc(var(--spin) * 0.06));
+  }
+  82% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.4), 108vh, 0) rotate(calc(var(--spin) * -0.05));
   }
 }
 

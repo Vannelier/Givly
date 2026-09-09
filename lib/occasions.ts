@@ -391,7 +391,7 @@ export const OPENINGS: OpeningStyle[] = [
  * combinent librement — un halo peut lacher des confettis — et un effet vaut
  * meme sans voile, quand le donneur l'a coupe.
  */
-export type EffectId = "aucun" | "confettis" | "petales" | "etincelles" | "neige";
+export type EffectId = "aucun" | "confettis" | "petales" | "etincelles" | "neige" | "notes";
 
 export type Effect = { id: EffectId; name: string; hint: string };
 
@@ -401,6 +401,7 @@ export const EFFECTS: Effect[] = [
   { id: "petales", name: "Pétales", hint: "Ils descendent en tournoyant." },
   { id: "etincelles", name: "Étincelles", hint: "Elles montent et s'éteignent." },
   { id: "neige", name: "Neige", hint: "Des flocons, lentement." },
+  { id: "notes", name: "Notes de musique", hint: "Elles descendent en se balançant." },
 ];
 
 export const DEFAULT_EFFECT_ID: EffectId = "aucun";
