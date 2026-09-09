@@ -155,7 +155,14 @@ export function lireBrouillon(): Brouillon | null {
       note: texte(l.note),
     }));
 
-  const etape = o.etape === 2 ? 2 : 1;
+  /*
+   * L'assistant est passe de deux a trois etapes : l'occasion, les cadeaux, la
+   * presentation. Un brouillon ecrit avant ce changement porte 1 ou 2, et 2 y
+   * designait la presentation — devenue la troisieme. On le laisse retomber sur
+   * les cadeaux plutot que de le promouvoir : mieux vaut revoir une etape deja
+   * remplie que d'en sauter une qui ne l'est pas.
+   */
+  const etape = o.etape === 3 ? 3 : o.etape === 2 ? 2 : 1;
 
   return {
     version: VERSION,

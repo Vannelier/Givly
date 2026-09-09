@@ -550,56 +550,6 @@ input[type="datetime-local"]:focus {
   box-shadow: 0 0 0 3px rgba(176, 83, 60, 0.13);
 }
 
-/* --- L'occasion, en tete de la premiere etape ------------------------------ */
-
-/*
- * Le cadre du selecteur, et son resume une fois le choix fait.
- *
- * Seize occasions en quatre rubriques, c'est le plus gros bloc de l'editeur.
- * Deplie en permanence, il repousserait la liste de cadeaux hors de l'ecran a
- * chaque retour a l'etape 1 — alors qu'on n'y revient justement pas pour
- * changer d'occasion, mais pour ajouter un cadeau.
- */
-.occasion-panel {
-  margin-bottom: 1rem;
-}
-
-.occasion-choisie {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.occasion-choisie__icon {
-  flex: 0 0 auto;
-  width: 2.6rem;
-  height: 2.6rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  font-size: 1.15rem;
-}
-
-.occasion-choisie__texte {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: grid;
-}
-
-.occasion-choisie__label {
-  font-size: 0.74rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.occasion-choisie strong {
-  font-size: 1.02rem;
-  color: var(--ink);
-}
-
 /* --- Presentation : reglages + apercu vivant ------------------------------- */
 
 /* La colonne de réglages et son aperçu vivant, sur l'étape « La présentation ». */

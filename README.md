@@ -107,7 +107,7 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | chemin | rôle |
 |---|---|
 | `app/page.tsx` | page d'accueil : présente l'outil et renvoie vers `/creer` |
-| `app/creer/page.tsx` | assistant de création, en deux étapes |
+| `app/creer/page.tsx` | assistant de création, en trois étapes |
 | `app/[slug]/page.tsx` | page-cadeau publique (SSR + `generateMetadata` pour l'aperçu de lien) |
 | `app/admin/[token]/page.tsx` | vue admin : cadeau choisi, liens, édition, clôture |
 | `components/GiftView.tsx` | le rendu que voit le receveur — **le même** composant sert à l'aperçu |
@@ -175,13 +175,13 @@ français, avant toute validation — voir « Les routes anonymes et leurs quota
 
 ## Ce qui est personnalisable
 
-L'assistant tient en **deux étapes** : l'occasion et les cadeaux, puis la présentation. Cette
-seconde étape est découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse la
-personne qui reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
+L'assistant tient en **trois étapes** : l'occasion, les cadeaux, la présentation. Cette dernière
+est découpée en cadres qui suivent, dans l'ordre, les trois écrans que traverse la personne qui
+reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
 
 | réglage | cadre | effet |
 |---|---|---|
-| **Occasion** | *étape 1* | Preset complet : palette, décor, effet et formulations de départ d'un coup. Seize occasions, rangées en quatre rubriques. |
+| **Occasion** | *étape 1* | Preset complet : palette, décor, effet et formulations de départ d'un coup. Seize occasions, rangées en quatre rubriques. Toute l'étape à elle seule. |
 | **Prénom** | Intro | « Pour Sophie », tout en haut du voile. |
 | **Mot d'ouverture** | Intro | La ligne au-dessus du titre. Vide = celle de l'occasion. |
 | **Message principal** | Intro | Le grand titre du voile, et le titre de l'aperçu de lien. |
@@ -229,20 +229,22 @@ de l'occasion et du prénom. Il ne reste qu'une exigence, structurelle : il faut
 à jour le mot d'ouverture — mais uniquement s'il était encore celui de l'occasion précédente. Un
 texte écrit à la main n'est jamais écrasé.
 
-**Elle se choisit avant les cadeaux, en tête de l'étape 1.** Elle vivait à l'étape 2, donc après la
-saisie : un preset qui arrive après coup écrase ce qu'on vient d'écrire, et la règle ci-dessus est
-née de là. Elle reste utile — on peut changer d'occasion en cours de route — mais elle n'est plus
-le rempart qu'elle était.
+**Elle est la première des trois étapes.** Elle vivait à la fin, donc après la saisie : un preset
+qui arrive après coup écrase ce qu'on vient d'écrire, et la règle ci-dessus est née de là. Elle
+reste utile — on peut changer d'occasion en cours de route — mais elle n'est plus le rempart
+qu'elle était.
 
-Le sélecteur **se replie en un résumé** dès qu'un choix est fait : seize occasions en quatre
-rubriques, c'est le plus gros bloc de l'éditeur, et déplié en permanence il repousserait la liste de
-cadeaux hors de l'écran à chaque retour à l'étape 1 — alors qu'on n'y revient pas pour changer
-d'occasion, mais pour ajouter un cadeau. Mesuré : le titre « Les cadeaux » passe de 1 211 px à
-481 px du haut sur un 1440, de 1 337 px à 418 px sur un 390.
+**Une étape à elle, et non un cadre en tête des cadeaux.** Seize occasions en quatre rubriques,
+c'est le plus gros bloc de l'éditeur : posé au-dessus de la liste, il repoussait le titre « Les
+cadeaux » à 1 211 px du haut sur un 1440, 1 337 px sur un 390. Un repli en résumé une fois le choix
+fait ramenait ces mesures à 481 px et 418 px, mais c'était une rustine pour tenir dans une étape
+partagée. Isolée, l'occasion tient dans un écran et ne gêne plus rien : le titre « Les cadeaux »
+ouvre maintenant sa propre étape à **352 px** du haut sur un 1440, **305 px** sur un 390, et le
+repli a disparu avec son objet.
 
-Il reste **dans la même étape que la liste de cadeaux**, et non dans une troisième à lui : c'est là
-que des suggestions par occasion devraient un jour apparaître, et il faudrait alors qu'ajouter une
-suggestion remplisse une ligne juste en dessous.
+L'étape de l'occasion **ne valide rien** : une occasion est toujours posée, « Sans occasion »
+comprise, et aucun choix n'y est invalide. Elle existe pour l'ordre, pas pour poser une question à
+laquelle on pourrait mal répondre.
 
 Les suggestions du titre et du contenu de l'écran des cadeaux, elles, sont **communes à toutes les
 occasions** (`ITEMS_TITLE_HINT`, `ITEMS_MESSAGE_HINT`) : cet écran est fonctionnel, le décorum de
@@ -910,14 +912,19 @@ pour qu'un montage posé à côté se voie tout de suite :
 
 ## L'assistant de composition
 
-Création et édition passent par le même composant, en deux étapes :
+Création et édition passent par le même composant, en trois étapes :
 
-1. **L'occasion et les cadeaux** — l'occasion d'abord, repliée en résumé dès qu'elle est choisie,
-   puis de 1 à 10 propositions, avec extraction depuis une URL ou saisie manuelle. Le minimum est
-   bien **un** : voir « Le cadeau unique ».
-2. **La présentation** — un cadre par écran que traverse la personne qui reçoit (**Intro**,
+1. **L'occasion** — seize presets en quatre rubriques. Rien à valider : voir « L'occasion ».
+2. **Les cadeaux** — de 1 à 10 propositions, avec extraction depuis une URL ou saisie manuelle. Le
+   minimum est bien **un** : voir « Le cadeau unique ».
+3. **La présentation** — un cadre par écran que traverse la personne qui reçoit (**Intro**,
    **Cadeaux**, **Choix**), puis le thème et le lien. Avec un aperçu en direct à côté des réglages,
    sur écran large.
+
+Un brouillon écrit du temps des deux étapes porte un numéro qui ne veut plus dire la même chose :
+son `2` désignait la présentation, devenue la troisième. `lireBrouillon` le fait retomber sur les
+cadeaux plutôt que de le promouvoir — mieux vaut revoir une étape déjà remplie que d'en sauter une
+qui ne l'est pas.
 
 **L'aperçu en direct n'existe qu'au-delà de 62 rem.** Son cadre mesure 300 × 525 px pour une
 page-cadeau réduite à la même hauteur : au téléphone, en colonne unique, il n'en montrait qu'une
