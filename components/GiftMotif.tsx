@@ -43,7 +43,72 @@ export default function GiftMotif({
 
 /** Une tuile large aere le decor : sur un grand ecran, un motif serre devient bruyant. */
 function patternSize(kind: MotifKind): number {
-  return kind === "confetti" ? 140 : 124;
+  if (kind === "confetti") return 140;
+  // Empreintes et pattes se lisent par paires, qui prennent plus de place qu'un
+  // signe isole : une tuile de 124 les serrait au point de brouiller la marche.
+  if (kind === "pattes" || kind === "pieds") return 150;
+  return 124;
+}
+
+/*
+ * Une patte : le coussinet, et quatre doigts en arc au-dessus.
+ *
+ * Le coussinet est un trace, pas une ellipse. Un coussinet reel s'evase vers le
+ * bas et s'y termine en deux lobes separes par une petite echancrure ; l'ellipse
+ * donnait une tache ovale qui ne ressemblait a rien de particulier. Les deux
+ * dernieres courbes du trace se rejoignent au milieu du bord bas : c'est cette
+ * rencontre qui creuse l'echancrure, et c'est elle qui fait lire « patte ».
+ *
+ * Les doigts sont gradues — les deux du milieu plus gros et plus hauts, les deux
+ * exterieurs plus petits et plus bas — et chacun pointe vers l'exterieur. Quatre
+ * ovales identiques poses en arc donnaient une rangee de perles.
+ *
+ * Dessinee autour de son propre zero pour que l'appelant n'ait qu'a la
+ * translater, la tourner et la mettre a l'echelle, comme les autres signes.
+ */
+function patte(cle: string, x: number, y: number, s: number, r: number) {
+  return (
+    <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}>
+      <path d="M0-1.3c3.7 0 6.4 2.5 6.4 5.6 0 2.6-1.7 4.7-3.8 4.7-1.2 0-1.9-.6-2.6-.6s-1.4.6-2.6.6c-2.1 0-3.8-2.1-3.8-4.7C-6.4 1.2-3.7-1.3 0-1.3z" />
+      <ellipse cx="-6" cy="-2.9" rx="1.5" ry="2" transform="rotate(-34 -6 -2.9)" />
+      <ellipse cx="-2.3" cy="-6" rx="1.75" ry="2.35" transform="rotate(-13 -2.3 -6)" />
+      <ellipse cx="2.3" cy="-6" rx="1.75" ry="2.35" transform="rotate(13 2.3 -6)" />
+      <ellipse cx="6" cy="-2.9" rx="1.5" ry="2" transform="rotate(34 6 -2.9)" />
+    </g>
+  );
+}
+
+/*
+ * Une empreinte de pied de bebe : la plante, le talon, cinq orteils.
+ *
+ * La plante est un trace en haricot, plus large du cote du gros orteil et
+ * legerement creuse de l'autre : c'est la voute, qui ne touche pas le sol et ne
+ * s'imprime donc pas. Deux ellipses concentriques donnaient un bonhomme de
+ * neige, sans cote ni orientation.
+ *
+ * Le talon est distinct et decale vers l'exterieur — sur une vraie empreinte,
+ * plante et talon sont deux marques separees.
+ *
+ * Les cinq orteils decroissent vite : le gros fait plus du double du petit, et
+ * ils s'inclinent en s'ecartant. Cinq disques de tailles voisines donnaient une
+ * chenille.
+ *
+ * `sens` vaut 1 pour un pied gauche et -1 pour un droit — un miroir horizontal,
+ * qui remet le gros orteil du bon cote. C'est ce decalage entre les deux pieds
+ * qui fait lire une marche plutot qu'une collection de taches.
+ */
+function pied(cle: string, x: number, y: number, s: number, r: number, sens: 1 | -1) {
+  return (
+    <g key={cle} transform={`translate(${x} ${y}) rotate(${r}) scale(${s * sens} ${s})`}>
+      <path d="M-.6-5.7c3 0 5.3 2.2 5.3 5.1 0 3-1.9 5.5-4.5 5.5-2.7 0-4.8-2.3-5-5.3-.2-3 1.4-5.3 4.2-5.3z" />
+      <ellipse cx="1.5" cy="10.4" rx="2.6" ry="3.1" transform="rotate(8 1.5 10.4)" />
+      <ellipse cx="-3.2" cy="-8.4" rx="1.7" ry="2" transform="rotate(-18 -3.2 -8.4)" />
+      <ellipse cx="-.2" cy="-9.4" rx="1.25" ry="1.5" transform="rotate(-6 -.2 -9.4)" />
+      <ellipse cx="2.2" cy="-9" rx="1.1" ry="1.35" transform="rotate(6 2.2 -9)" />
+      <ellipse cx="4.1" cy="-7.9" rx=".95" ry="1.15" transform="rotate(16 4.1 -7.9)" />
+      <ellipse cx="5.5" cy="-6.3" rx=".8" ry=".95" transform="rotate(28 5.5 -6.3)" />
+    </g>
+  );
 }
 
 function shapes(kind: MotifKind) {
@@ -150,6 +215,47 @@ function shapes(kind: MotifKind) {
             <circle cx="24" cy="81" r="2.4" />
             <circle cx="72" cy="81" r="2.4" />
           </g>
+        </g>
+      );
+
+    /*
+     * Pattes : trois empreintes en diagonale, orientees comme si l'animal
+     * traversait la tuile. Les rotations alternent legerement — une patte gauche
+     * ne se pose pas au meme angle qu'une droite.
+     */
+    case "pattes":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["a", 28, 30, 1, -14],
+              ["b", 76, 66, 0.82, 16],
+              ["c", 46, 110, 0.9, -8],
+              ["d", 116, 20, 0.62, 24],
+            ] as const
+          ).map(([cle, x, y, s, r]) => patte(cle, x, y, s, r))}
+          <circle cx="108" cy="112" r="1.8" />
+          <circle cx="12" cy="76" r="1.5" />
+        </g>
+      );
+
+    /*
+     * Pieds : deux paires de pas, gauche puis droit, decalees l'une par rapport
+     * a l'autre. C'est le decalage qui raconte la marche.
+     */
+    case "pieds":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["g1", 24, 26, 0.95, -12, 1],
+              ["d1", 44, 40, 0.95, -12, -1],
+              ["g2", 86, 88, 0.8, 14, 1],
+              ["d2", 106, 74, 0.8, 14, -1],
+            ] as const
+          ).map(([cle, x, y, s, r, sens]) => pied(cle, x, y, s, r, sens))}
+          <circle cx="118" cy="24" r="1.6" />
+          <circle cx="16" cy="112" r="1.4" />
         </g>
       );
 

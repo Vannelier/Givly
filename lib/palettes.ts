@@ -14,7 +14,8 @@ export type PaletteId =
   | "sapin"
   | "rose"
   | "brume"
-  | "ivoire";
+  | "ivoire"
+  | "noisette";
 
 export type Palette = {
   id: PaletteId;
@@ -191,6 +192,34 @@ export const PALETTES: Palette[] = [
       "--thumb-b": "#e4d9c2",
       "--glow-a": "rgba(165, 138, 78, 0.11)",
       "--glow-b": "rgba(220, 200, 150, 0.14)",
+    },
+  },
+  {
+    /*
+     * Un brun de bois, pour les cartes qui parlent d'animaux.
+     *
+     * Terracotta est un brun rouge, ivoire un doré : ni l'un ni l'autre ne donne
+     * le marron franc d'un pelage. Celui-ci descend plus bas en clarté et
+     * abandonne le rouge, tout en gardant le papier chaud du reste du site.
+     */
+    id: "noisette",
+    name: "Noisette",
+    swatch: ["#79512f", "#f1e7db", "#2a2119"],
+    vars: {
+      "--paper": "#faf6f1",
+      "--paper-warm": "#f1e7db",
+      "--card": "#fffdfa",
+      "--ink": "#2a2119",
+      "--ink-soft": "#6d6053",
+      "--ink-faint": "#a39588",
+      "--line": "#e6d9c9",
+      "--accent": "#79512f",
+      "--accent-dark": "#5d3d22",
+      "--accent-soft": "#efe2d3",
+      "--thumb-a": "#f1e7db",
+      "--thumb-b": "#e2d2bb",
+      "--glow-a": "rgba(121, 81, 47, 0.10)",
+      "--glow-b": "rgba(198, 166, 118, 0.13)",
     },
   },
 ];

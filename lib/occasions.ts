@@ -16,7 +16,9 @@ export type MotifKind =
   | "coeurs"
   | "etoiles"
   | "guirlande"
-  | "feuilles";
+  | "feuilles"
+  | "pattes"
+  | "pieds";
 
 export type OccasionId =
   | "aucune"
@@ -33,10 +35,15 @@ export type OccasionId =
   | "cremaillere"
   | "retraite"
   | "nouvel-an"
-  | "pot-de-depart";
+  | "pot-de-depart"
+  | "animaux";
 
 /** Rubrique du sélecteur. `null` = affichée en tête, sans titre. */
-export type OccasionGroup = "Fêtes du calendrier" | "Grandes étapes" | "Un mot";
+export type OccasionGroup =
+  | "Fêtes du calendrier"
+  | "Grandes étapes"
+  | "Un mot"
+  | "Autour d'un thème";
 
 export type Occasion = {
   id: OccasionId;
@@ -130,7 +137,11 @@ export const OCCASIONS: Occasion[] = [
     name: "Naissance",
     icon: "✦",
     palette: "brume",
-    motif: "etoiles",
+    /*
+     * Des pas de bebe, et non des etoiles : le decor dit desormais de qui il est
+     * question. Les etoiles restent au catalogue, elles servent ailleurs.
+     */
+    motif: "pieds",
     intro: "Bienvenue au monde",
     welcomeHint: "Un petit quelque chose pour bien commencer.",
     thanksHint: "C'est noté. Félicitations !",
@@ -278,6 +289,27 @@ export const OCCASIONS: Occasion[] = [
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
+  /*
+   * Une occasion qui n'en est pas une : elle ne repond ni a une date ni a une
+   * etape, seulement a ce qui vit dans la maison. D'ou sa rubrique a elle.
+   *
+   * La palette noisette existe pour celle-ci : ni terracotta, qui est un brun
+   * rouge, ni ivoire, qui est un dore, ne donnent le marron d'un pelage.
+   */
+  {
+    id: "animaux",
+    group: "Autour d'un thème",
+    name: "Animaux",
+    icon: "❦",
+    palette: "noisette",
+    motif: "pattes",
+    intro: "Pour la boule de poils",
+    welcomeHint: "Quelque chose pour lui, ou pour vous deux.",
+    thanksHint: "Parfait, c'est noté. Une caresse de ma part.",
+    effect: "aucun",
+    openHint: "Ouvrir",
+    waitHint: "Bientôt, patience.",
+  },
 ];
 
 export const DEFAULT_OCCASION_ID: OccasionId = "aucune";
@@ -288,7 +320,12 @@ export const DEFAULT_OCCASION_ID: OccasionId = "aucune";
  */
 export const OCCASION_GROUPS: { label: OccasionGroup | null; items: Occasion[] }[] = [
   { label: null, items: OCCASIONS.filter((o) => o.group === null) },
-  ...(["Fêtes du calendrier", "Grandes étapes", "Un mot"] as OccasionGroup[]).map((label) => ({
+  ...([
+    "Fêtes du calendrier",
+    "Grandes étapes",
+    "Un mot",
+    "Autour d'un thème",
+  ] as OccasionGroup[]).map((label) => ({
     label,
     items: OCCASIONS.filter((o) => o.group === label),
   })),
