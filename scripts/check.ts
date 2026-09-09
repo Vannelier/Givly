@@ -1088,11 +1088,20 @@ test("les motifs couvrent tous ceux que GiftMotif sait dessiner", () => {
   }
 });
 
-test("la composition « bandeau » a bien disparu", () => {
-  // Son aplat etait pose en `::before` sans `z-index` : il passait derriere le
-  // titre qu'il devait souligner. La remettre sans le corriger reintroduirait
-  // le defaut signale.
-  assert.ok(!PRINT_LAYOUTS.some((l) => (l.id as string) === "bandeau"));
+test("les dispositions retirees le restent", () => {
+  /*
+   * « bandeau » : son aplat etait pose en `::before` sans `z-index`, il passait
+   * derriere le titre qu'il devait souligner. « cadre » : retiree sur demande,
+   * le decor de fond faisant mieux le meme travail depuis qu'on en regle la
+   * taille et le contraste. Les remettre par inadvertance rendrait un defaut
+   * signale, ou un choix defait.
+   */
+  for (const parti of ["bandeau", "cadre"]) {
+    assert.ok(
+      !PRINT_LAYOUTS.some((l) => (l.id as string) === parti),
+      `${parti} de retour`,
+    );
+  }
 });
 
 test("stepPrintMotif avance, recule et boucle", () => {
@@ -1112,7 +1121,7 @@ test("les replis ne renvoient jamais undefined", () => {
   assert.equal(printLayoutById("inconnu").id, DEFAULT_PRINT_LAYOUT);
   assert.equal(printLayoutById("").id, DEFAULT_PRINT_LAYOUT);
   assert.equal(printLayoutById(undefined).id, DEFAULT_PRINT_LAYOUT);
-  assert.equal(printLayoutById(PRINT_LAYOUTS[2].id).id, PRINT_LAYOUTS[2].id);
+  assert.equal(printLayoutById(PRINT_LAYOUTS[1].id).id, PRINT_LAYOUTS[1].id);
   assert.equal(printMotifIndex(null), 0);
   assert.equal(PRINT_MOTIFS[printMotifIndex(null)].id, DEFAULT_PRINT_MOTIF);
 });
@@ -1313,6 +1322,19 @@ async function checkImages() {
       /\.cover__title \{\n\s+animation-delay: calc\(0\.2s \+ 2 \* var\(--voile-pas\) \+ var\(--voile-souffle\)\);/,
     );
     assert.match(css, /\.cover__wait \{[\s\S]{0,1400}?var\(--voile-souffle\) \+ [\d.]+s\)/);
+  });
+
+  test("le decor reste reglable sans changer la page-cadeau", () => {
+    /*
+     * La carte imprimable regle l'opacite du decor ; la page-cadeau, elle, ne
+     * pose rien. Le repli de la variable doit donc valoir exactement l'ancienne
+     * valeur en dur, sans quoi toutes les pages deja creees changeraient
+     * d'apparence pour un reglage qui ne les concerne pas.
+     */
+    const i = css.indexOf("\n.motif {");
+    assert.notEqual(i, -1, "regle .motif absente");
+    const regle = css.slice(i, css.indexOf("\n}", i));
+    assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
   });
 
   test("une feuille reduite est rognee par son cadre", () => {

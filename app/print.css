@@ -115,7 +115,7 @@
   bottom: 0;
 }
 
-/* --- Contenu commun aux trois dispositions -------------------------------- */
+/* --- Contenu commun aux deux dispositions -------------------------------- */
 
 .feuille__to {
   font-family: var(--font-title, var(--font-display, Georgia, serif));
@@ -179,43 +179,24 @@
   color: var(--ink-soft);
 }
 
-/* --- Les trois dispositions ----------------------------------------------- */
+/* --- Les deux dispositions ----------------------------------------------- */
 
 /*
  * `centre` est la disposition d'origine, portee sur deux panneaux : tout centre
- * verticalement, le QR de taille moyenne au dos. Elle sert de base, les deux
- * autres ne font que s'en ecarter.
+ * verticalement, le QR de taille moyenne au dos. Elle sert de base, « Affiche »
+ * ne fait que s'en ecarter.
  *
- * Il y en avait une quatrieme, « bandeau » : un aplat d'accent sur le tiers
- * superieur de la couverture, pose en `::before`. Un pseudo-element sans
- * `z-index` se peint apres le fond mais avant le contenu positionne, et le
- * contenu de la feuille l'est tout entier — l'aplat passait donc derriere le
- * titre qu'il devait souligner, et par-dessus rien du tout. Retiree.
+ * Deux autres ont disparu. « Bandeau » : un aplat d'accent pose en `::before`,
+ * donc peint apres le fond mais avant le contenu positionne — et le contenu de
+ * la feuille l'est tout entier. L'aplat passait derriere le titre qu'il devait
+ * souligner. « Encadree » : un filet a 8 mm des bords, retire sur demande — le
+ * decor de fond fait mieux le meme travail depuis qu'on en regle la taille et le
+ * contraste.
  */
-
-/* Cadre : un filet interieur, et le decor seme a l'interieur. */
-.feuille--cadre .feuille__panneau::after {
-  content: "";
-  position: absolute;
-  inset: 8mm;
-  border: 0.4mm solid var(--accent-soft);
-  border-radius: 3px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.feuille--cadre .feuille__titre {
-  font-size: 19pt;
-}
-
-.feuille--cadre .feuille__qr {
-  width: 42mm;
-  height: 42mm;
-}
 
 /*
  * Affiche : le titre prend la couverture, aligne a gauche. Le QR passe pleine
- * largeur au dos — c'est le plus grand des trois.
+ * largeur au dos — c'est le plus grand des deux.
  */
 .feuille--affiche .feuille__couv {
   justify-items: start;
@@ -404,12 +385,124 @@
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
 }
 
+/* --- Les reglages du decor : taille, contraste ----------------------------- */
+
+/*
+ * Meme grammaire que le curseur de couleur — intitule a gauche, valeur a droite,
+ * piste dessous — mais une piste neutre : ces deux-la n'ont pas de couleur a
+ * annoncer, seulement une position sur une echelle.
+ */
+.reglage {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.reglage__tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reglage__label {
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.reglage__droite {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.reglage__valeur {
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.reglage__retour {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.reglage__curseur {
+  width: 100%;
+  /* 44 px de haut : la cible tactile minimale, comme le curseur de couleur. */
+  height: 2.75rem;
+  margin: 0;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+
+.reglage__curseur::-webkit-slider-runnable-track {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+}
+
+.reglage__curseur::-moz-range-track {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+}
+
+.reglage__curseur::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: -0.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--card);
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgba(52, 38, 28, 0.35);
+}
+
+.reglage__curseur::-moz-range-thumb {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 2px solid var(--card);
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgba(52, 38, 28, 0.35);
+}
+
+.reglage__curseur:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
 /* --- L'apercu de la carte, hors de l'atelier -------------------------------- */
 
 /*
  * Montre la feuille entiere — le dos avec son QR a gauche, la couverture a
  * droite — et non le QR seul. Le damier noir et blanc qui occupait cette place
  * ne disait ni le prenom, ni le theme, ni meme qu'il y avait une carte derriere.
+ */
+/*
+ * La vignette a gauche, les deux gestes a droite.
+ *
+ * Elle occupait toute la largeur, feuille de 813 px sur grand ecran : c'est la
+ * taille d'un objet qu'on travaille, pas d'un objet qu'on constate. Ici elle ne
+ * fait que dire « il existe une carte, la voici » — 15 rem suffisent, et la
+ * place gagnee revient aux deux boutons, qui montent a hauteur d'oeil au lieu
+ * d'attendre sous une image.
+ *
+ * `minmax(0, 15rem)` et non `15rem` : sans le zero, une colonne de grille ne
+ * descend pas sous la taille minimale de son contenu, et la vignette debordait
+ * du cadre en fenetre etroite avant meme que la requete ci-dessous ne bascule.
  */
 .carte-apercu {
   margin-top: 0.9rem;
@@ -422,6 +515,10 @@
    * Le fond du cadre doit reculer pour que la feuille avance.
    */
   background: var(--card);
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.1rem;
 }
 
 /* Meme cadre que l'atelier : la feuille garde ses proportions reelles. */
@@ -438,28 +535,55 @@
   box-shadow: 0 8px 22px -12px rgba(52, 38, 28, 0.45);
 }
 
+/*
+ * La colonne de droite : ce qu'est la carte, puis ce qu'on en fait.
+ *
+ * Bornee a 22 rem. Sans plafond, les deux boutons s'etiraient sur toute la
+ * place restante — pres de 700 px sur un ecran large — et une pilule de cette
+ * longueur pour trois mots ne ressemble plus a un bouton.
+ */
+.carte-apercu__cote {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: stretch;
+  max-width: 22rem;
+}
+
 .carte-apercu__legende {
-  margin-top: 0.85rem;
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--ink-soft);
 }
 
-/*
- * Deux colonnes egales des qu'il y a la place, sinon deux lignes pleine largeur.
- * En `flex-wrap`, les deux boutons prenaient leur largeur de texte et se
- * retrouvaient l'un sous l'autre, decales, comme deux elements sans rapport.
- */
 .carte-apercu__actions {
-  margin-top: 0.85rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0.6rem;
 }
 
 .carte-apercu__actions > * {
   width: 100%;
   text-align: center;
+}
+
+/*
+ * Sous 32 rem, la vignette et sa colonne ne tiennent plus cote a cote sans que
+ * l'une des deux devienne illisible : la carte repasse en haut, pleine largeur,
+ * et les boutons en dessous.
+ */
+@media (max-width: 32rem) {
+  .carte-apercu {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * Les avertissements — QR impossible a produire, adresse locale — ne concernent
+ * ni la vignette ni les boutons : ils tiennent la largeur du cadre, sous les
+ * deux colonnes.
+ */
+.carte-apercu__alerte {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 /* --- Les mots de la carte imprimee ---------------------------------------- */

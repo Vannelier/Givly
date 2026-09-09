@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import GiftMotif from "@/components/GiftMotif";
 import PrintCarousel from "@/components/PrintCarousel";
 import PrintColorSlider from "@/components/PrintColorSlider";
+import PrintSlider from "@/components/PrintSlider";
 import { styleDeTeinte, teinteDuTheme } from "@/lib/carteCouleur";
 import { fontById, occasionById, type MotifKind } from "@/lib/occasions";
 import { paletteStyle } from "@/lib/palettes";
@@ -36,6 +37,11 @@ import type { Theme } from "@/lib/types";
  * Tout est dessiné en CSS et en SVG : rien à télécharger, et l'impression sort
  * nette à n'importe quelle taille. Les commandes disparaissent à l'impression.
  */
+/** La tuile telle que la page-cadeau la dessine. */
+const MOTIF_ECHELLE_DEFAUT = 1;
+/** L'opacite du decor avant qu'elle ne devienne reglable, dans `globals.css`. */
+const MOTIF_OPACITE_DEFAUT = 0.11;
+
 export default function PrintableCard({
   url,
   to,
@@ -79,6 +85,22 @@ export default function PrintableCard({
   );
   const teinteDefaut = teinteDuTheme(theme.palette);
   const [teinte, setTeinte] = useState(teinteDefaut);
+
+  /*
+   * La taille du decor et son contraste.
+   *
+   * `MOTIF_ECHELLE_DEFAUT` vaut 1 : la tuile telle que `GiftMotif` la dessine
+   * pour la page-cadeau. En dessous le decor se resserre et se fait discret, au
+   * dessus il s'espace et s'affirme.
+   *
+   * `MOTIF_OPACITE_DEFAUT` vaut 0,11, la valeur en dur dans `globals.css` avant
+   * qu'elle ne devienne une variable : une carte qu'on n'a pas reglee sort
+   * exactement comme avant. La borne haute s'arrete a 0,4 — au-dela le decor
+   * concurrence le titre au lieu de l'accompagner, et sur une imprimante a jet
+   * d'encre il boit le papier.
+   */
+  const [echelle, setEchelle] = useState(MOTIF_ECHELLE_DEFAUT);
+  const [opacite, setOpacite] = useState(MOTIF_OPACITE_DEFAUT);
   const composition = printLayoutById(layout).id;
 
   /*
@@ -159,6 +181,7 @@ export default function PrintableCard({
     // variables qu'il touche, et ne touche que celles-la.
     ...styleDeTeinte(theme.palette, teinte),
     "--font-title": fontById(theme.font).cssVar,
+    "--motif-opacite": opacite,
     "--zoom": zoom,
   } as React.CSSProperties;
 
@@ -209,6 +232,30 @@ export default function PrintableCard({
           teinte={teinte}
           defaut={teinteDefaut}
           onChange={setTeinte}
+        />
+
+        <PrintSlider
+          id="taille-motif"
+          label="Taille du décor"
+          valeur={echelle}
+          min={0.4}
+          max={2.2}
+          pas={0.05}
+          defaut={MOTIF_ECHELLE_DEFAUT}
+          format={(v) => `×${v.toFixed(2).replace(".", ",")}`}
+          onChange={setEchelle}
+        />
+
+        <PrintSlider
+          id="contraste-motif"
+          label="Contraste du décor"
+          valeur={opacite}
+          min={0.02}
+          max={0.4}
+          pas={0.01}
+          defaut={MOTIF_OPACITE_DEFAUT}
+          format={(v) => `${Math.round(v * 100)} %`}
+          onChange={setOpacite}
         />
       </div>
 
@@ -305,7 +352,7 @@ export default function PrintableCard({
 
           {/* Panneau gauche : le dos, visible en retournant la carte. */}
           <div className="feuille__panneau feuille__dos">
-            <GiftMotif kind={motif} />
+            <GiftMotif kind={motif} echelle={echelle} />
             <div className="feuille__qr">
               {svg ? (
                 // SVG produit a l'instant par la bibliotheque, a partir de notre
@@ -321,7 +368,7 @@ export default function PrintableCard({
 
           {/* Panneau droit : la couverture, devant une fois pliee. */}
           <div className="feuille__panneau feuille__couv">
-            <GiftMotif kind={motif} />
+            <GiftMotif kind={motif} echelle={echelle} />
             {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
             {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
             <h1 className="feuille__titre">{mots.title}</h1>
