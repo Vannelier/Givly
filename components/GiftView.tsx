@@ -654,7 +654,7 @@ export default function GiftView({
         {page.signature.trim() && <p className="signature">{page.signature}</p>}
 
         <p className="made-with">
-          Page-cadeau générée avec <strong>Givly</strong>
+          Page-cadeau générée avec <strong>MyPresentsForYou</strong>
         </p>
       </div>
 

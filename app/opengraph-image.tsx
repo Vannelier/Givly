@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 
 /**
  * La bannière de partage : ce que montrent Google, Bing, WhatsApp, Signal et les
- * SMS quand on colle un lien Givly.
+ * SMS quand on colle un lien MyPresentsForYou.
  *
  * Elle vaut pour tout le site sauf les pages-cadeau, qui composent la leur à
  * partir de l'image du premier cadeau (voir `app/[slug]/page.tsx`). Une carte
@@ -14,7 +14,7 @@ import { ImageResponse } from "next/og";
  * requête, et une image figée s'envoie depuis le cache sans jamais faire
  * attendre l'aperçu d'un lien.
  */
-export const alt = "Givly — offre le choix";
+export const alt = "MyPresentsForYou — offre le choix";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -97,13 +97,19 @@ export default async function Image() {
           {mark ? <img src={mark} width={80} height={80} alt="" /> : null}
           <span
             style={{
+              /*
+                Interlettrage ramene de 9 a 4.
+                Le nom du site est passe de cinq signes a seize : a 9 px d'ecart,
+                la marque mesurait 435 px de large contre 136 avant, et se lisait
+                comme seize lettres posees cote a cote plutot que comme un mot.
+              */
               fontSize: 26,
-              letterSpacing: 9,
+              letterSpacing: 4,
               textTransform: "uppercase",
               color: INK_FAINT,
             }}
           >
-            Givly
+            MyPresentsForYou
           </span>
         </div>
 

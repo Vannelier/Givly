@@ -1,4 +1,4 @@
-# Givly
+# MyPresentsForYou
 
 Composer une petite page-cadeau, envoyer un lien, laisser la personne choisir.
 
@@ -816,8 +816,8 @@ l'outil : l'accueil, le formulaire, et surtout `/questions`.
   six pages publiques ; y inscrire les cartes reviendrait à publier la liste des liens envoyés.
 - **Une adresse canonique par page** (`alternates.canonical`), pour qu'une même page atteinte par
   deux chemins ne se fasse pas concurrence à elle-même.
-- **Des titres qui portent ce qu'on cherche, pas ce qu'on est.** « Givly — offre le choix » ne se
-  trouve qu'en tapant « Givly », c'est-à-dire en connaissant déjà le site. L'accueil annonce donc
+- **Des titres qui portent ce qu'on cherche, pas ce qu'on est.** « MyPresentsForYou — offre le choix » ne se
+  trouve qu'en tapant « MyPresentsForYou », c'est-à-dire en connaissant déjà le site. L'accueil annonce donc
   « Offrir en laissant choisir le cadeau ». Tous les titres tiennent sous 60 signes, toutes les
   descriptions sous 160 — au-delà, Google coupe.
 - **Données structurées** : `WebApplication` sur l'accueil, avec un `offers` à zéro qui est la façon
@@ -907,7 +907,7 @@ Le démarrage annonce le chemin retenu et vérifie qu'il est accessible en écri
 pour qu'un montage posé à côté se voie tout de suite :
 
 ```
-[givly] Images : dossier /app/.media.
+[mypresentsforyou] Images : dossier /app/.media.
 ```
 
 ## L'assistant de composition
@@ -925,6 +925,24 @@ Un brouillon écrit du temps des deux étapes porte un numéro qui ne veut plus 
 son `2` désignait la présentation, devenue la troisième. `lireBrouillon` le fait retomber sur les
 cadeaux plutôt que de le promouvoir — mieux vaut revoir une étape déjà remplie que d'en sauter une
 qui ne l'est pas.
+
+**La barre d'action est une barre, pas un dégradé.** Ses boutons secondaires portaient un fond
+`--card` et un bord `--line` : **1,06:1** et **1,23:1** de contraste avec le papier, quand la règle
+1.4.11 des WCAG en demande 3:1 pour la limite d'une commande. Sans contour perceptible,
+« Précédent » et « Aperçu » ne se lisaient pas comme des boutons mais comme du texte posé là, et la
+seule chose visible de la barre était l'action principale. Le bord est passé à `--ink-soft`, soit
+**5,47:1**. Ils mesuraient aussi 40 px de haut — hérités de `.btn--sm`, contre les 44 px minimum
+d'une cible tactile (WCAG 2.5.8) — et touchaient l'action principale : 10 px à 1440, 9,6 px en
+dessous de 62 rem où la barre passe à deux rangées. Mesuré après correction : **44 px** de haut,
+**24 px** d'écart horizontal, **16 px** vertical. Le fond opaque, le filet et l'ombre portée
+remplacent le dégradé, qui laissait la barre se fondre dans le contenu défilant dessous.
+
+**Créer n'est pas valider.** L'écran « Ta page est prête » ne le disait pas et n'offrait aucun
+retour : le formulaire avait disparu, et rien ne signalait que tout restait modifiable jusqu'au
+choix. Il porte maintenant cette phrase, et **« Reprendre la modification »** remplace « Ouvrir
+l'administration » — même destination, mais à cet instant précis personne n'a encore rien choisi :
+il n'y a rien à administrer et tout à reprendre. L'ancre `#modifier` dépose sur le panneau de
+l'éditeur plutôt qu'en haut de la vue admin, les trois étapes cliquables juste en dessous.
 
 **L'aperçu en direct n'existe qu'au-delà de 62 rem.** Son cadre mesure 300 × 525 px pour une
 page-cadeau réduite à la même hauteur : au téléphone, en colonne unique, il n'en montrait qu'une
@@ -976,15 +994,15 @@ stuffing, les redirections forcées, avec fermeture de compte annoncée pour tou
 est la perte du canal entier.
 
 **Le cookie de 24 h contre un parcours asynchrone.** Le cookie Amazon dure 24 h (90 jours si le
-produit part au panier), or Givly est asynchrone par construction : création, envoi, choix du
+produit part au panier), or MyPresentsForYou est asynchrone par construction : création, envoi, choix du
 receveur des jours plus tard, achat après. Contrainte de conception qui en découle : **le lien
-d'achat final doit être servi par Givly** depuis l'écran d'administration, pas copié-collé.
+d'achat final doit être servi par MyPresentsForYou** depuis l'écran d'administration, pas copié-collé.
 
-**Ce que l'affiliation impliquerait sur le produit.** Givly repose sur un renversement : *c'est le
-donneur qui propose, pas le receveur qui demande*. Si Givly propose les cadeaux, la prémisse devient
-« Givly me dit quoi offrir », et l'on entre frontalement sur le marché des sites d'idées cadeaux.
+**Ce que l'affiliation impliquerait sur le produit.** MyPresentsForYou repose sur un renversement : *c'est le
+donneur qui propose, pas le receveur qui demande*. Si MyPresentsForYou propose les cadeaux, la prémisse devient
+« MyPresentsForYou me dit quoi offrir », et l'on entre frontalement sur le marché des sites d'idées cadeaux.
 Les listes multi-enseignes gratuites existent déjà en France — The Good List, Listy, MyLittleWishList,
-Milirose — et ce qui distingue Givly n'est pas la liste, c'est le renversement et la mise en scène.
+Milirose — et ce qui distingue MyPresentsForYou n'est pas la liste, c'est le renversement et la mise en scène.
 
 **L'ordre à suivre, si la question revient :**
 

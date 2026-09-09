@@ -13,7 +13,7 @@
  */
 
 export const SITE = {
-  nom: "Givly",
+  nom: "MyPresentsForYou",
   /** Baseline courte, reprise dans les données structurées. */
   accroche: "Offrir plusieurs idées cadeau, et laisser la personne choisir.",
 

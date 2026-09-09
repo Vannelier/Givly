@@ -4,8 +4,8 @@ import TextPage from "@/components/TextPage";
 import { SITE, aRemplir } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Mentions légales — Givly",
-  description: "Éditeur, hébergeur et contact du site Givly.",
+  title: "Mentions légales — MyPresentsForYou",
+  description: "Éditeur, hébergeur et contact du site MyPresentsForYou.",
   alternates: { canonical: "/mentions-legales" },
   // Une page de mentions n'apporte rien dans un index de recherche, mais elle
   // doit rester atteignable : `follow` laisse passer le lien vers le reste.
@@ -68,7 +68,7 @@ export default function MentionsLegales() {
 
       <h2>Propriété intellectuelle</h2>
       <p>
-        Le nom Givly, l&apos;interface du site et son code sont la propriété de leur auteur. En
+        Le nom MyPresentsForYou, l&apos;interface du site et son code sont la propriété de leur auteur. En
         revanche, <strong>le contenu des cartes appartient à celui qui les compose</strong> : textes,
         images et choix restent les siens, et nous n&apos;en revendiquons aucun droit.
       </p>
@@ -80,7 +80,7 @@ export default function MentionsLegales() {
 
       <h2>Responsabilité</h2>
       <p>
-        Givly ne vend rien et n&apos;encaisse aucun paiement. Les cadeaux proposés sur une carte
+        MyPresentsForYou ne vend rien et n&apos;encaisse aucun paiement. Les cadeaux proposés sur une carte
         renvoient vers des sites tiers, sur lesquels nous n&apos;avons aucun contrôle : leur contenu,
         leurs prix et leur disponibilité n&apos;engagent qu&apos;eux.
       </p>

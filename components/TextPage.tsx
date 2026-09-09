@@ -25,7 +25,7 @@ export default function TextPage({
     <main className="landing">
       <article className="prose">
         <Link className="back-link" href="/">
-          ← Givly
+          ← MyPresentsForYou
         </Link>
 
         <h1>{titre}</h1>

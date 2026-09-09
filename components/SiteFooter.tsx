@@ -9,7 +9,7 @@ import Link from "next/link";
  *
  * Absent des pages-cadeau et de la vue d'administration : la personne qui reçoit
  * une carte n'a pas à voir les conditions d'utilisation d'un outil qu'elle
- * n'utilise pas, et la page doit rester celle du donneur, pas celle de Givly.
+ * n'utilise pas, et la page doit rester celle du donneur, pas celle de MyPresentsForYou.
  */
 export default function SiteFooter({ note }: { note?: string }) {
   return (
@@ -24,7 +24,7 @@ export default function SiteFooter({ note }: { note?: string }) {
         <Link href="/mentions-legales">Mentions légales</Link>
       </nav>
 
-      <p className="lp-foot__mark">Givly</p>
+      <p className="lp-foot__mark">MyPresentsForYou</p>
     </footer>
   );
 }

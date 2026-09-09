@@ -3,7 +3,7 @@ import CreateFlow from "@/components/CreateFlow";
 import { baseUrl } from "@/lib/env";
 
 export const metadata: Metadata = {
-  title: "Créer une page-cadeau gratuite — Givly",
+  title: "Créer une page-cadeau gratuite — MyPresentsForYou",
   description:
     "Compose ta page en deux étapes : tes idées de cadeau, puis la présentation. Sans compte, sans paiement, en quelques minutes.",
   alternates: { canonical: "/creer" },

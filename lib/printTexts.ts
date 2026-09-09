@@ -33,6 +33,16 @@ const DUREE_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Une clé par carte : un donneur peut en avoir plusieurs en cours. */
 function cle(slug: string): string {
+  return `mypresentsforyou:carte:${slug}`;
+}
+
+/*
+ * L'ancienne cle, du temps ou le site portait un autre nom. Meme raison que dans
+ * `draft.ts` : renommer sans relire jette ce qui etait deja ecrit. La perte
+ * serait moins grave — des textes de carte, pas une carte entiere — mais le
+ * rattrapage tient en une ligne. A retirer passe les trente jours de `DUREE_MS`.
+ */
+function cleAncienne(slug: string): string {
   return `givly:carte:${slug}`;
 }
 
@@ -59,6 +69,7 @@ export const PRINT_LIMITS = {
 export function ecrirePrintTexts(slug: string, t: PrintTexts): void {
   try {
     localStorage.setItem(cle(slug), JSON.stringify({ ...t, version: VERSION, a: Date.now() }));
+    localStorage.removeItem(cleAncienne(slug));
   } catch {
     /* quota plein, navigation privee : on continue sans filet */
   }
@@ -67,6 +78,7 @@ export function ecrirePrintTexts(slug: string, t: PrintTexts): void {
 export function effacerPrintTexts(slug: string): void {
   try {
     localStorage.removeItem(cle(slug));
+    localStorage.removeItem(cleAncienne(slug));
   } catch {
     /* rien a faire de plus */
   }
@@ -82,7 +94,7 @@ export function effacerPrintTexts(slug: string): void {
 export function lirePrintTexts(slug: string): PrintTexts | null {
   let brut: unknown;
   try {
-    const texte = localStorage.getItem(cle(slug));
+    const texte = localStorage.getItem(cle(slug)) ?? localStorage.getItem(cleAncienne(slug));
     if (!texte) return null;
     brut = JSON.parse(texte);
   } catch {

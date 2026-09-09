@@ -737,7 +737,7 @@ test("sslFor : TLS pour les hotes distants, rien en local ou reseau interne", ()
     rejectUnauthorized: false,
   });
   assert.equal(sslFor("postgres://u:p@postgres.railway.internal:5432/railway"), undefined);
-  assert.equal(sslFor("postgres://u:p@localhost:5432/givly"), undefined);
+  assert.equal(sslFor("postgres://u:p@localhost:5432/mypresentsforyou"), undefined);
   assert.equal(sslFor("pas une url"), undefined);
 });
 
@@ -788,7 +788,7 @@ test("boot.mjs et lib/db.ts decident du TLS de la meme maniere", () => {
     "postgres://u:p@ep-x.eu-central-1.aws.neon.tech/db",
     "postgres://u:p@monorail.proxy.rlwy.net:1234/railway",
     "postgres://u:p@postgres.railway.internal:5432/railway",
-    "postgres://u:p@localhost:5432/givly",
+    "postgres://u:p@localhost:5432/mypresentsforyou",
     "pas une url",
   ]) {
     assert.deepEqual(bootSslFor(url), sslFor(url), url);
@@ -1420,6 +1420,121 @@ async function checkImages() {
     assert.notEqual(presentation, -1, "etape de presentation absente");
     assert.ok(selecteur < cadeaux, "le selecteur d'occasion a quitte la premiere etape");
     assert.ok(cadeaux < presentation, "les cadeaux doivent preceder la presentation");
+  });
+
+  test("la barre d'action porte des cibles tactiles et des bords visibles", () => {
+    /*
+     * Deux defauts mesures, et rien dans le code ne les designait.
+     *
+     * Les boutons secondaires heritaient de `.btn--sm`, soit 40 px de haut,
+     * contre les 44 px minimum d'une cible tactile (WCAG 2.5.8) — et ils vivent
+     * au bord bas de l'ecran, serres contre l'action principale, la ou le pouce
+     * vise le moins bien. Leur bord etait `--line` : 1,23:1 de contraste avec le
+     * papier quand la regle 1.4.11 en demande 3:1. Autrement dit, une cible trop
+     * petite et sans contour visible, juste a cote du bouton qui cree la page.
+     *
+     * On lit la regle comme du texte : `getComputedStyle` demanderait un
+     * navigateur, et le harnais tourne sans.
+     */
+    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const bloc = /\.editor__nav \.btn \{([^}]*)\}/.exec(css);
+    assert.ok(bloc, "regle .editor__nav .btn introuvable");
+
+    const hauteur = /min-height:\s*([\d.]+)rem/.exec(bloc[1]);
+    assert.ok(hauteur, "les boutons de navigation n'imposent plus de hauteur minimale");
+    assert.ok(
+      Number(hauteur[1]) * 16 >= 44,
+      `cible tactile de ${Number(hauteur[1]) * 16} px, minimum 44`,
+    );
+
+    /*
+     * `--line` est le token qui plafonnait a 1,23:1. Le reste du depot s'en sert
+     * legitimement pour des filets ; ici, sur le bord d'une commande, il est le
+     * defaut exact qu'on vient de corriger.
+     */
+    const bord = /border-color:\s*var\((--[a-z-]+)\)/.exec(bloc[1]);
+    assert.ok(bord, "les boutons de navigation n'imposent plus de couleur de bord");
+    assert.notEqual(bord[1], "--line", "bord revenu a --line, invisible sur le papier");
+
+    /*
+     * L'ecart qui separe le groupe secondaire de l'action principale. A 1440 il
+     * valait 10 px : viser « Apercu » et manquer d'un demi-pouce vers la droite
+     * declenchait « Creer la page ». Les deux axes comptent — la barre passe a
+     * deux rangees sous 62 rem, et l'ecart change alors de nom.
+     */
+    const barre = /\.editor__actions \{([^}]*)\}/.exec(css);
+    assert.ok(barre, "regle .editor__actions introuvable");
+    for (const axe of ["column-gap", "row-gap"]) {
+      const m = new RegExp(`${axe}:\\s*([\\d.]+)rem`).exec(barre[1]);
+      assert.ok(m, `la barre d'action n'impose plus de ${axe}`);
+      assert.ok(
+        Number(m[1]) * 16 >= 16,
+        `${axe} de ${Number(m[1]) * 16} px entre les commandes, minimum 16`,
+      );
+    }
+  });
+
+  test("l'ecran de creation ramene a l'editeur", () => {
+    /*
+     * Le bouton « Creer la page » se touche par erreur en visant « Apercu »,
+     * juste a cote dans la barre d'action. L'ecran qui suit n'offrait alors
+     * aucun retour : le formulaire avait disparu et rien ne disait que tout
+     * restait modifiable.
+     *
+     * Le retour passe par une ancre nommee dans l'administration, ou vit
+     * l'editeur. Les deux moities se verifient ensemble : un lien vers une ancre
+     * absente ne casse rien de visible, il depose seulement le donneur en haut
+     * d'une page ou il n'a rien a faire.
+     */
+    const flux = readFileSync(new URL("../components/CreateFlow.tsx", import.meta.url), "utf8");
+    assert.ok(
+      flux.includes("#modifier"),
+      "l'ecran « Ta page est prete » ne renvoie plus a l'editeur",
+    );
+
+    const admin = readFileSync(new URL("../components/AdminView.tsx", import.meta.url), "utf8");
+    assert.ok(admin.includes('id="modifier"'), "l'ancre #modifier a disparu de l'administration");
+  });
+
+  test("l'ancien nom du site ne traine plus dans les sources", () => {
+    /*
+     * Le site a ete renomme, et un renommage se rate par les bords.
+     *
+     * Le premier passage n'a couvert que .tsx/.ts/.css/.json/.md : il a laisse
+     * l'ancien nom dans `scripts/boot.mjs` (onze lignes de journal), dans
+     * `scripts/brand.mjs` (donc dans `app/icon.svg`, qui en est engendre) et dans
+     * `db/schema.sql`. Aucun de ces trois ne casse quoi que ce soit — c'est bien
+     * le probleme : rien ne s'en serait plaint.
+     *
+     * Les deux cles de `localStorage` d'avant le renommage sont les seules
+     * exceptions permises : elles doivent porter l'ancien nom, sans quoi les
+     * brouillons deja ecrits sur les appareils deviennent illisibles.
+     */
+    const racines = ["app", "components", "lib", "scripts", "db"];
+    const suffixes = [".ts", ".tsx", ".css", ".mjs", ".sql", ".svg", ".json"];
+    const permis = ["givly:brouillon", "givly:carte:"];
+
+    const fichiers: string[] = [];
+    const descendre = (dossier: string) => {
+      for (const e of readdirSync(dossier, { withFileTypes: true })) {
+        const chemin = `${dossier}/${e.name}`;
+        if (e.isDirectory()) descendre(chemin);
+        // Ce fichier-ci s'exclut : il doit citer l'ancien nom pour le chercher.
+        else if (chemin === "scripts/check.ts") continue;
+        else if (suffixes.some((f) => e.name.endsWith(f))) fichiers.push(chemin);
+      }
+    };
+    for (const r of racines) descendre(r);
+    assert.ok(fichiers.length > 40, `parcours trop court : ${fichiers.length} fichiers`);
+
+    for (const chemin of fichiers) {
+      let contenu = readFileSync(chemin, "utf8");
+      for (const p of permis) contenu = contenu.split(p).join("");
+      assert.ok(
+        !/givly/i.test(contenu),
+        `l'ancien nom du site subsiste dans ${chemin}`,
+      );
+    }
   });
 
   test("le README annonce le bon nombre d'etapes", () => {

@@ -1068,26 +1068,69 @@ label.btn.is-disabled {
 
 /* --- Actions --------------------------------------------------------------- */
 
+/*
+ * La barre d'action, et pourquoi elle n'est plus un degrade.
+ *
+ * Elle etait invisible, au sens propre : ses boutons secondaires portaient un
+ * fond `--card` et un bord `--line`, soit 1,06:1 et 1,23:1 de contraste avec le
+ * papier. La regle 1.4.11 des WCAG demande 3:1 pour la limite d'une commande —
+ * on en etait a un huitieme. Sans limite perceptible, « Precedent » et
+ * « Apercu » ne se lisaient pas comme des boutons mais comme du texte pose la,
+ * et la seule chose visible de la barre etait l'action principale.
+ *
+ * Le degrade ne separait rien non plus : la barre se fondait dans le contenu
+ * qui defilait dessous. Elle a maintenant une surface opaque, un filet et une
+ * ombre portee vers le haut — elle se lit comme une barre, ce qu'elle est.
+ */
 .editor__actions {
   position: sticky;
   bottom: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  /*
+   * L'ecart entre le groupe secondaire et l'action principale, et non entre les
+   * boutons d'une meme rangee — ceux-la gardent leurs 8 px dans `.editor__nav`.
+   * Mesure a 1440 : « Apercu » et « Creer la page » se touchaient a 10 px.
+   */
+  column-gap: 1.5rem;
+  /*
+   * Plus d'air entre la rangee secondaire et l'action principale qu'entre les
+   * boutons d'une meme rangee. En dessous de 62 rem la barre passe a deux
+   * rangees, et 9,6 px separaient « Apercu » de « Creer la page » : viser le
+   * premier et manquer de dix pixels vers le bas declenchait le second.
+   */
+  row-gap: 1rem;
+  margin-top: 0.5rem;
   padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--paper) 65%, rgba(250, 246, 240, 0));
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -14px 26px -20px rgba(35, 31, 28, 0.5);
   z-index: 10;
 }
 
 .editor__nav {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   flex: 0 0 auto;
 }
 
 .editor__nav .btn {
+  /*
+   * 44 px, le minimum d'une cible tactile (WCAG 2.5.8). `.btn--sm` en pose 40,
+   * ce qui va pour un bouton isole au milieu d'un panneau mais pas pour trois
+   * commandes serrees au bord bas de l'ecran, la ou le pouce vise le moins bien.
+   */
+  min-height: 2.75rem;
   background: var(--card);
+  /* 5,47:1 contre le papier, la ou `--line` plafonnait a 1,23:1. */
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+.editor__nav .btn:hover:not(:disabled) {
+  background: var(--paper-warm);
+  border-color: var(--ink);
 }
 
 .editor__actions > .btn {

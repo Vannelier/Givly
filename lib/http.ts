@@ -69,9 +69,9 @@ export function handleError(err: unknown) {
     return fail(err.message, 400, err.field);
   }
   if (err instanceof DbNotConfiguredError) {
-    console.error("[givly]", err.message);
+    console.error("[mypresentsforyou]", err.message);
     return fail("Base de données non configurée sur ce déploiement.", 503);
   }
-  console.error("[givly]", err);
+  console.error("[mypresentsforyou]", err);
   return fail("Une erreur inattendue est survenue.", 500);
 }

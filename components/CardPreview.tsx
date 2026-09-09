@@ -186,7 +186,7 @@ function telecharger(svg: string) {
   const href = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = href;
-  a.download = "givly-qr.svg";
+  a.download = "mypresentsforyou-qr.svg";
   document.body.appendChild(a);
   a.click();
   a.remove();

@@ -1,4 +1,4 @@
--- Schema Givly. Idempotent : rejouable sans risque.
+-- Schema MyPresentsForYou. Idempotent : rejouable sans risque.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS gift_pages (

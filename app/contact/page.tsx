@@ -4,7 +4,7 @@ import TextPage from "@/components/TextPage";
 import { SITE, aRemplir } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact — Givly",
+  title: "Contact — MyPresentsForYou",
   description:
     "Une question, un bug, une carte à signaler ou un lien d'administration perdu : comment nous joindre.",
   alternates: { canonical: "/contact" },
@@ -16,7 +16,7 @@ export default function Contact() {
   return (
     <TextPage
       titre="Contact"
-      chapo="Givly est un petit projet. Les réponses ne sont pas instantanées, mais elles arrivent."
+      chapo="MyPresentsForYou est un petit projet. Les réponses ne sont pas instantanées, mais elles arrivent."
     >
       <h2>Nous écrire</h2>
       {sansAdresse ? (

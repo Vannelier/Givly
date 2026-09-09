@@ -41,7 +41,7 @@ export function sslFor(url) {
 export async function applySchema() {
   const url = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
   if (!url) {
-    console.warn("[givly] Aucune base configurée : schéma non appliqué.");
+    console.warn("[mypresentsforyou] Aucune base configurée : schéma non appliqué.");
     return;
   }
 
@@ -49,7 +49,7 @@ export async function applySchema() {
   try {
     schema = readFileSync(resolve(process.cwd(), "db/schema.sql"), "utf8");
   } catch {
-    console.error("[givly] db/schema.sql introuvable : schéma non appliqué.");
+    console.error("[mypresentsforyou] db/schema.sql introuvable : schéma non appliqué.");
     return;
   }
 
@@ -61,9 +61,9 @@ export async function applySchema() {
     const { rows } = await client.query(
       "select count(*)::int as n from information_schema.columns where table_name = 'gift_pages'",
     );
-    console.log(`[givly] Schéma à jour. gift_pages : ${rows[0].n} colonnes.`);
+    console.log(`[mypresentsforyou] Schéma à jour. gift_pages : ${rows[0].n} colonnes.`);
   } catch (err) {
-    console.error("[givly] Schéma non appliqué :", err.message);
+    console.error("[mypresentsforyou] Schéma non appliqué :", err.message);
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -95,7 +95,7 @@ export function mediaDir() {
  */
 async function verifierStockageImages() {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    console.log("[givly] Images : stockage distant configure.");
+    console.log("[mypresentsforyou] Images : stockage distant configure.");
     return;
   }
 
@@ -109,12 +109,12 @@ async function verifierStockageImages() {
     await writeFile(sonde, "");
     await rm(sonde, { force: true });
   } catch (err) {
-    console.error(`[givly] Images : ${dossier} n'est pas accessible en ecriture — ${err.message}`);
-    console.error("[givly] Les televersements echoueront. Verifie le montage et ses droits.");
+    console.error(`[mypresentsforyou] Images : ${dossier} n'est pas accessible en ecriture — ${err.message}`);
+    console.error("[mypresentsforyou] Les televersements echoueront. Verifie le montage et ses droits.");
     return;
   }
 
-  console.log(`[givly] Images : dossier ${dossier}.`);
+  console.log(`[mypresentsforyou] Images : dossier ${dossier}.`);
 
   /*
    * Pas de garde sur NODE_ENV : ce script tourne avant Next, qui n'a donc pas
@@ -129,7 +129,7 @@ async function verifierStockageImages() {
       "cartes deja envoyees. Monte un volume et pointe-le avec MEDIA_DIR, ou",
       "configure BLOB_READ_WRITE_TOKEN.",
     ]) {
-      console.warn(`[givly] ${ligne}`);
+      console.warn(`[mypresentsforyou] ${ligne}`);
     }
   }
 }
@@ -139,7 +139,7 @@ async function verifierStockageImages() {
 // transposent en CommonJS.
 if (process.argv[1] && process.argv[1].endsWith("boot.mjs")) {
   verifierStockageImages()
-    .catch((err) => console.error("[givly]", err.message))
+    .catch((err) => console.error("[mypresentsforyou]", err.message))
     .then(() => applySchema())
-    .catch((err) => console.error("[givly]", err.message));
+    .catch((err) => console.error("[mypresentsforyou]", err.message));
 }

@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: OG_DESCRIPTION,
       url,
-      siteName: "Givly",
+      siteName: "MyPresentsForYou",
       locale: "fr_BE",
       images: image ? [{ url: image }] : undefined,
     },

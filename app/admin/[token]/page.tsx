@@ -8,7 +8,7 @@ import { isExpired, isLocked, isSealed } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Administration — Givly",
+  title: "Administration — MyPresentsForYou",
   robots: { index: false, follow: false, nocache: true },
 };
 

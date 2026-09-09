@@ -83,24 +83,24 @@ const DESCRIPTION =
  * partirait en relatif, et aucune messagerie ne sait quoi en faire.
  *
  * Pas de gabarit de titre (`template`) : le titre d'une page-cadeau est celui
- * que le donneur a écrit, et lui accoler « — Givly » signerait sa carte à sa
+ * que le donneur a écrit, et lui accoler « — MyPresentsForYou » signerait sa carte à sa
  * place dans l'aperçu WhatsApp.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl()),
-  title: "Givly — compose une page-cadeau",
+  title: "MyPresentsForYou — compose une page-cadeau",
   description: DESCRIPTION,
-  applicationName: "Givly",
+  applicationName: "MyPresentsForYou",
   openGraph: {
     type: "website",
-    siteName: "Givly",
+    siteName: "MyPresentsForYou",
     locale: "fr_BE",
-    title: "Givly — offre le choix",
+    title: "MyPresentsForYou — offre le choix",
     description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Givly — offre le choix",
+    title: "MyPresentsForYou — offre le choix",
     description: DESCRIPTION,
   },
 };

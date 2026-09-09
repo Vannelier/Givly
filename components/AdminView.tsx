@@ -160,7 +160,12 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
 
       {editable && (
         <>
-          <section className="panel" style={{ paddingBottom: "0.6rem" }}>
+          {/*
+            Ancre nommee : l'ecran « Ta page est prete » y renvoie directement.
+            Sans elle, « Modifier la page » deposait le donneur en haut de
+            l'administration, plusieurs ecrans au-dessus de l'editeur.
+          */}
+          <section className="panel" id="modifier" style={{ paddingBottom: "0.6rem" }}>
             <h2>Modifier la page</h2>
             <p className="help">
               Les liens ne changent pas : celui que tu as déjà envoyé continue de fonctionner.
