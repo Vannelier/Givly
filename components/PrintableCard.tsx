@@ -193,15 +193,66 @@ export default function PrintableCard({
             ← Retour
           </Link>
         )}
-        <p>
-          Feuille A4, pliée en deux. Rabats la moitié gauche derrière la droite : la couverture se
-          retrouve devant, le QR code au dos.
-        </p>
+        {/*
+          La consigne de pliage a quitte cette barre pour passer sous la carte.
+          Elle occupait 118 px en tete de page au telephone, pour une phrase qu'on
+          lit une fois — et elle repoussait d'autant l'objet dont elle parle.
+        */}
         <button type="button" className="btn btn--sm" onClick={() => window.print()}>
           Imprimer
         </button>
       </div>
 
+      {/*
+        Deux colonnes sur grand ecran, deux etages au telephone — et dans les deux
+        cas la carte et ses reglages sont a l'ecran en meme temps.
+
+        Ils ne l'etaient jamais : la page empilait la barre, les reglages, les
+        mots, puis la feuille, en une seule colonne. Mesure, il fallait defiler
+        de 710 px au telephone et de 657 px sur un 1440 pour atteindre la carte,
+        et le desktop laissait 62 % de sa largeur vide pour y arriver. On reglait
+        a l'aveugle.
+      */}
+      <div className="print-atelier">
+        <div className="print-scene">
+          <div className="feuille-cadre" ref={cadre}>
+            <div className={`feuille feuille--${composition}`} style={skin}>
+              <span className="feuille__pli feuille__pli--haut" aria-hidden="true" />
+              <span className="feuille__pli feuille__pli--bas" aria-hidden="true" />
+
+              {/* Panneau gauche : le dos, visible en retournant la carte. */}
+              <div className="feuille__panneau feuille__dos">
+                <GiftMotif kind={motif} echelle={echelle} />
+                <div className="feuille__qr">
+                  {svg ? (
+                    // SVG produit a l'instant par la bibliotheque, a partir de notre
+                    // propre URL : rien d'exterieur n'entre dans cette chaine.
+                    <div dangerouslySetInnerHTML={{ __html: svg }} />
+                  ) : (
+                    <div className="feuille__qr-vide" />
+                  )}
+                </div>
+                {mots.cta.trim() && <p className="feuille__cta">{mots.cta}</p>}
+                {mots.signature.trim() && <p className="feuille__signature">{mots.signature}</p>}
+              </div>
+
+              {/* Panneau droit : la couverture, devant une fois pliee. */}
+              <div className="feuille__panneau feuille__couv">
+                <GiftMotif kind={motif} echelle={echelle} />
+                {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
+                {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
+                <h1 className="feuille__titre">{mots.title}</h1>
+              </div>
+            </div>
+          </div>
+
+          <p className="print-legende">
+            Feuille A4, pliée en deux. Rabats la moitié gauche derrière la droite : la couverture se
+            retrouve devant, le QR code au dos.
+          </p>
+        </div>
+
+        <div className="print-reglages">
       {/*
         Les trois reglages de l'habillage, groupes : on les parcourt du plus
         structurant au plus fin — la disposition, puis le decor, puis la couleur.
@@ -345,34 +396,6 @@ export default function PrintableCard({
         )}
       </div>
 
-      <div className="feuille-cadre" ref={cadre}>
-        <div className={`feuille feuille--${composition}`} style={skin}>
-          <span className="feuille__pli feuille__pli--haut" aria-hidden="true" />
-          <span className="feuille__pli feuille__pli--bas" aria-hidden="true" />
-
-          {/* Panneau gauche : le dos, visible en retournant la carte. */}
-          <div className="feuille__panneau feuille__dos">
-            <GiftMotif kind={motif} echelle={echelle} />
-            <div className="feuille__qr">
-              {svg ? (
-                // SVG produit a l'instant par la bibliotheque, a partir de notre
-                // propre URL : rien d'exterieur n'entre dans cette chaine.
-                <div dangerouslySetInnerHTML={{ __html: svg }} />
-              ) : (
-                <div className="feuille__qr-vide" />
-              )}
-            </div>
-            {mots.cta.trim() && <p className="feuille__cta">{mots.cta}</p>}
-            {mots.signature.trim() && <p className="feuille__signature">{mots.signature}</p>}
-          </div>
-
-          {/* Panneau droit : la couverture, devant une fois pliee. */}
-          <div className="feuille__panneau feuille__couv">
-            <GiftMotif kind={motif} echelle={echelle} />
-            {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
-            {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
-            <h1 className="feuille__titre">{mots.title}</h1>
-          </div>
         </div>
       </div>
     </div>
