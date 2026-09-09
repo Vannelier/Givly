@@ -1,63 +1,80 @@
 import type { MotifKind } from "./occasions";
 
 /**
- * Les modèles de carte imprimable.
+ * De quoi habiller la carte imprimable.
  *
- * Une liste plate, pas deux sélecteurs à croiser : chaque entrée est une
- * combinaison déjà arbitrée d'une composition et d'un décor. Un carrousel qu'on
- * parcourt à la flèche doit être court, et dix combinaisons choisies valent
- * mieux que vingt-huit engendrées.
+ * Deux axes indépendants, et non une liste de combinaisons figées. La liste
+ * plate d'avant croisait une composition et un décor : dix entrées pour quatre
+ * dispositions et six motifs, donc l'immense majorité des croisements
+ * inatteignables, et une flèche qui changeait les deux à la fois sans qu'on
+ * puisse dire lequel on voulait. Séparés, sept motifs et trois dispositions
+ * donnent vingt-et-une cartes au lieu de dix, avec deux commandes lisibles.
  *
- * Comme les palettes et les occasions, seul l'identifiant compte : la palette et
- * la police restent celles du thème de la carte, et tout le rendu vit dans
- * `app/print.css`. Ajouter un modèle coûte une ligne ici et un bloc de style.
+ * La composition « bandeau » a disparu avec la liste : son aplat d'accent était
+ * posé en `::before` sans contexte d'empilement, il passait devant le titre
+ * qu'il était censé souligner. Trois modèles la portaient, ils partent avec.
+ *
+ * Comme les palettes et les occasions, seul l'identifiant compte : le rendu vit
+ * dans `app/print.css`. Ajouter une disposition coûte une ligne ici et un bloc
+ * de style ; ajouter un motif ne coûte qu'une ligne, `GiftMotif` sachant déjà
+ * les dessiner tous.
  *
  * Aucun import Node : ce module part dans le bundle navigateur.
  */
 
-/** Ce qui change dans la mise en page. Le rendu vit dans `app/print.css`. */
-export const PRINT_COMPOSITIONS = ["centre", "cadre", "bandeau", "affiche"] as const;
+/* --- La disposition : où tombent le titre, le mot et le QR ----------------- */
 
-export type PrintComposition = (typeof PRINT_COMPOSITIONS)[number];
+export const PRINT_LAYOUTS = [
+  { id: "centre", nom: "Classique" },
+  { id: "cadre", nom: "Encadrée" },
+  { id: "affiche", nom: "Affiche" },
+] as const;
 
-export type PrintModel = {
-  id: string;
-  nom: string;
-  composition: PrintComposition;
-  motif: MotifKind;
-};
+export type PrintLayout = (typeof PRINT_LAYOUTS)[number]["id"];
 
-export const PRINT_MODELS: PrintModel[] = [
-  { id: "classique", nom: "Classique", composition: "centre", motif: "none" },
-  { id: "classique-coeurs", nom: "Cœurs", composition: "centre", motif: "coeurs" },
-  { id: "cadre-flocons", nom: "Flocons", composition: "cadre", motif: "flocons" },
-  { id: "cadre-etoiles", nom: "Étoiles", composition: "cadre", motif: "etoiles" },
-  { id: "cadre-feuilles", nom: "Feuilles", composition: "cadre", motif: "feuilles" },
-  { id: "bandeau", nom: "Bandeau", composition: "bandeau", motif: "none" },
-  { id: "bandeau-confetti", nom: "Confettis", composition: "bandeau", motif: "confetti" },
-  { id: "bandeau-guirlande", nom: "Guirlande", composition: "bandeau", motif: "guirlande" },
-  { id: "affiche", nom: "Affiche", composition: "affiche", motif: "none" },
-  { id: "affiche-coeurs", nom: "Affiche fleurie", composition: "affiche", motif: "coeurs" },
-];
-
-export const DEFAULT_PRINT_MODEL_ID = PRINT_MODELS[0].id;
+export const DEFAULT_PRINT_LAYOUT: PrintLayout = PRINT_LAYOUTS[0].id;
 
 /** Un identifiant inconnu retombe sur le défaut, jamais sur `undefined`. */
-export function printModelById(id: string | undefined | null): PrintModel {
-  return PRINT_MODELS.find((m) => m.id === id) ?? PRINT_MODELS[0];
+export function printLayoutById(id: string | undefined | null): (typeof PRINT_LAYOUTS)[number] {
+  return PRINT_LAYOUTS.find((l) => l.id === id) ?? PRINT_LAYOUTS[0];
+}
+
+/* --- Le pictogramme de fond ------------------------------------------------ */
+
+/**
+ * Les mêmes motifs que la page-cadeau, dans l'ordre où on les fait défiler.
+ *
+ * « Aucun » ouvre la marche : c'est le défaut, et c'est ce qu'on veut voir en
+ * premier — une carte nue avant d'y semer quoi que ce soit.
+ */
+export const PRINT_MOTIFS: { id: MotifKind; nom: string }[] = [
+  { id: "none", nom: "Aucun" },
+  { id: "coeurs", nom: "Cœurs" },
+  { id: "etoiles", nom: "Étoiles" },
+  { id: "flocons", nom: "Flocons" },
+  { id: "feuilles", nom: "Feuilles" },
+  { id: "confetti", nom: "Confettis" },
+  { id: "guirlande", nom: "Guirlande" },
+];
+
+export const DEFAULT_PRINT_MOTIF: MotifKind = PRINT_MOTIFS[0].id;
+
+export function printMotifIndex(id: MotifKind | undefined | null): number {
+  const i = PRINT_MOTIFS.findIndex((m) => m.id === id);
+  return i === -1 ? 0 : i;
 }
 
 /**
- * Le modèle voisin, dans un sens ou dans l'autre. La liste boucle : après le
+ * Le motif voisin, dans un sens ou dans l'autre. La liste boucle : après le
  * dernier vient le premier.
  *
- * Fonction du modèle courant vers le suivant, et non calcul à partir d'un index
+ * Fonction du motif courant vers le suivant, et non calcul à partir d'un index
  * mémorisé : c'est ce qui permet au composant d'employer la forme fonctionnelle
  * de `setState`. Sans elle, deux clics rapprochés partaient du même état — la
- * seconde flèche recalculait le voisin de l'ancien modèle, et n'avançait pas.
+ * seconde flèche recalculait le voisin de l'ancien motif, et n'avançait pas.
  */
-export function stepPrintModel(id: string | undefined | null, pas: number): string {
-  const courant = PRINT_MODELS.findIndex((m) => m.id === printModelById(id).id);
-  const total = PRINT_MODELS.length;
-  return PRINT_MODELS[(((courant + pas) % total) + total) % total].id;
+export function stepPrintMotif(id: MotifKind | undefined | null, pas: number): MotifKind {
+  const courant = printMotifIndex(id);
+  const total = PRINT_MOTIFS.length;
+  return PRINT_MOTIFS[(((courant + pas) % total) + total) % total].id;
 }

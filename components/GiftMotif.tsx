@@ -7,17 +7,36 @@ import type { MotifKind } from "@/lib/occasions";
  * choisie sans code de couleur en dur. Purement décoratif, donc masqué aux
  * lecteurs d'écran.
  */
-export default function GiftMotif({ kind }: { kind: MotifKind }) {
+export default function GiftMotif({
+  kind,
+  /**
+   * Resserre la tuile. Une vignette de 40 px de côté ne montre qu'un fragment
+   * d'une tuile de 124 : à cette taille, « Confettis » se réduit à une tache et
+   * ne se distingue plus de « Guirlande ». À 0,3 elle en montre trois de large,
+   * assez pour reconnaître le décor.
+   *
+   * L'identifiant du motif suit l'échelle : deux `<pattern>` de même `id` dans
+   * un document, le premier gagne, et la carte aurait hérité de la tuile serrée
+   * de la vignette posée à côté d'elle.
+   */
+  echelle = 1,
+}: {
+  kind: MotifKind;
+  echelle?: number;
+}) {
   if (kind === "none") return null;
+
+  const taille = Math.max(8, Math.round(patternSize(kind) * echelle));
+  const id = echelle === 1 ? `motif-${kind}` : `motif-${kind}-${taille}`;
 
   return (
     <svg className="motif" aria-hidden="true" focusable="false">
       <defs>
-        <pattern id={`motif-${kind}`} width={patternSize(kind)} height={patternSize(kind)} patternUnits="userSpaceOnUse">
-          {shapes(kind)}
+        <pattern id={id} width={taille} height={taille} patternUnits="userSpaceOnUse">
+          <g transform={echelle === 1 ? undefined : `scale(${echelle})`}>{shapes(kind)}</g>
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill={`url(#motif-${kind})`} />
+      <rect width="100%" height="100%" fill={`url(#${id})`} />
     </svg>
   );
 }

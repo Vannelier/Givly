@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CopyLine from "@/components/CopyLine";
-import PrintableCard from "@/components/PrintableCard";
+import CardPreview from "@/components/CardPreview";
 import PageEditor, { type CreateResult, type EditorInitial } from "@/components/editor/PageEditor";
 import { DEFAULT_THEME } from "@/lib/types";
 
@@ -83,20 +83,22 @@ function Created({ result }: { result: CreateResult }) {
         </div>
 
         {/*
-          La carte a imprimer, avec son carrousel de modeles, des cet ecran.
-          Elle n'etait accessible qu'en passant par l'administration puis par
-          « Imprimer » : le donneur qui veut glisser un QR dans une vraie carte
-          ne decouvrait qu'il pouvait la styler qu'apres avoir cherche.
+          Un apercu de la carte, et le chemin vers l'atelier.
+
+          L'atelier complet vivait ici, deplie : carrousel, champs de texte,
+          feuille pleine largeur. C'etait la bonne intention — montrer des cet
+          ecran qu'une carte existe — mais au mauvais format : sur un ecran de
+          fin ou l'on vient chercher deux liens, il occupait plus de place que
+          les liens eux-memes et repoussait les deux boutons hors de vue.
         */}
-        <PrintableCard
+        <CardPreview
           url={result.publicUrl}
           to={result.carte.to}
           intro={result.carte.intro}
           title={result.carte.title}
           signature={result.carte.signature}
           theme={result.carte.theme}
-          slug={result.slug}
-          variante="encart"
+          printHref={`${result.adminUrl}/imprimer`}
         />
 
         {result.warnings?.length > 0 && (

@@ -27,17 +27,20 @@ import {
   occasionById,
   openingById,
 } from "../lib/occasions";
-import { DEFAULT_PALETTE_ID, paletteById, paletteIdOf } from "../lib/palettes";
+import { DEFAULT_PALETTE_ID, PALETTES, paletteById, paletteIdOf } from "../lib/palettes";
+import { hexToHsl, hslToHex, styleDeTeinte, teinteDuTheme } from "../lib/carteCouleur";
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
 import { MEDIA_DIR } from "../lib/mediaStore";
 import {
-  DEFAULT_PRINT_MODEL_ID,
-  PRINT_COMPOSITIONS,
-  PRINT_MODELS,
-  printModelById,
-  stepPrintModel,
+  DEFAULT_PRINT_LAYOUT,
+  DEFAULT_PRINT_MOTIF,
+  PRINT_LAYOUTS,
+  PRINT_MOTIFS,
+  printLayoutById,
+  printMotifIndex,
+  stepPrintMotif,
 } from "../lib/printModels";
 import sharp from "sharp";
 import { MAX_IMAGE_EDGE, shrinkImage } from "../lib/image";
@@ -1055,49 +1058,134 @@ test("adresseClient a un repli quand aucun en-tete n'est pose", () => {
   assert.equal(adresseClient(new Request("https://exemple.test")), "sans-adresse");
 });
 
-// --- Modeles de carte imprimable -------------------------------------------
+// --- Habillage de la carte imprimable --------------------------------------
 
-test("les identifiants de modele sont uniques", () => {
-  const ids = PRINT_MODELS.map((m) => m.id);
-  assert.equal(new Set(ids).size, ids.length);
+test("les identifiants de disposition et de motif sont uniques", () => {
+  const dispositions = PRINT_LAYOUTS.map((l) => l.id);
+  assert.equal(new Set(dispositions).size, dispositions.length);
+  const motifs = PRINT_MOTIFS.map((m) => m.id);
+  assert.equal(new Set(motifs).size, motifs.length);
 });
 
-test("chaque modele porte un nom et un decor connus", () => {
+test("chaque entree porte un nom, et chaque motif un decor connu", () => {
   const decors = ["none", "confetti", "flocons", "coeurs", "etoiles", "guirlande", "feuilles"];
-  for (const m of PRINT_MODELS) {
+  for (const l of PRINT_LAYOUTS) assert.ok(l.nom.trim().length > 0, l.id);
+  for (const m of PRINT_MOTIFS) {
     assert.ok(m.nom.trim().length > 0, m.id);
-    assert.ok(decors.includes(m.motif), `${m.id} : decor ${m.motif}`);
-    assert.ok(PRINT_COMPOSITIONS.includes(m.composition), `${m.id} : ${m.composition}`);
+    assert.ok(decors.includes(m.id), `motif inconnu : ${m.id}`);
   }
 });
 
-test("les quatre compositions sont toutes representees", () => {
-  for (const c of PRINT_COMPOSITIONS) {
+test("les motifs couvrent tous ceux que GiftMotif sait dessiner", () => {
+  // Un decor ajoute a la page-cadeau et oublie ici serait dessinable mais
+  // inatteignable au carrousel.
+  const decors = ["none", "confetti", "flocons", "coeurs", "etoiles", "guirlande", "feuilles"];
+  for (const d of decors) {
     assert.ok(
-      PRINT_MODELS.some((m) => m.composition === c),
-      c,
+      PRINT_MOTIFS.some((m) => m.id === d),
+      `${d} absent du carrousel`,
     );
   }
 });
 
-test("stepPrintModel avance, recule et boucle", () => {
-  const premier = PRINT_MODELS[0].id;
-  const dernier = PRINT_MODELS[PRINT_MODELS.length - 1].id;
-  assert.equal(stepPrintModel(premier, 1), PRINT_MODELS[1].id);
-  assert.equal(stepPrintModel(premier, -1), dernier);
-  assert.equal(stepPrintModel(dernier, 1), premier);
-  // Deux clics rapproches doivent avancer de deux : c'est tout l'interet de
-  // calculer a partir du modele courant plutot que d'un index memorise.
-  assert.equal(stepPrintModel(stepPrintModel(premier, 1), 1), PRINT_MODELS[2].id);
-  // Un identifiant inconnu part du defaut plutot que de sortir de la liste.
-  assert.equal(stepPrintModel("inconnu", 1), PRINT_MODELS[1].id);
+test("la composition « bandeau » a bien disparu", () => {
+  // Son aplat etait pose en `::before` sans `z-index` : il passait derriere le
+  // titre qu'il devait souligner. La remettre sans le corriger reintroduirait
+  // le defaut signale.
+  assert.ok(!PRINT_LAYOUTS.some((l) => (l.id as string) === "bandeau"));
 });
 
-test("printModelById retombe sur le defaut", () => {
-  assert.equal(printModelById("inconnu").id, DEFAULT_PRINT_MODEL_ID);
-  assert.equal(printModelById("").id, DEFAULT_PRINT_MODEL_ID);
-  assert.equal(printModelById(undefined).id, DEFAULT_PRINT_MODEL_ID);
-  assert.equal(printModelById(PRINT_MODELS[2].id).id, PRINT_MODELS[2].id);
+test("stepPrintMotif avance, recule et boucle", () => {
+  const premier = PRINT_MOTIFS[0].id;
+  const dernier = PRINT_MOTIFS[PRINT_MOTIFS.length - 1].id;
+  assert.equal(stepPrintMotif(premier, 1), PRINT_MOTIFS[1].id);
+  assert.equal(stepPrintMotif(premier, -1), dernier);
+  assert.equal(stepPrintMotif(dernier, 1), premier);
+  // Deux clics rapproches doivent avancer de deux : c'est tout l'interet de
+  // calculer a partir du motif courant plutot que d'un index memorise.
+  assert.equal(stepPrintMotif(stepPrintMotif(premier, 1), 1), PRINT_MOTIFS[2].id);
+  // Un identifiant inconnu part du defaut plutot que de sortir de la liste.
+  assert.equal(stepPrintMotif(null, 1), PRINT_MOTIFS[1].id);
+});
+
+test("les replis ne renvoient jamais undefined", () => {
+  assert.equal(printLayoutById("inconnu").id, DEFAULT_PRINT_LAYOUT);
+  assert.equal(printLayoutById("").id, DEFAULT_PRINT_LAYOUT);
+  assert.equal(printLayoutById(undefined).id, DEFAULT_PRINT_LAYOUT);
+  assert.equal(printLayoutById(PRINT_LAYOUTS[2].id).id, PRINT_LAYOUTS[2].id);
+  assert.equal(printMotifIndex(null), 0);
+  assert.equal(PRINT_MOTIFS[printMotifIndex(null)].id, DEFAULT_PRINT_MOTIF);
+});
+
+// --- Couleur de la carte ----------------------------------------------------
+
+test("le rond-point hex vers HSL et retour conserve la couleur", () => {
+  for (const p of PALETTES) {
+    const hex = p.vars["--accent"];
+    const hsl = hexToHsl(hex);
+    assert.ok(hsl, p.id);
+    assert.equal(hslToHex(hsl!).toLowerCase(), hex.toLowerCase(), p.id);
+  }
+});
+
+test("hexToHsl refuse ce qui n'est pas une couleur", () => {
+  for (const mauvais of ["", "#12345", "rouge", "#gggggg", "rgb(1,2,3)"]) {
+    assert.equal(hexToHsl(mauvais), null, mauvais);
+  }
+});
+
+test("le curseur sur la teinte du theme ne surcharge rien", () => {
+  // Reecrire les memes couleurs a un arrondi pres ferait deriver une carte qu'on
+  // n'a pas touchee. Sur sa valeur de depart, le curseur doit etre transparent.
+  for (const p of PALETTES) {
+    const palette = { id: p.id };
+    assert.deepEqual(styleDeTeinte(palette, teinteDuTheme(palette)), {}, p.id);
+  }
+});
+
+test("le curseur amene tout sur une seule teinte, sans toucher au reste", () => {
+  /*
+   * L'invariant tient en deux moities.
+   *
+   * Toutes les variables teintees sortent sur *la meme* teinte, celle du
+   * curseur : c'est ce qui fait une couleur de carte plutot que cinq couleurs
+   * decalees les unes des autres. Et chacune garde sa propre saturation et sa
+   * propre clarte, ce qui garde la carte dans le registre papier du site au lieu
+   * de la faire virer au fluo.
+   */
+  for (const p of PALETTES) {
+    const palette = { id: p.id };
+    const cible = (teinteDuTheme(palette) + 120) % 360;
+    const style = styleDeTeinte(palette, cible) as Record<string, string>;
+    assert.ok(Object.keys(style).length > 0, p.id);
+
+    for (const [nom, valeur] of Object.entries(style)) {
+      const avant = hexToHsl(p.vars[nom])!;
+      const apres = hexToHsl(valeur)!;
+      assert.ok(Math.abs(avant.s - apres.s) < 0.02, `${p.id} ${nom} saturation`);
+      assert.ok(Math.abs(avant.l - apres.l) < 0.02, `${p.id} ${nom} clarte`);
+
+      /*
+       * La tolerance sur la teinte suit le chroma. Une couleur pale — `--line`,
+       * `--accent-soft` — n'occupe qu'une dizaine de niveaux sur 255 : la teinte
+       * s'y quantifie par paliers de plusieurs degres, et l'exiger au degre pres
+       * n'aurait rien teste d'autre que l'arrondi 8 bits. Le pire ecart mesure
+       * sur les huit palettes et les 359 rotations vaut 30 une fois multiplie
+       * par le chroma ; la marge est prise au double.
+       */
+      const chroma = (1 - Math.abs(2 * avant.l - 1)) * avant.s * 255;
+      const marge = Math.max(1.5, 60 / Math.max(chroma, 1));
+      const ecart = Math.min(Math.abs(apres.h - cible), 360 - Math.abs(apres.h - cible));
+      assert.ok(ecart < marge, `${p.id} ${nom} : ${ecart.toFixed(1)}° > ${marge.toFixed(1)}°`);
+    }
+  }
+});
+
+test("une teinte hors bornes revient dans le tour", () => {
+  const palette = { id: "olive" };
+  const depart = teinteDuTheme(palette);
+  assert.deepEqual(styleDeTeinte(palette, depart + 360), {});
+  assert.deepEqual(styleDeTeinte(palette, depart - 360), {});
 });
 
 // --- Reduction des images --------------------------------------------------
@@ -1225,6 +1313,23 @@ async function checkImages() {
       /\.cover__title \{\n\s+animation-delay: calc\(0\.2s \+ 2 \* var\(--voile-pas\) \+ var\(--voile-souffle\)\);/,
     );
     assert.match(css, /\.cover__wait \{[\s\S]{0,1400}?var\(--voile-souffle\) \+ [\d.]+s\)/);
+  });
+
+  test("une feuille reduite est rognee par son cadre", () => {
+    /*
+     * `transform: scale()` reduit ce qu'on voit, pas la boite mise en page : la
+     * feuille mesure toujours 297 mm, soit 1 122 px. Sans rognage elle gonflait
+     * la largeur du document et la page defilait lateralement sur telephone,
+     * dans le vide — rien ne depassait a l'oeil, ce qui rend le defaut d'autant
+     * plus facile a reintroduire.
+     */
+    const impression = readFileSync(new URL("../app/print.css", import.meta.url), "utf8");
+    for (const selecteur of [".feuille-cadre", ".carte-apercu__scene"]) {
+      const i = impression.indexOf(`\n${selecteur} {`);
+      assert.notEqual(i, -1, `regle absente : ${selecteur}`);
+      const regle = impression.slice(i, impression.indexOf("\n}", i));
+      assert.match(regle, /overflow: hidden;/, selecteur);
+    }
   });
 
   test("la pastille de validation garde de quoi etre composee", () => {
