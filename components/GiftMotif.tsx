@@ -47,6 +47,10 @@ function patternSize(kind: MotifKind): number {
   // Empreintes et pattes se lisent par paires, qui prennent plus de place qu'un
   // signe isole : une tuile de 124 les serrait au point de brouiller la marche.
   if (kind === "pattes" || kind === "pieds") return 150;
+  // Bougies et cadeaux sont plus hauts qu'un signe ordinaire : ils ont besoin
+  // d'air au-dessus et en dessous, sans quoi ils se touchent d'une tuile a
+  // l'autre.
+  if (kind === "bougies" || kind === "cadeaux") return 138;
   return 124;
 }
 
@@ -266,6 +270,99 @@ function shapes(kind: MotifKind) {
           ).map(([cle, x, y, s, r, cote]) => pied(cle, x, y, s, r, cote))}
           <circle cx="118" cy="24" r="1.6" />
           <circle cx="16" cy="112" r="1.4" />
+        </g>
+      );
+
+    /*
+     * Bougies : le corps, et la flamme detachee au-dessus.
+     *
+     * Sans meche, et avec un vrai vide entre les deux. Une premiere version en
+     * avait une : peinte de la meme couleur que le reste, elle soudait la flamme
+     * au corps, et l'ensemble se lisait comme une balle de fusil. Un pictogramme
+     * de bougie separe toujours les deux — c'est le vide qui dit que ca brule.
+     *
+     * Quatre hauteurs differentes, comme sur un gateau.
+     */
+    case "bougies":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["a", 26, 30, 1, 11],
+              ["b", 82, 66, 0.78, 8.5],
+              ["c", 50, 104, 0.9, 13],
+              ["d", 110, 22, 0.6, 7],
+            ] as const
+          ).map(([cle, x, y, s, h]) => (
+            <g key={cle} transform={`translate(${x} ${y}) scale(${s})`}>
+              <path
+                transform="translate(0 -3.4)"
+                d="M0-10c2.3 2.2 3.4 4 3.4 5.6a3.4 3.4 0 0 1-6.8 0C-3.4-6-2.3-7.8 0-10z"
+              />
+              <rect x="-2.1" y="-1.8" width="4.2" height={h} rx="1.2" />
+            </g>
+          ))}
+          <circle cx="104" cy="112" r="1.7" />
+          <circle cx="14" cy="80" r="1.4" />
+        </g>
+      );
+
+    /*
+     * Cadeaux : quatre quartiers separes par le ruban, et le noeud au-dessus.
+     *
+     * Le ruban n'est pas dessine, il est laisse en creux. Tout est peint dans
+     * la meme couleur : un ruban plein sur une boite pleine ne se verrait pas.
+     * Ce sont les deux fentes entre les quartiers qui le rendent visible, et
+     * c'est ce qui fait lire « paquet » plutot que « rectangle ».
+     */
+    case "cadeaux":
+      return (
+        <g fill="currentColor">
+          {(
+            [
+              ["a", 28, 34, 1],
+              ["b", 84, 72, 0.8],
+              ["c", 52, 110, 0.88],
+              ["d", 112, 24, 0.58],
+            ] as const
+          ).map(([cle, x, y, s]) => (
+            <g key={cle} transform={`translate(${x} ${y}) scale(${s})`}>
+              <rect x="-6.2" y="-2.6" width="5.3" height="4.2" rx="0.7" />
+              <rect x="0.9" y="-2.6" width="5.3" height="4.2" rx="0.7" />
+              <rect x="-6.2" y="2.6" width="5.3" height="4.4" rx="0.7" />
+              <rect x="0.9" y="2.6" width="5.3" height="4.4" rx="0.7" />
+              <path d="M-0.7-3.2c-3.3-3.5-6.1-1.7-4.8.7.7 1.3 2.6 1.4 4.8-.7z" />
+              <path d="M0.7-3.2c3.3-3.5 6.1-1.7 4.8.7-.7 1.3-2.6 1.4-4.8-.7z" />
+            </g>
+          ))}
+          <circle cx="108" cy="112" r="1.7" />
+          <circle cx="16" cy="84" r="1.4" />
+        </g>
+      );
+
+    /*
+     * Alliances : deux anneaux qui se croisent.
+     *
+     * En trait et non en aplat — un anneau plein n'est plus un anneau. C'est le
+     * chevauchement qui dit l'union ; deux cercles cote a cote ne diraient rien.
+     */
+    case "alliances":
+      return (
+        <g fill="none" stroke="currentColor" strokeWidth="1.5">
+          {(
+            [
+              ["a", 30, 32, 1],
+              ["b", 86, 74, 0.72],
+              ["c", 52, 104, 0.84],
+            ] as const
+          ).map(([cle, x, y, s]) => (
+            <g key={cle} transform={`translate(${x} ${y}) scale(${s})`}>
+              <circle cx="-3.1" cy="0" r="5" />
+              <circle cx="3.1" cy="0" r="5" />
+            </g>
+          ))}
+          <circle cx="106" cy="16" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="14" cy="76" r="1.3" fill="currentColor" stroke="none" />
         </g>
       );
 

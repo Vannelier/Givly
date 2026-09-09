@@ -18,7 +18,10 @@ export type MotifKind =
   | "guirlande"
   | "feuilles"
   | "pattes"
-  | "pieds";
+  | "pieds"
+  | "bougies"
+  | "cadeaux"
+  | "alliances";
 
 export type OccasionId =
   | "aucune"
@@ -95,7 +98,8 @@ export const OCCASIONS: Occasion[] = [
     name: "Anniversaire",
     icon: "✻",
     palette: "terracotta",
-    motif: "confetti",
+    // Le fond portait des confettis, comme l'effet : le meme signe deux fois.
+    motif: "bougies",
     intro: "Joyeux anniversaire",
     welcomeHint: "Un an de plus, et un cadeau à choisir toi-même.",
     thanksHint: "Excellent choix. Bon anniversaire !",
@@ -145,7 +149,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue au monde",
     welcomeHint: "Un petit quelque chose pour bien commencer.",
     thanksHint: "C'est noté. Félicitations !",
-    effect: "etincelles",
+    effect: "bulles",
     openHint: "Ouvrir",
     waitHint: "Bientôt, promis.",
   },
@@ -197,7 +201,7 @@ export const OCCASIONS: Occasion[] = [
     name: "Fête des pères",
     icon: "◈",
     palette: "encre",
-    motif: "none",
+    motif: "cadeaux",
     intro: "Pour toi, papa",
     welcomeHint: "Tu ne demandes jamais rien. Alors cette fois, tu choisis.",
     thanksHint: "Parfait. À très bientôt.",
@@ -215,7 +219,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bonne année",
     welcomeHint: "Pour bien commencer l'année, choisis ce qui te tente.",
     thanksHint: "C'est noté. Très belle année à toi !",
-    effect: "etincelles",
+    effect: "poussiere",
     openHint: "Ouvrir",
     waitHint: "Rendez-vous à minuit.",
   },
@@ -225,11 +229,11 @@ export const OCCASIONS: Occasion[] = [
     name: "Mariage",
     icon: "✧",
     palette: "ivoire",
-    motif: "etoiles",
+    motif: "alliances",
     intro: "Pour vous deux",
     welcomeHint: "Pour votre nouvelle vie, c'est vous qui choisissez.",
     thanksHint: "C'est noté. Tous mes vœux à vous deux.",
-    effect: "petales",
+    effect: "poussiere",
     openHint: "Ouvrir notre cadeau",
     waitHint: "Encore un peu de patience.",
   },
@@ -243,7 +247,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Tu l'as décroché",
     welcomeHint: "Après tout ce travail, tu as bien le droit de choisir.",
     thanksHint: "Excellent. Profite, c'est mérité.",
-    effect: "confettis",
+    effect: "poussiere",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -257,7 +261,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Bienvenue chez toi",
     welcomeHint: "Pour ton nouveau chez-toi, choisis ce qui manque encore.",
     thanksHint: "C'est noté. Bonne installation !",
-    effect: "aucun",
+    effect: "ballons",
     openHint: "Ouvrir",
     waitHint: "Encore un peu de patience.",
   },
@@ -271,7 +275,7 @@ export const OCCASIONS: Occasion[] = [
     intro: "Et maintenant, le temps",
     welcomeHint: "Une page se tourne. Choisis de quoi remplir la suivante.",
     thanksHint: "C'est noté. Profite bien, tu l'as gagné.",
-    effect: "aucun",
+    effect: "feuilles",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -281,11 +285,11 @@ export const OCCASIONS: Occasion[] = [
     name: "Pot de départ",
     icon: "→",
     palette: "olive",
-    motif: "none",
+    motif: "cadeaux",
     intro: "Bonne route",
     welcomeHint: "L'équipe s'est cotisée. À toi de choisir.",
     thanksHint: "C'est noté. Bonne continuation !",
-    effect: "confettis",
+    effect: "ballons",
     openHint: "Ouvrir",
     waitHint: "Ça arrive très bientôt.",
   },
@@ -391,7 +395,17 @@ export const OPENINGS: OpeningStyle[] = [
  * combinent librement — un halo peut lacher des confettis — et un effet vaut
  * meme sans voile, quand le donneur l'a coupe.
  */
-export type EffectId = "aucun" | "confettis" | "petales" | "etincelles" | "neige" | "notes";
+export type EffectId =
+  | "aucun"
+  | "confettis"
+  | "petales"
+  | "etincelles"
+  | "neige"
+  | "notes"
+  | "bulles"
+  | "feuilles"
+  | "ballons"
+  | "poussiere";
 
 export type Effect = { id: EffectId; name: string; hint: string };
 
@@ -402,6 +416,10 @@ export const EFFECTS: Effect[] = [
   { id: "etincelles", name: "Étincelles", hint: "Elles montent et s'éteignent." },
   { id: "neige", name: "Neige", hint: "Des flocons, lentement." },
   { id: "notes", name: "Notes de musique", hint: "Elles descendent en se balançant." },
+  { id: "bulles", name: "Bulles", hint: "Elles montent et éclatent." },
+  { id: "feuilles", name: "Feuilles", hint: "Elles tombent en tournoyant." },
+  { id: "ballons", name: "Ballons", hint: "Quelques-uns, qui s'élèvent." },
+  { id: "poussiere", name: "Poussière d'or", hint: "Un scintillement, sans chute." },
 ];
 
 export const DEFAULT_EFFECT_ID: EffectId = "aucun";

@@ -1078,6 +1078,9 @@ const DECORS = [
   "feuilles",
   "pattes",
   "pieds",
+  "bougies",
+  "cadeaux",
+  "alliances",
 ];
 
 test("les identifiants de disposition et de motif sont uniques", () => {

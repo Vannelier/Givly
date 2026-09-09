@@ -106,6 +106,10 @@ const EFFECT_GLYPHS: Record<EffectId, string> = {
   etincelles: "✦",
   neige: "❄",
   notes: "♪",
+  bulles: "◌",
+  feuilles: "❧",
+  ballons: "◍",
+  poussiere: "✧",
 };
 
 const STEPS = [

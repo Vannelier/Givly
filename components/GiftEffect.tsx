@@ -39,6 +39,14 @@ export default function GiftEffect({ kind }: { kind: EffectId }) {
             style={
               {
                 "--x": `${(a * 100).toFixed(2)}%`,
+                /*
+                 * La hauteur de depart. Les cinq premiers effets partent tous
+                 * d'un bord — le haut pour ce qui tombe, le bas pour ce qui
+                 * monte — et n'en ont donc pas besoin. La poussiere d'or, elle,
+                 * ne traverse rien : elle scintille sur place, et il lui faut
+                 * une place.
+                 */
+                "--y": `${(c * 92 + 4).toFixed(2)}%`,
                 // Duree et etalement triples : la salve passait trop vite pour
                 // qu'on la remarque. Les particules tombent plus lentement et
                 // continuent d'arriver plus longtemps.
