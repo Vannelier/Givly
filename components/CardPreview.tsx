@@ -96,11 +96,13 @@ export default function CardPreview({
     <div className="carte-apercu">
       <div className="carte-apercu__scene" ref={cadre}>
         <div className="feuille feuille--centre feuille--apercu" style={skin} aria-hidden="true">
+          {/* Un seul decor pour la feuille entiere : voir `PrintableCard`. */}
+          <GiftMotif kind={motif} />
+
           <span className="feuille__pli feuille__pli--haut" />
           <span className="feuille__pli feuille__pli--bas" />
 
           <div className="feuille__panneau feuille__dos">
-            <GiftMotif kind={motif} />
             <div className="feuille__qr">
               {svg ? (
                 // SVG produit a l'instant par la bibliotheque, a partir de notre
@@ -115,7 +117,6 @@ export default function CardPreview({
           </div>
 
           <div className="feuille__panneau feuille__couv">
-            <GiftMotif kind={motif} />
             {to.trim() && <p className="feuille__to">Pour {to}</p>}
             {intro.trim() && <p className="feuille__intro">{intro}</p>}
             <h2 className="feuille__titre">{title}</h2>

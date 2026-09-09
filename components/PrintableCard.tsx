@@ -217,12 +217,21 @@ export default function PrintableCard({
         <div className="print-scene">
           <div className="feuille-cadre" ref={cadre}>
             <div className={`feuille feuille--${composition}`} style={skin}>
+              {/*
+                Un seul decor, pour la feuille entiere.
+                
+                Chaque panneau portait le sien, et un `<pattern>` commence son
+                pavage au coin de son propre dessin : la tuile repartait de zero
+                au milieu de la feuille, et le motif se cassait net sur le pli.
+                Pose ici, il court d'un bord a l'autre sans rupture.
+              */}
+              <GiftMotif kind={motif} echelle={echelle} />
+
               <span className="feuille__pli feuille__pli--haut" aria-hidden="true" />
               <span className="feuille__pli feuille__pli--bas" aria-hidden="true" />
 
               {/* Panneau gauche : le dos, visible en retournant la carte. */}
               <div className="feuille__panneau feuille__dos">
-                <GiftMotif kind={motif} echelle={echelle} />
                 <div className="feuille__qr">
                   {svg ? (
                     // SVG produit a l'instant par la bibliotheque, a partir de notre
@@ -238,7 +247,6 @@ export default function PrintableCard({
 
               {/* Panneau droit : la couverture, devant une fois pliee. */}
               <div className="feuille__panneau feuille__couv">
-                <GiftMotif kind={motif} echelle={echelle} />
                 {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
                 {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
                 <h1 className="feuille__titre">{mots.title}</h1>
