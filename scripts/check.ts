@@ -1078,6 +1078,9 @@ const DECORS = [
   "feuilles",
   "pattes",
   "pieds",
+  "bougies",
+  "cadeaux",
+  "alliances",
 ];
 
 test("les identifiants de disposition et de motif sont uniques", () => {
@@ -1374,6 +1377,23 @@ async function checkImages() {
     assert.notEqual(i, -1, "regle .motif absente");
     const regle = css.slice(i, css.indexOf("\n}", i));
     assert.match(regle, /opacity: var\(--motif-opacite, 0\.11\);/);
+  });
+
+  test("chaque effet du catalogue est dessine quelque part", () => {
+    /*
+     * `GiftEffect` pose une classe `fx--<id>` sur un calque de spans vides et
+     * s'arrete la : sans regle correspondante, l'effet est proposable, activable,
+     * et absolument invisible. Meme piege que pour les decors, mais du cote CSS.
+     */
+    for (const e of EFFECTS) {
+      if (e.id === "aucun") continue;
+      /*
+       * L'accolade compte : `.fx--notes span:nth-child(odd)` contient
+       * `.fx--notes span`, et sans elle la verification passait alors meme que
+       * la regle de base avait ete renommee. Verifie par mutation.
+       */
+      assert.ok(css.includes(`.fx--${e.id} span {`), `aucune regle pour l'effet ${e.id}`);
+    }
   });
 
   test("le decor court d'un bord a l'autre de la feuille", () => {

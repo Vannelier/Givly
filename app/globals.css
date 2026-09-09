@@ -1624,6 +1624,161 @@ select {
   animation-duration: calc(var(--dur) * 1.6);
 }
 
+/*
+ * Notes de musique : elles tombent en se balancant, sans tournoyer.
+ *
+ * Le signe est un masque, pas un glyphe.
+ *
+ * `content: "♪"` aurait ete plus court, mais la note serait alors dessinee par
+ * la police disponible sur l'appareil : une croche fine ici, un pave carre la,
+ * et parfois un rectangle vide. Le masque porte notre propre trace, decoupe
+ * dans un aplat de couleur qui suit le theme — c'est le seul moyen d'obtenir la
+ * meme note partout tout en gardant `currentColor`.
+ *
+ * Deux signes alternes, une croche isolee et deux croches liees, pour que la
+ * pluie ne soit pas une repetition du meme objet.
+ */
+.fx--notes span {
+  background: var(--accent-dark);
+  border-radius: 0;
+  /*
+   * Plus grosses que les autres particules : un confetti est une tache, une
+   * note est un signe qu'il faut reconnaitre. A 1,15 les plus petites tombaient
+   * a 7 px et se lisaient comme des poussieres.
+   */
+  width: calc(var(--size) * 1.7);
+  height: calc(var(--size) * 1.7);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  animation-name: fx-notes;
+  animation-duration: calc(var(--dur) * 1.15);
+}
+
+/* Une croche : tete ovale inclinee, hampe, crochet. */
+.fx--notes span:nth-child(odd) {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13 3v10.6a4.2 4.2 0 1 0 2 3.6V8.3c2 .5 3.4 1.9 3.6 3.9h1.4C19.8 7.9 17.3 5 13 3z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13 3v10.6a4.2 4.2 0 1 0 2 3.6V8.3c2 .5 3.4 1.9 3.6 3.9h1.4C19.8 7.9 17.3 5 13 3z'/%3E%3C/svg%3E");
+}
+
+/* Deux croches liees par leur barre. */
+.fx--notes span:nth-child(even) {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9 4.6 20 2.4v3l-11 2.2z'/%3E%3Cpath fill='%23000' d='M9 4.6v9.9a3.3 3.3 0 1 0 1.6 2.9V6z'/%3E%3Cpath fill='%23000' d='M20 2.4v9.2a3.3 3.3 0 1 0 1.6 2.9V3.7z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9 4.6 20 2.4v3l-11 2.2z'/%3E%3Cpath fill='%23000' d='M9 4.6v9.9a3.3 3.3 0 1 0 1.6 2.9V6z'/%3E%3Cpath fill='%23000' d='M20 2.4v9.2a3.3 3.3 0 1 0 1.6 2.9V3.7z'/%3E%3C/svg%3E");
+}
+
+/*
+ * Bulles : elles montent, grossissent, et eclatent en haut de course.
+ *
+ * En trait et non en aplat. Une bulle pleine est un disque ; c'est le cercle
+ * vide qui la fait lire, parce qu'on voit au travers.
+ */
+.fx--bulles span {
+  top: auto;
+  bottom: -8vh;
+  border-radius: 999px;
+  background: none;
+  border: 1.4px solid var(--accent);
+  width: calc(var(--size) * 1.2);
+  height: calc(var(--size) * 1.2);
+  animation-name: fx-bulles;
+  animation-duration: calc(var(--dur) * 1.25);
+}
+
+/*
+ * Feuilles : chute lente, et un tournoiement sur deux axes.
+ *
+ * `rotate3d` et non `rotate` : une feuille qui tombe se retourne, elle ne pivote
+ * pas a plat comme un confetti. Le passage par la tranche — ou elle disparait
+ * presque — est ce qui rend la chute credible.
+ */
+.fx--feuilles span {
+  background: var(--accent);
+  border-radius: 0;
+  width: calc(var(--size) * 1.6);
+  height: calc(var(--size) * 1.6);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M21 3C10 3 3 8.5 3 16.5c0 1.6.3 3.1.9 4.5l1.7-.7A11 11 0 0 1 5 16.5C5 10.9 10.4 6.7 18 5.6 13 8.4 9 12.6 7.3 18.6c1.6.9 3.4 1.4 5.2 1.4 5.6 0 9.5-4.9 8.5-17z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M21 3C10 3 3 8.5 3 16.5c0 1.6.3 3.1.9 4.5l1.7-.7A11 11 0 0 1 5 16.5C5 10.9 10.4 6.7 18 5.6 13 8.4 9 12.6 7.3 18.6c1.6.9 3.4 1.4 5.2 1.4 5.6 0 9.5-4.9 8.5-17z'/%3E%3C/svg%3E");
+  animation-name: fx-feuilles;
+  animation-duration: calc(var(--dur) * 1.6);
+}
+
+/*
+ * Ballons : quelques-uns seulement, gros et lents.
+ *
+ * Vingt-six ballons ne sont pas une fete, c'est un lacher. Un span sur quatre
+ * est affiche — six ou sept montent, ce qui laisse voir chacun d'eux. Le compte
+ * est reduit ici plutot que dans le composant : celui-ci sert les dix effets, et
+ * n'a pas a connaitre les besoins de chacun.
+ */
+.fx--ballons span {
+  display: none;
+}
+
+.fx--ballons span:nth-child(4n + 2) {
+  display: block;
+  top: auto;
+  bottom: -18vh;
+  border-radius: 0;
+  background: hsl(var(--hue) 48% 58%);
+  width: calc(var(--size) * 3);
+  height: calc(var(--size) * 4.4);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 36'%3E%3Cellipse cx='12' cy='11' rx='9' ry='11' fill='%23000'/%3E%3Cpath d='M12 22l2.2 3h-4.4z' fill='%23000'/%3E%3Cpath d='M12 25c3 3-3 5 0 8' stroke='%23000' stroke-width='1.1' fill='none'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 36'%3E%3Cellipse cx='12' cy='11' rx='9' ry='11' fill='%23000'/%3E%3Cpath d='M12 22l2.2 3h-4.4z' fill='%23000'/%3E%3Cpath d='M12 25c3 3-3 5 0 8' stroke='%23000' stroke-width='1.1' fill='none'/%3E%3C/svg%3E");
+  animation-name: fx-ballons;
+  /*
+   * 1,4 et non 2,1 : a ce dernier facteur un ballon mettait de 16 a 31 s a
+   * traverser l'ecran, soit plus longtemps qu'on ne regarde la page. Lent, mais
+   * pas au point de ne jamais arriver.
+   */
+  animation-duration: calc(var(--dur) * 1.4);
+}
+
+/*
+ * Poussiere d'or : un scintillement, et rien qui traverse l'ecran.
+ *
+ * Le seul effet qui ne va nulle part. Les autres entrent par un bord et
+ * ressortent par l'autre ; celui-ci se pose la ou il tombe — d'ou `--y`, la
+ * hauteur de depart que le composant tire pour chaque grain — et se contente de
+ * respirer sur place. Des grains fins et nombreux, avec un halo.
+ */
+.fx--poussiere span {
+  top: var(--y);
+  border-radius: 999px;
+  background: var(--accent);
+  /*
+   * Trois grains par span, poses en `box-shadow` : vingt-six points sur un ecran
+   * entier, c'est un desert. Le decalage negatif de la troisieme valeur retrecit
+   * les copies, ce qui evite trois grains parfaitement identiques ; la premiere
+   * ombre, sans decalage, est le halo.
+   */
+  box-shadow:
+    0 0 5px var(--accent),
+    17px -26px 0 -0.4px var(--accent),
+    -21px 31px 0 -0.7px var(--accent);
+  width: calc(var(--size) * 0.3);
+  height: calc(var(--size) * 0.3);
+  animation-name: fx-poussiere;
+  animation-duration: calc(var(--dur) * 0.62);
+  /* Il respire plusieurs fois avant de s'eteindre — sinon on ne le voit pas. */
+  animation-iteration-count: 3;
+}
+
 /* Etincelles : elles partent du bas et s'eteignent en montant. */
 .fx--etincelles span {
   top: auto;
@@ -1667,6 +1822,119 @@ select {
   100% {
     opacity: 0;
     transform: translate3d(calc(var(--drift) * 0.5), 108vh, 0);
+  }
+}
+
+/*
+ * Une note ne tournoie pas comme un confetti : elle se balance.
+ *
+ * D'ou une rotation ramenee au douzieme de `--spin`, soit une trentaine de
+ * degres au plus, et un ecart lateral qui part d'un cote pour revenir de
+ * l'autre. Reutiliser `fx-fall` aurait fait tourner les notes sur elles-memes,
+ * ce qui les rend illisibles et un peu betes.
+ */
+@keyframes fx-notes {
+  0% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.5), 0, 0) rotate(calc(var(--spin) * -0.04));
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(calc(var(--drift) * 0.6), 54vh, 0) rotate(calc(var(--spin) * 0.06));
+  }
+  82% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.4), 108vh, 0) rotate(calc(var(--spin) * -0.05));
+  }
+}
+
+@keyframes fx-bulles {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.5);
+  }
+  12% {
+    opacity: 0.7;
+  }
+  72% {
+    opacity: 0.7;
+  }
+  /* Les deux derniers arrets sont l'eclatement : elle s'ouvre et disparait. */
+  93% {
+    opacity: 0.5;
+    transform: translate3d(var(--drift), -84vh, 0) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), -88vh, 0) scale(1.55);
+  }
+}
+
+@keyframes fx-feuilles {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate3d(0.6, 1, 0.2, 0deg);
+  }
+  8% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(calc(var(--drift) * 1.4), 54vh, 0)
+      rotate3d(0.6, 1, 0.2, calc(var(--spin) * 0.7));
+  }
+  84% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.6), 108vh, 0)
+      rotate3d(0.6, 1, 0.2, calc(var(--spin) * 1.6));
+  }
+}
+
+@keyframes fx-ballons {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 0.85;
+  }
+  /* Un leger balancement de la ficelle, pas une culbute. */
+  50% {
+    transform: translate3d(calc(var(--drift) * 0.8), -52vh, 0) rotate(calc(var(--spin) * 0.03));
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.4), -118vh, 0)
+      rotate(calc(var(--spin) * -0.025));
+  }
+}
+
+@keyframes fx-poussiere {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.5);
+  }
+  22% {
+    opacity: 0.95;
+    transform: translate3d(calc(var(--drift) * 0.14), -7px, 0) scale(1);
+  }
+  56% {
+    opacity: 0.3;
+  }
+  78% {
+    opacity: 0.85;
+    transform: translate3d(calc(var(--drift) * -0.1), -15px, 0) scale(0.8);
   }
 }
 
