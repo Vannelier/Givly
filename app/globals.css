@@ -194,7 +194,12 @@ select {
   width: 100%;
   height: 100%;
   color: var(--accent);
-  opacity: 0.11;
+  /*
+   * L'opacite passe par une variable pour que la carte imprimable puisse la
+   * regler. `0.11` reste le repli : la page-cadeau, qui ne la pose nulle part,
+   * garde exactement le decor qu'elle avait.
+   */
+  opacity: var(--motif-opacite, 0.11);
   pointer-events: none;
   z-index: 0;
 }

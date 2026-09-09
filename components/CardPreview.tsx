@@ -123,37 +123,39 @@ export default function CardPreview({
         </div>
       </div>
 
-      {/*
-        La feuille est marquee `aria-hidden` : c'est une image du meme texte que
-        celui de la page, et le relire deux fois n'apprend rien. Une legende la
-        decrit a la place.
-      */}
-      <p className="carte-apercu__legende">
-        Une feuille A4 pliée en deux : la couverture devant, le QR code au dos.
-      </p>
+      <div className="carte-apercu__cote">
+        {/*
+          La feuille est marquee `aria-hidden` : c'est une image du meme texte que
+          celui de la page, et le relire deux fois n'apprend rien. Une legende la
+          decrit a la place.
+        */}
+        <p className="carte-apercu__legende">
+          Une feuille A4 pliée en deux : la couverture devant, le QR code au dos.
+        </p>
 
-      <div className="carte-apercu__actions">
-        <Link className="btn btn--sm" href={printHref}>
-          Carte à imprimer
-        </Link>
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          disabled={!svg}
-          onClick={() => svg && telecharger(svg)}
-        >
-          Télécharger le QR code
-        </button>
+        <div className="carte-apercu__actions">
+          <Link className="btn btn--sm" href={printHref}>
+            Carte à imprimer
+          </Link>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            disabled={!svg}
+            onClick={() => svg && telecharger(svg)}
+          >
+            Télécharger le QR code
+          </button>
+        </div>
       </div>
 
       {rate && (
-        <p className="notice notice--warn" style={{ marginTop: "0.8rem" }}>
+        <p className="notice notice--warn carte-apercu__alerte">
           Le QR code n&apos;a pas pu être généré. Le lien reste utilisable tel quel.
         </p>
       )}
 
       {!isOpenableUrl(url) && (
-        <p className="notice notice--warn" style={{ marginTop: "0.8rem" }}>
+        <p className="notice notice--warn carte-apercu__alerte">
           Ce lien pointe vers une adresse locale : les téléphones l&apos;affichent sans pouvoir
           l&apos;ouvrir. Renseigne <code>NEXT_PUBLIC_BASE_URL</code> avec l&apos;adresse publique du
           site.

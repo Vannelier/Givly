@@ -8,11 +8,14 @@ import type { MotifKind } from "./occasions";
  * dispositions et six motifs, donc l'immense majorité des croisements
  * inatteignables, et une flèche qui changeait les deux à la fois sans qu'on
  * puisse dire lequel on voulait. Séparés, sept motifs et trois dispositions
- * donnent vingt-et-une cartes au lieu de dix, avec deux commandes lisibles.
+ * donnent quatorze cartes au lieu de dix, et chacune se règle encore en taille,
+ * en contraste et en couleur.
  *
- * La composition « bandeau » a disparu avec la liste : son aplat d'accent était
- * posé en `::before` sans contexte d'empilement, il passait devant le titre
- * qu'il était censé souligner. Trois modèles la portaient, ils partent avec.
+ * Deux compositions sont tombées en chemin. « Bandeau » d'abord : son aplat
+ * d'accent était posé en `::before` sans contexte d'empilement, il passait
+ * derrière le titre qu'il était censé souligner. « Encadrée » ensuite, sur
+ * demande — son filet intérieur n'apportait rien que le décor de fond ne fasse
+ * mieux, maintenant qu'on en règle la taille et le contraste.
  *
  * Comme les palettes et les occasions, seul l'identifiant compte : le rendu vit
  * dans `app/print.css`. Ajouter une disposition coûte une ligne ici et un bloc
@@ -26,7 +29,6 @@ import type { MotifKind } from "./occasions";
 
 export const PRINT_LAYOUTS = [
   { id: "centre", nom: "Classique" },
-  { id: "cadre", nom: "Encadrée" },
   { id: "affiche", nom: "Affiche" },
 ] as const;
 
