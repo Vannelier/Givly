@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CopyLine from "@/components/CopyLine";
-import QrCard from "@/components/QrCard";
+import CardPreview from "@/components/CardPreview";
 import { GiftCard } from "@/components/GiftView";
 import PageEditor, { type EditorInitial } from "@/components/editor/PageEditor";
+import { occasionById } from "@/lib/occasions";
 import type { Item, Theme } from "@/lib/types";
 
 export type AdminSnapshot = {
@@ -138,13 +139,23 @@ export default function AdminView({ page, token }: { page: AdminSnapshot; token:
           <CopyLine value={page.publicUrl} />
         </div>
 
-        <QrCard url={page.publicUrl} />
+        {/*
+          L'apercu de la carte, et non le QR seul.
 
-        <div className="btn-row" style={{ marginTop: "0.85rem" }}>
-          <Link className="btn btn--ghost btn--sm" href={`/admin/${token}/imprimer`}>
-            Carte à imprimer
-          </Link>
-        </div>
+          Le damier noir et blanc pleine largeur ne disait rien de ce qu'on va
+          tenir dans la main : ni le prenom, ni le theme, ni meme qu'il existe
+          une carte derriere. Le bouton « Carte a imprimer » vivait dessous, dans
+          une rangee separee ou personne ne faisait le lien entre les deux.
+        */}
+        <CardPreview
+          url={page.publicUrl}
+          to={page.recipient_name}
+          intro={page.intro_message.trim() || occasionById(page.theme.occasion).intro}
+          title={page.welcome_message}
+          signature={page.signature}
+          theme={page.theme}
+          printHref={`/admin/${token}/imprimer`}
+        />
       </section>
 
       {editable && (

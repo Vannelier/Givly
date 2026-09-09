@@ -5,9 +5,17 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import GiftMotif from "@/components/GiftMotif";
 import PrintCarousel from "@/components/PrintCarousel";
-import { fontById } from "@/lib/occasions";
+import PrintColorSlider from "@/components/PrintColorSlider";
+import { styleDeTeinte, teinteDuTheme } from "@/lib/carteCouleur";
+import { fontById, occasionById, type MotifKind } from "@/lib/occasions";
 import { paletteStyle } from "@/lib/palettes";
-import { DEFAULT_PRINT_MODEL_ID, printModelById, stepPrintModel } from "@/lib/printModels";
+import {
+  DEFAULT_PRINT_LAYOUT,
+  DEFAULT_PRINT_MOTIF,
+  PRINT_LAYOUTS,
+  printLayoutById,
+  stepPrintMotif,
+} from "@/lib/printModels";
 import {
   CTA_DEFAUT,
   PRINT_LIMITS,
@@ -36,7 +44,6 @@ export default function PrintableCard({
   signature,
   theme,
   backHref,
-  variante = "page",
   slug,
 }: {
   url: string;
@@ -45,21 +52,34 @@ export default function PrintableCard({
   title: string;
   signature: string;
   theme: Theme;
-  /** Absent en encart : il n'y a nulle part ou revenir depuis l'ecran de fin. */
+  /** Absent quand il n'y a nulle part ou revenir. */
   backHref?: string;
-  /**
-   * « page » : la feuille occupe l'ecran, avec sa barre et son lien de retour.
-   * « encart » : la meme feuille, posee dans une page qui a deja son propre fil
-   * — l'ecran qui suit la creation. Le rendu imprime est identique ; seule la
-   * chrome autour change.
-   */
-  variante?: "page" | "encart";
   /** Sert de cle au stockage des mots de la carte : un donneur en a plusieurs. */
   slug: string;
 }) {
   const [svg, setSvg] = useState<string | null>(null);
-  const [modelId, setModelId] = useState(DEFAULT_PRINT_MODEL_ID);
-  const modele = printModelById(modelId);
+
+  /*
+   * Trois reglages independants, la ou il y avait une liste de dix combinaisons
+   * figees : la disposition, le pictogramme de fond, la couleur. Chacun a sa
+   * commande, et les vingt-et-un croisements sont tous atteignables.
+   */
+  const [layout, setLayout] = useState<string>(DEFAULT_PRINT_LAYOUT);
+  /*
+   * Le decor part sur celui de l'occasion, pas sur « aucun ».
+   *
+   * C'est ce que porte deja la page-cadeau, donc c'est la carte assortie a ce
+   * qu'on vient de composer — et c'est aussi ce que montre l'apercu de l'ecran
+   * de fin, qui n'a pas de reglages. Les deux doivent s'accorder, sans quoi
+   * « Carte a imprimer » ouvrirait une autre carte que celle annoncee.
+   * `DEFAULT_PRINT_MOTIF` reste le repli des occasions sans decor.
+   */
+  const [motif, setMotif] = useState<MotifKind>(
+    occasionById(theme.occasion).motif || DEFAULT_PRINT_MOTIF,
+  );
+  const teinteDefaut = teinteDuTheme(theme.palette);
+  const [teinte, setTeinte] = useState(teinteDefaut);
+  const composition = printLayoutById(layout).id;
 
   /*
    * Les mots de la carte imprimee : ceux de la page-cadeau au depart, modifiables
@@ -135,12 +155,15 @@ export default function PrintableCard({
 
   const skin = {
     ...paletteStyle(theme.palette),
+    // Apres la palette, jamais avant : le curseur a le dernier mot sur les
+    // variables qu'il touche, et ne touche que celles-la.
+    ...styleDeTeinte(theme.palette, teinte),
     "--font-title": fontById(theme.font).cssVar,
     "--zoom": zoom,
   } as React.CSSProperties;
 
   return (
-    <div className={`print-page${variante === "encart" ? " print-page--encart" : ""}`}>
+    <div className="print-page">
       <div className="print-bar">
         {backHref && (
           <Link className="btn btn--ghost btn--sm" href={backHref}>
@@ -156,10 +179,38 @@ export default function PrintableCard({
         </button>
       </div>
 
-      <PrintCarousel
-        modelId={modelId}
-        onStep={(pas) => setModelId((prev) => stepPrintModel(prev, pas))}
-      />
+      {/*
+        Les trois reglages de l'habillage, groupes : on les parcourt du plus
+        structurant au plus fin — la disposition, puis le decor, puis la couleur.
+        Masques a l'impression avec le reste des commandes.
+      */}
+      <div className="habillage">
+        <div className="dispositions" role="group" aria-label="Disposition de la carte">
+          {PRINT_LAYOUTS.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className="dispositions__choix"
+              aria-pressed={composition === l.id}
+              onClick={() => setLayout(l.id)}
+            >
+              {l.nom}
+            </button>
+          ))}
+        </div>
+
+        <PrintCarousel
+          motif={motif}
+          onStep={(pas) => setMotif((prev) => stepPrintMotif(prev, pas))}
+        />
+
+        <PrintColorSlider
+          palette={theme.palette}
+          teinte={teinte}
+          defaut={teinteDefaut}
+          onChange={setTeinte}
+        />
+      </div>
 
       {/*
         Les mots de la carte, replies par defaut : neuf fois sur dix ceux de la
@@ -248,13 +299,13 @@ export default function PrintableCard({
       </div>
 
       <div className="feuille-cadre" ref={cadre}>
-        <div className={`feuille feuille--${modele.composition}`} style={skin}>
+        <div className={`feuille feuille--${composition}`} style={skin}>
           <span className="feuille__pli feuille__pli--haut" aria-hidden="true" />
           <span className="feuille__pli feuille__pli--bas" aria-hidden="true" />
 
           {/* Panneau gauche : le dos, visible en retournant la carte. */}
           <div className="feuille__panneau feuille__dos">
-            <GiftMotif kind={modele.motif} />
+            <GiftMotif kind={motif} />
             <div className="feuille__qr">
               {svg ? (
                 // SVG produit a l'instant par la bibliotheque, a partir de notre
@@ -270,7 +321,7 @@ export default function PrintableCard({
 
           {/* Panneau droit : la couverture, devant une fois pliee. */}
           <div className="feuille__panneau feuille__couv">
-            <GiftMotif kind={modele.motif} />
+            <GiftMotif kind={motif} />
             {mots.to.trim() && <p className="feuille__to">Pour {mots.to}</p>}
             {mots.intro.trim() && <p className="feuille__intro">{mots.intro}</p>}
             <h1 className="feuille__titre">{mots.title}</h1>
