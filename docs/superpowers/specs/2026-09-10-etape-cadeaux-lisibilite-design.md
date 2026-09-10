@@ -77,7 +77,7 @@ l'autre bout de la ligne.
 ### Un seul contrôle d'image
 
 La vignette absorbe les trois. Elle devient un `<label>` portant l'`<input
-type="file">` caché :
+type="file">` masqué :
 
 - **cliquer** ouvre le sélecteur — la galerie ou l'appareil photo au téléphone ;
 - **coller** y marche déjà : le gestionnaire vit sur la ligne entière et ne
@@ -90,6 +90,18 @@ Le champ « Adresse de l'image » disparaît. Ce qu'on perd : taper une adresse
 d'image à la main. Ce qu'on garde : l'extraction, le collage d'une adresse
 d'image, le collage d'un fichier, le téléversement — c'est-à-dire tous les
 chemins réellement empruntés.
+
+**L'input n'est pas `hidden`, et c'est le point qui décide.** Mesuré dans le
+navigateur : `<input type="file" hidden>` est `display: none`, donc non
+focalisable — `focus()` dessus laisse le focus sur `body`. Le bouton
+« Téléverser » d'aujourd'hui est déjà inatteignable au clavier ; ça ne se voit
+pas parce que deux autres chemins subsistent, le champ d'adresse et la vignette
+qui porte `tabIndex={0}`. Les supprimer tous les deux **en gardant `hidden`**
+rendrait l'image totalement inatteignable au clavier.
+
+L'input est donc **masqué en CSS mais focalisable** — position absolue, 1 px,
+`opacity: 0` — et `.row__thumb:focus-within` porte l'anneau de focus. Le clavier
+y gagne un chemin qu'il n'avait pas.
 
 ## Géométrie
 
@@ -161,8 +173,8 @@ L'en-tête de ligne — numéro, ↑, ↓, × — est inchangé.
 
 ## Garde-fous
 
-Deux vérifications dans `scripts/check.ts`, chacune sur un piège qu'un
-remaniement futur défairait sans qu'on le voie. **Les deux se testent par
+Trois vérifications dans `scripts/check.ts`, chacune sur un piège qu'un
+remaniement futur défairait sans qu'on le voie. **Les trois se testent par
 mutation** : casser exprès ce qu'elles protègent, constater l'échec, remettre.
 
 **La vignette est une cible tactile.** Elle est désormais le *seul* chemin vers
@@ -175,12 +187,20 @@ Lu comme du texte : le harnais tourne sans navigateur.
 hiérarchie une fois les `grid-template-areas` retirées, et c'est exactement le
 genre de chose qu'un remaniement inverse en silence.
 
+**L'input de fichier reste focalisable.** `hidden` sur cet `<input>` est le
+raccourci naturel — c'est ce que fait le code d'aujourd'hui, et le passage de
+trois chemins à un seul le transforme d'inélégance en coupure. Le garde-fou
+refuse l'attribut `hidden` sur l'input de la vignette et exige la règle de
+masquage clippée.
+
 ## Accessibilité
 
 Les `aria-label` par ligne (« Titre du cadeau 3 ») sont conservés : ils sont ce
 qui rend la liste navigable au lecteur d'écran, où l'intitulé visuel seul serait
 ambigu entre dix cadeaux.
 
-La vignette-`<label>` reste atteignable au clavier par son `<input type="file">`,
-et garde le comportement de collage. L'intitulé du filet, « Ce que verra la
-personne », est un vrai élément de texte, pas une bordure décorée.
+La vignette-`<label>` devient atteignable au clavier par son `<input
+type="file">` masqué mais focalisable — voir « Un seul contrôle d'image » : c'est
+un gain sur l'existant, pas un maintien. Elle garde le comportement de collage.
+L'intitulé du filet, « Ce que verra la personne », est un vrai élément de texte,
+pas une bordure décorée.
