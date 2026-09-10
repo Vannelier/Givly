@@ -50,9 +50,9 @@ les effets.
 le consigne : « une case à cocher devant un champ facultatif ne protégeait de rien et ajoutait un
 geste ».
 
-**Alléger toutes les lignes d'aide.** Six des neuf disent **où tombe le texte** sur la page du
-receveur — « au-dessus du titre », « au-dessus des cadeaux », « la ligne sous ce titre », « à la place
-des cadeaux ». L'aperçu étant masqué au téléphone, ce sont les seules indications de position qui
+**Alléger toutes les lignes d'aide.** Sept des neuf disent **où tombe le texte** sur la page du
+receveur — « tout en haut », « au-dessus du titre », « au-dessus des cadeaux », « la ligne sous ce
+titre », « en bas de page », « à la place des cadeaux ». L'aperçu étant masqué au téléphone, ce sont les seules indications de position qui
 restent. Les retirer rendrait le réglage plus aveugle qu'aujourd'hui.
 
 ## Ce qu'on construit
@@ -147,7 +147,8 @@ reste.
 
 - **L'aperçu reste masqué sous 62 rem.** La décision du 7 septembre tient.
 - **Tous les champs de texte restent visibles.** Aucun repli nouveau.
-- **Les six lignes d'aide qui disent où tombe le texte sont conservées mot pour mot.**
+- **Les sept lignes d'aide qui disent où tombe le texte gardent cette indication.** Cinq restent mot
+  pour mot ; Prénom et Signature ne perdent que « Facultatif. ».
 - **Police, ouverture et effet gardent leur grille actuelle.** Seule celle des palettes change.
 - Aucun champ en base, aucun identifiant, aucune route, aucune validation. Pas de migration.
 
