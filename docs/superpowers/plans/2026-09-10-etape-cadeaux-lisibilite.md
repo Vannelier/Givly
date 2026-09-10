@@ -193,11 +193,22 @@ exactement ce qu'un remaniement inverse en silence.
       new URL("../components/editor/PageEditor.tsx", import.meta.url),
       "utf8",
     );
-    const source = editeur.indexOf('className="row__source"');
-    const cadeau = editeur.indexOf('className="row__gift"');
-    assert.notEqual(source, -1, "zone row__source absente");
-    assert.notEqual(cadeau, -1, "zone row__gift absente");
-    assert.ok(source < cadeau, "row__gift est passe devant row__source");
+    /*
+     * Le type de guillemets et la presence d'un litteral gabarit sont des
+     * details de style : les figer ferait echouer ce garde-fou sur une reecriture
+     * innocente du `className`, avec un message parlant d'une zone absente. La
+     * frontiere de mot, elle, est necessaire — sans elle `row__gift` matcherait
+     * `row__gift-grid`, qui vit dans la zone au lieu de la designer.
+     */
+    const positionDe = (classe: string) => {
+      const m = new RegExp(`className=\{?[\`"'][^\`"']*${classe}(?![\w-])`).exec(editeur);
+      return m ? m.index : -1;
+    };
+    const source = positionDe("row__source");
+    const cadeau = positionDe("row__gift");
+    assert.notEqual(source, -1, "aucun element ne porte la classe row__source");
+    assert.notEqual(cadeau, -1, "aucun element ne porte la classe row__gift");
+    assert.ok(source < cadeau, "row__gift est passe devant row__source")
 
     const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
     assert.doesNotMatch(
@@ -214,10 +225,12 @@ exactement ce qu'un remaniement inverse en silence.
 npm run check
 ```
 
-Attendu : `5 échec(s)`. Le nouveau dit `zone row__source absente` — faux à la lettre
-(`.row__source` existe en CSS) mais vrai dans le JSX, où la classe est portée par un `<div>` sans
-que la chaîne `className="row__source"` y figure telle quelle. Vérifier le message : s'il dit
-autre chose, s'arrêter et comprendre pourquoi avant de continuer.
+Attendu : `5 échec(s)`, le nouveau disant **`aucun element ne porte la classe row__gift`**.
+
+Et non pas `row__source` : contrairement à ce que ce plan a d'abord annoncé, `row__source` **existe
+déjà** dans le JSX d'aujourd'hui, à l'intérieur de `row__grid` — c'est `row__gift` qui manque. Le
+premier agent à qui la mauvaise attente avait été donnée s'est arrêté et l'a signalé plutôt que de
+deviner ; c'est le bon réflexe, et cette ligne est corrigée grâce à lui.
 
 - [ ] **Étape 3 : commiter**
 
@@ -444,9 +457,10 @@ npm run check
 ```
 
 Attendu : `4 échec(s)` — les 2 préexistants, plus les 2 imputables au JSX qui n'est pas encore fait
-(`zone row__source absente` et `vignette-label introuvable`). Le test « la vignette du cadeau reste
-une cible tactile », lui, a disparu des échecs : c'est le seul des trois que le CSS seul pouvait
-satisfaire.
+(`vignette : aucun <label> ne porte la classe row__thumb` et `aucun element ne porte la classe
+row__gift`). Le test « la vignette du cadeau reste une cible tactile », lui, a disparu des échecs :
+c'est le seul des trois que le CSS seul pouvait satisfaire, et le retrait de `.row__grid` a levé au
+passage la seconde assertion du garde-fou de l'ordre.
 
 - [ ] **Étape 3 : commiter**
 
