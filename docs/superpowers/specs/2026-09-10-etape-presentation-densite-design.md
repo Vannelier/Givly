@@ -171,18 +171,19 @@ figer un style, ce qui n'a pas sa place dans ce harnais.
 
 ## Documentation
 
-[README.md:716](../../../README.md) décrit l'aperçu en direct ainsi :
+**Une phrase fausse.** [README.md:717](../../../README.md) décrit l'aperçu en direct comme une
+« colonne collante à partir de 62 rem, bandeau en haut de l'étape en dessous ». Le bandeau **n'est
+jamais rendu** : le CSS pose `.compose__side { display: none }` sous 62 rem, et l'aperçu y mesure
+0 × 0. La phrase devient « Colonne collante à partir de 62 rem, masqué en dessous. »
 
-> **Au-delà de 62 rem seulement** — voir « L'assistant de composition ». Colonne collante à partir de
-> 62 rem, bandeau en haut de l'étape en dessous.
+Le renvoi qui la précède, « voir « L'assistant de composition » », **reste** : cette section existe,
+ligne 913, et explique précisément pourquoi l'aperçu est masqué au téléphone.
 
-Deux affirmations fausses : la section « L'assistant de composition » **n'existe pas**, et le
-« bandeau en haut de l'étape » au téléphone **n'est jamais rendu** — le CSS pose
-`.compose__side { display: none }` sous 62 rem. Le passage devient :
-
-> **Au-delà de 62 rem seulement**, en colonne collante. En dessous, il est masqué : son cadre ne
-> montrait qu'une tranche de la page et repoussait le formulaire sous la ligne de flottaison. Le
-> bouton « Aperçu » ouvre le même rendu en plein écran.
+**Un paragraphe pour ce chantier.** La section « L'assistant de composition » consigne les décisions
+de cet ordre — la barre d'action y documente déjà son passage à 44 px. Elle reçoit, après le
+paragraphe sur l'aperçu, un paragraphe qui dit ce qui a été densifié et de combien, ce qui a été
+écarté et pourquoi, et le passage de l'échelle d'étapes à 44 px. Ses chiffres sont ceux **relevés
+sur le code réel**, pas ceux de la simulation.
 
 La section « Ce qui est personnalisable » ne décrit pas les lignes d'aide mot pour mot, et n'a pas à
 changer.
