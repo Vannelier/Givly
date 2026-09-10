@@ -103,6 +103,10 @@ L'input est donc **masqué en CSS mais focalisable** — position absolue, 1 px,
 `opacity: 0` — et `.row__thumb:focus-within` porte l'anneau de focus. Le clavier
 y gagne un chemin qu'il n'avait pas.
 
+*Vérifié après implémentation* : `focus()` sur cet input rend
+`document.activeElement === input` et `.row__thumb:focus-within` vrai. C'était
+`false` avant ce changement.
+
 ## Géométrie
 
 Un seul seuil, **40 rem**, celui qui existe déjà dans `editor.css`. On n'en
@@ -128,10 +132,21 @@ elle.
 
 ### Ce que ça donne
 
-| | ligne vide, aujourd'hui | ligne vide, après | dix cadeaux, après |
-|---|---|---|---|
-| **375 px** | 651 px | ≈ 310 px | 6 510 → ≈ 3 100 px |
-| **1440 px** | 481 px | ≈ 330 px | 4 810 → ≈ 3 300 px |
+Estimations d'abord, puis les **mesures relevées après implémentation** — elles font foi :
+
+| | ligne vide, avant | estimé | **mesuré** | dix cadeaux |
+|---|---|---|---|---|
+| **375 px** | 651 px | ≈ 310 px | **408 px** | 6 510 → **4 080 px** |
+| **1440 px** | 481 px | ≈ 330 px | **336 px** | 4 810 → **3 360 px** |
+
+**L'estimation à 375 était fausse de 167 px, et la mesure a dit pourquoi.** La première version
+tenait la ligne à 477 px : l'intitulé de la zone source faisait 191 caractères, soit cinq lignes et
+87 px de gris — répétés à l'identique sur chacun des dix cadeaux. Une consigne qui ne varie pas
+d'une ligne à l'autre n'appartient pas à la ligne : elle est passée en tête d'étape, où elle est lue
+une fois, et la ligne ne garde que ce qui se décide ligne par ligne — « facultatif ». D'où 408.
+
+Aucune lecture du CSS n'aurait donné ce chiffre : la maquette qui avait servi à l'estimer portait un
+intitulé d'une ligne.
 
 Sur écran large, deux gains que le téléphone ne donnait pas : la colonne morte de
 350 px disparaît, et Titre et Note tombent de 632 à ≈ 310 px — une longueur de
