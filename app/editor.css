@@ -985,6 +985,15 @@ label.btn.is-disabled {
   margin-bottom: 0;
 }
 
+/*
+ * Le pendant cote cadeau : un fichier refuse affichait son motif sous le champ
+ * de lien, a ~150 px de la vignette au telephone, laquelle ne montrait rien.
+ */
+.row__gift > .notice {
+  margin-top: 0.7rem;
+  margin-bottom: 0;
+}
+
 .row__zone-label {
   display: block;
   font-size: 0.78rem;

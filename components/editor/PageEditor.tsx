@@ -91,6 +91,9 @@ type DraftItem = {
   note: string;
   busy: "extract" | "upload" | null;
   hint: string | null;
+  /* Separe de `hint` : les messages de l'image doivent se lire a cote de la
+     vignette, pas sous le champ de lien a l'autre bout de la ligne. */
+  imageHint: string | null;
 };
 
 /*
@@ -133,6 +136,7 @@ function toDraftItems(items: Item[]): DraftItem[] {
     note: it.note ?? "",
     busy: null,
     hint: null,
+    imageHint: null,
   }));
   // Deux lignes vides a la creation : le cas courant reste le choix entre
   // plusieurs cadeaux. Le minimum reel est de un, mais partir d'une seule ligne
@@ -145,7 +149,16 @@ function toDraftItems(items: Item[]): DraftItem[] {
 }
 
 function emptyRow(): DraftItem {
-  return { key: nextKey(), label: "", image_url: "", source_url: "", note: "", busy: null, hint: null };
+  return {
+    key: nextKey(),
+    label: "",
+    image_url: "",
+    source_url: "",
+    note: "",
+    busy: null,
+    hint: null,
+    imageHint: null,
+  };
 }
 
 export default function PageEditor(props: Props) {
@@ -316,7 +329,9 @@ export default function PageEditor(props: Props) {
     setLinkOn(b.linkOn);
     setRevealOn(b.revealOn);
     if (b.items.length > 0) {
-      setItems(b.items.map((i) => ({ key: nextKey(), ...i, busy: null, hint: null })));
+      setItems(
+        b.items.map((i) => ({ key: nextKey(), ...i, busy: null, hint: null, imageHint: null })),
+      );
     }
     setBrouillonRetrouve(true);
   }, [mode]);
@@ -559,18 +574,18 @@ export default function PageEditor(props: Props) {
     const url = imageUrlFromClipboard(event.clipboardData);
     if (url) {
       event.preventDefault();
-      patchItem(key, { image_url: url, hint: "Adresse d'image collee." });
+      patchItem(key, { image_url: url, imageHint: "Adresse d'image collée." });
     }
   }
 
   async function upload(key: string, file: File | null) {
     if (!file) return;
-    patchItem(key, { busy: "upload", hint: null });
+    patchItem(key, { busy: "upload", imageHint: null });
     const result = await uploadImage(file);
     if (result.ok) {
-      patchItem(key, { busy: null, image_url: result.url, hint: null });
+      patchItem(key, { busy: null, image_url: result.url, imageHint: null });
     } else {
-      patchItem(key, { busy: null, hint: result.error });
+      patchItem(key, { busy: null, imageHint: result.error });
     }
   }
 
@@ -1104,6 +1119,7 @@ export default function PageEditor(props: Props) {
                       </Field>
                     </div>
                   </div>
+                  {row.imageHint && <p className="notice notice--info">{row.imageHint}</p>}
                 </div>
               </li>
             ))}
