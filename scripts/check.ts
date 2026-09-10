@@ -1505,6 +1505,48 @@ async function checkImages() {
     assert.match(regle, /opacity:\s*0/, "l'input n'est plus masque");
   });
 
+  test("la ligne de cadeau lit sa provenance avant son contenu", () => {
+    /*
+     * L'ordre de lecture d'une ligne est : d'ou vient ce cadeau, puis ce qu'on
+     * en montre. Il tenait sur des `grid-template-areas` qui reordonnaient la
+     * grille contre l'ordre du DOM ; elles sont parties au profit de deux
+     * conteneurs reels. Plus rien ne rattraperait donc une inversion du JSX —
+     * d'ou ce garde-fou, et le refus du retour de `.row__grid`.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    /*
+     * Le type de guillemets et la presence d'un litteral gabarit sont des
+     * details de style : les figer ferait echouer ce garde-fou sur une reecriture
+     * innocente du `className`, avec un message parlant d'une zone absente. La
+     * frontiere de mot, elle, est necessaire — sans elle `row__gift` matcherait
+     * `row__gift-grid`, qui vit dans la zone au lieu de la designer.
+     */
+    const positionDe = (classe: string) => {
+      const m = new RegExp(`className=\\{?[\`"'][^\`"']*${classe}(?![\\w-])`).exec(editeur);
+      return m ? m.index : -1;
+    };
+    const source = positionDe("row__source");
+    const cadeau = positionDe("row__gift");
+    assert.notEqual(source, -1, "aucun element ne porte la classe row__source");
+    assert.notEqual(cadeau, -1, "aucun element ne porte la classe row__gift");
+    assert.ok(source < cadeau, "row__gift est passe devant row__source");
+
+    /*
+     * `[\s,{]` en queue plutot qu'un `\n` : sous CRLF un `\n` exige juste apres
+     * le selecteur ne matcherait jamais, et l'assertion passerait avec la regle
+     * bel et bien revenue.
+     */
+    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    assert.doesNotMatch(
+      css,
+      /\.row__grid[\s,{]/,
+      "row__grid ressuscite : l'ordre de la ligne repasserait par la grille",
+    );
+  });
+
   test("la barre d'action porte des cibles tactiles et des bords visibles", () => {
     /*
      * Deux defauts mesures, et rien dans le code ne les designait.
