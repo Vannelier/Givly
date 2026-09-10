@@ -952,12 +952,13 @@ d'action ouvre le même rendu en plein écran, là où il a la place d'être lis
 CSS et non en JavaScript : lire la largeur de la fenêtre pendant le rendu ferait diverger
 l'hydratation.
 
-**L'ordre d'une ligne de cadeau change avec la largeur.** Elle est faite de trois zones nommées —
-`source`, `preview`, `fields` — placées par `grid-template-areas` et non par l'ordre du DOM. En
-colonne unique, l'adresse du produit passe **avant** la vignette : c'est le geste qui remplit tout
-le reste, il n'a pas à attendre derrière un cadre de collage vide. Ce cadre se réduit d'ailleurs à
-une bande tant qu'aucune image n'y est tombée, pour ne pas repousser le titre hors de l'écran. Au
-large, la vignette reprend sa colonne à gauche et enjambe les deux rangées.
+**L'ordre d'une ligne de cadeau est fixe, à toutes les largeurs.** Deux zones réelles du DOM —
+`row__source` (l'adresse du produit), puis `row__gift` (la vignette, le titre, la note) — le disent
+maintenant, en remplacement de `grid-template-areas` qui remontait l'adresse produit au-dessus de la
+vignette en colonne unique, à l'encontre de l'ordre du DOM. Seul l'enroulement interne de la zone
+cadeau change au seuil de 40 rem : en dessous, la vignette occupe une colonne à elle à côté du titre,
+la note s'étalant seule sur la largeur ; au-delà, vignette, titre et note se rangent côte à côte sur
+une même ligne.
 
 **« La carte » n'a pas survécu comme étape.** Elle ne portait que deux champs : le nom interne et le
 prénom du receveur. Le prénom a rejoint le cadre **Intro**, là où il s'affiche ; le nom a rejoint le
@@ -1053,9 +1054,10 @@ remplit le cadre sans rien couper.
 **Une image se colle, elle ne se téléverse pas forcément.** Sur chaque ligne de cadeau, `Ctrl+V`
 accepte une capture d'écran, une image copiée depuis une page marchande, ou un fichier copié dans
 l'explorateur — que le curseur soit dans un champ ou sur la vignette. Coller une simple adresse
-d'image sur la vignette remplit le champ Image. Un collage de texte dans un champ de saisie n'est
-jamais détourné. L'image passe par `/api/upload` comme un téléversement : il faut bien une URL en
-base, on ne stocke pas de `data:` URI — donc `BLOB_READ_WRITE_TOKEN` est requis pour cette voie.
+d'image la pose directement dans la vignette : c'est ce qui remplace le champ « Adresse de l'image »,
+supprimé avec les deux autres façons de poser une image. Un collage de texte dans un champ de saisie
+n'est jamais détourné. L'image passe par `/api/upload` comme un téléversement : il faut bien une URL
+en base, on ne stocke pas de `data:` URI — donc `BLOB_READ_WRITE_TOKEN` est requis pour cette voie.
 
 **Le repli manuel est un chemin nominal.** Quand rien ne sort, l'API renvoie `{ ok: false, reason }`
 et l'UI affiche un message adapté à la cause (`login_required`, `blocked`, `unreachable`,
