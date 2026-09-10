@@ -917,8 +917,7 @@ export default function PageEditor(props: Props) {
             </span>
           </div>
           <p className="help">
-            Jusqu&apos;à {LIMITS.itemsMax} propositions. Colle l&apos;adresse d&apos;un produit pour
-            récupérer le titre et l&apos;image, ou remplis tout à la main.
+            Jusqu&apos;à {LIMITS.itemsMax} propositions, dans l&apos;ordre que tu veux.
             {filledCount === 1 && (
               <>
                 {" "}
@@ -965,110 +964,127 @@ export default function PageEditor(props: Props) {
                 </div>
 
                 {/*
-                  L'adresse du produit est sortie de `row__fields` pour devenir une
-                  case a part entiere de la grille : c'est le seul moyen de la faire
-                  passer au-dessus de la vignette au telephone, ou tout s'empile,
-                  tout en la gardant a droite de la vignette au large. L'ordre est
-                  porte par `grid-template-areas`, pas par l'ordre du DOM — qui
-                  reste celui de la lecture : on colle un lien, puis on regarde ce
-                  qui en est sorti.
+                  L'ordre du DOM est l'ordre de lecture : d'ou vient ce cadeau,
+                  puis ce qu'on en montre. Il passait par `grid-template-areas`,
+                  qui remontaient l'adresse produit au-dessus de la vignette au
+                  telephone en contredisant le DOM. Deux conteneurs reels le
+                  disent maintenant a toutes les largeurs, et `scripts/check.ts`
+                  refuse leur inversion.
                 */}
-                <div className="row__grid">
-                  <div className="row__source">
-                    <Field label="Adresse de la page produit" help="Facultatif. Jamais affichée sur la page-cadeau.">
-                      <div className="inline">
+                <div className="row__source">
+                  {/*
+                    L'intitule enonce les deux roles du champ. L'ancien — « Jamais
+                    affichee sur la page-cadeau » — disait ce qu'il ne fait pas, et
+                    taisait le second : `source_url` est stocke, et AdminView le
+                    ressert au donneur apres le choix sous « Ouvrir la page
+                    d'origine ». C'est le lien d'achat.
+                  */}
+                  <span className="row__zone-label">
+                    Colle l&apos;adresse d&apos;un produit : elle remplit le titre et
+                    l&apos;image, et te revient après le choix pour acheter. Facultative — un
+                    cadeau qui ne s&apos;achète pas en ligne se décrit très bien à la main.
+                  </span>
+                  <div className="inline">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      value={row.source_url}
+                      aria-label={`Adresse de la page produit du cadeau ${index + 1}`}
+                      placeholder="https://…"
+                      onChange={(e) => patchItem(row.key, { source_url: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={row.busy !== null}
+                      onClick={() => extract(row.key)}
+                    >
+                      {row.busy === "extract" ? "…" : "Récupérer"}
+                    </button>
+                  </div>
+                  {row.hint && <p className="notice notice--info">{row.hint}</p>}
+                </div>
+
+                <div className="row__gift">
+                  <span className="row__zone-label row__zone-label--gift">
+                    Ce que verra la personne
+                  </span>
+                  <div className="row__gift-grid">
+                    <div className="row__thumb-wrap">
+                      {/*
+                        Un `<label>`, et non un `<div role="button">` : cliquer
+                        ouvre le selecteur — galerie ou appareil photo au
+                        telephone — sans JavaScript, et l'`<input type="file">`
+                        porte le focus clavier.
+
+                        Coller y marche toujours : le gestionnaire vit sur la
+                        ligne entiere et ne s'efface que sur les champs de
+                        saisie. Retirer le champ d'adresse d'image a donc
+                        *elargi* la surface de collage.
+                      */}
+                      <label className={`row__thumb${row.busy === "upload" ? " is-busy" : ""}`}>
+                        {/*
+                          Pas d'attribut `hidden` : il vaut display:none, qui
+                          retire l'input de l'ordre de tabulation. Le masquage
+                          est en CSS pour que le clavier garde un chemin vers
+                          l'image — il n'en a plus d'autre.
+                        */}
                         <input
-                          type="url"
-                          inputMode="url"
-                          value={row.source_url}
-                          aria-label={`Adresse de la page produit du cadeau ${index + 1}`}
-                          placeholder="https://…"
-                          onChange={(e) => patchItem(row.key, { source_url: e.target.value })}
+                          type="file"
+                          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                          disabled={row.busy !== null}
+                          aria-label={`Image du cadeau ${index + 1}`}
+                          onChange={(e) => {
+                            void upload(row.key, e.target.files?.[0] ?? null);
+                            e.target.value = "";
+                          }}
                         />
+                        {row.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={row.image_url} alt="" />
+                        ) : (
+                          <span>
+                            {row.busy === "upload" ? "envoi…" : "choisis ou colle une image"}
+                          </span>
+                        )}
+                      </label>
+                      {row.image_url && row.busy === null && (
                         <button
                           type="button"
-                          className="btn btn--ghost btn--sm"
-                          disabled={row.busy !== null}
-                          onClick={() => extract(row.key)}
+                          className="row__thumb-clear"
+                          aria-label={`Retirer l'image du cadeau ${index + 1}`}
+                          onClick={() => patchItem(row.key, { image_url: "" })}
                         >
-                          {row.busy === "extract" ? "…" : "Récupérer"}
+                          ×
                         </button>
-                      </div>
-                    </Field>
-                  </div>
+                      )}
+                    </div>
 
-                  <div
-                    className={`row__preview${row.image_url ? "" : " row__preview--empty"}${
-                      row.busy === "upload" ? " is-busy" : ""
-                    }`}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Coller une image pour le cadeau ${index + 1}`}
-                    onPaste={(e) => handlePaste(row.key, e)}
-                  >
-                    {row.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.image_url} alt="" />
-                    ) : (
-                      <span>
-                        {row.busy === "upload" ? "envoi…" : "colle une image ici"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="row__fields">
-                    <Field label="Titre">
-                      <input
-                        type="text"
-                        value={row.label}
-                        aria-label={`Titre du cadeau ${index + 1}`}
-                        maxLength={LIMITS.itemLabel}
-                        placeholder="Collier Fluorite"
-                        onChange={(e) => patchItem(row.key, { label: e.target.value })}
-                      />
-                    </Field>
-
-                    <Field
-                      label="Image"
-                      help="Colle une image (Ctrl+V) n'importe où sur cette ligne, colle une adresse, ou choisis un fichier."
-                    >
-                      <div className="inline">
+                    <div className="row__title">
+                      <Field label="Titre">
                         <input
-                          type="url"
-                          inputMode="url"
-                          value={row.image_url}
-                          aria-label={`Adresse de l'image du cadeau ${index + 1}`}
-                          placeholder="https://…/photo.jpg"
-                          onChange={(e) => patchItem(row.key, { image_url: e.target.value })}
+                          type="text"
+                          value={row.label}
+                          aria-label={`Titre du cadeau ${index + 1}`}
+                          maxLength={LIMITS.itemLabel}
+                          placeholder="Collier Fluorite"
+                          onChange={(e) => patchItem(row.key, { label: e.target.value })}
                         />
-                        <label className={`btn btn--ghost btn--sm${row.busy ? " is-disabled" : ""}`}>
-                          {row.busy === "upload" ? "…" : "Téléverser"}
-                          <input
-                            type="file"
-                            accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                            hidden
-                            disabled={row.busy !== null}
-                            onChange={(e) => {
-                              void upload(row.key, e.target.files?.[0] ?? null);
-                              e.target.value = "";
-                            }}
-                          />
-                        </label>
-                      </div>
-                    </Field>
+                      </Field>
+                    </div>
 
-                    <Field label="Note" help="Facultatif. Un mot pour situer le cadeau.">
-                      <input
-                        type="text"
-                        value={row.note}
-                        aria-label={`Note du cadeau ${index + 1}`}
-                        maxLength={LIMITS.itemNote}
-                        placeholder="Un soir de semaine, sans se presser"
-                        onChange={(e) => patchItem(row.key, { note: e.target.value })}
-                      />
-                    </Field>
-
-                    {row.hint && <p className="notice notice--info">{row.hint}</p>}
+                    <div className="row__note">
+                      <Field label="Note" help="Facultatif. Un mot pour situer le cadeau.">
+                        <input
+                          type="text"
+                          value={row.note}
+                          aria-label={`Note du cadeau ${index + 1}`}
+                          maxLength={LIMITS.itemNote}
+                          placeholder="Un soir de semaine, sans se presser"
+                          onChange={(e) => patchItem(row.key, { note: e.target.value })}
+                        />
+                      </Field>
+                    </div>
                   </div>
                 </div>
               </li>
