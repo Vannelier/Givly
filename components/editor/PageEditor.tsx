@@ -539,9 +539,22 @@ export default function PageEditor(props: Props) {
       return;
     }
 
-    // Le texte colle dans un champ de saisie lui appartient : on n'y touche pas.
+    /*
+     * Le texte colle dans un champ de saisie lui appartient : on n'y touche pas.
+     *
+     * L'input de fichier fait exception, et ce n'est pas un detail : un vrai
+     * Ctrl+V vise l'element focalise, et depuis que la vignette est un
+     * `<label>`, son seul element focalisable est cet input. Sans l'exemption,
+     * coller une adresse d'image sur la vignette ne faisait rien — mesure faite,
+     * et c'est precisement le chemin cense remplacer le champ « Adresse de
+     * l'image » supprime. Un test qui viserait le `<label>` plutot que l'element
+     * focalise n'aurait rien vu.
+     */
     const target = event.target as HTMLElement | null;
-    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+    const champDeSaisie =
+      target instanceof HTMLTextAreaElement ||
+      (target instanceof HTMLInputElement && target.type !== "file");
+    if (champDeSaisie) return;
 
     const url = imageUrlFromClipboard(event.clipboardData);
     if (url) {

@@ -1547,6 +1547,29 @@ async function checkImages() {
     );
   });
 
+  test("coller une adresse d'image atteint la vignette", () => {
+    /*
+     * Mesure au navigateur : un vrai Ctrl+V vise l'element focalise, et depuis
+     * que la vignette est un `<label>`, son seul element focalisable est
+     * l'`<input type="file">`. Un `handlePaste` qui sort sur tout `INPUT` tuait
+     * donc le collage d'une adresse d'image — le chemin meme qui justifiait la
+     * suppression du champ « Adresse de l'image ». Le defaut ne se voyait ni au
+     * typage, ni au rendu, ni dans un test qui viserait le `<label>`.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    const i = editeur.indexOf("function handlePaste(");
+    assert.notEqual(i, -1, "handlePaste introuvable");
+    const corps = editeur.slice(i, editeur.indexOf("\n  }", i));
+    assert.match(
+      corps,
+      /type\s*!==\s*"file"/,
+      "handlePaste ne fait plus d'exception pour l'input de fichier : coller une adresse d'image sur la vignette ne fera plus rien",
+    );
+  });
+
   test("la barre d'action porte des cibles tactiles et des bords visibles", () => {
     /*
      * Deux defauts mesures, et rien dans le code ne les designait.
