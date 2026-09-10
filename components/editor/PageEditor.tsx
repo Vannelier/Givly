@@ -91,6 +91,9 @@ type DraftItem = {
   note: string;
   busy: "extract" | "upload" | null;
   hint: string | null;
+  /* Separe de `hint` : les messages de l'image doivent se lire a cote de la
+     vignette, pas sous le champ de lien a l'autre bout de la ligne. */
+  imageHint: string | null;
 };
 
 /*
@@ -133,6 +136,7 @@ function toDraftItems(items: Item[]): DraftItem[] {
     note: it.note ?? "",
     busy: null,
     hint: null,
+    imageHint: null,
   }));
   // Deux lignes vides a la creation : le cas courant reste le choix entre
   // plusieurs cadeaux. Le minimum reel est de un, mais partir d'une seule ligne
@@ -145,7 +149,16 @@ function toDraftItems(items: Item[]): DraftItem[] {
 }
 
 function emptyRow(): DraftItem {
-  return { key: nextKey(), label: "", image_url: "", source_url: "", note: "", busy: null, hint: null };
+  return {
+    key: nextKey(),
+    label: "",
+    image_url: "",
+    source_url: "",
+    note: "",
+    busy: null,
+    hint: null,
+    imageHint: null,
+  };
 }
 
 export default function PageEditor(props: Props) {
@@ -316,7 +329,9 @@ export default function PageEditor(props: Props) {
     setLinkOn(b.linkOn);
     setRevealOn(b.revealOn);
     if (b.items.length > 0) {
-      setItems(b.items.map((i) => ({ key: nextKey(), ...i, busy: null, hint: null })));
+      setItems(
+        b.items.map((i) => ({ key: nextKey(), ...i, busy: null, hint: null, imageHint: null })),
+      );
     }
     setBrouillonRetrouve(true);
   }, [mode]);
@@ -539,25 +554,38 @@ export default function PageEditor(props: Props) {
       return;
     }
 
-    // Le texte colle dans un champ de saisie lui appartient : on n'y touche pas.
+    /*
+     * Le texte colle dans un champ de saisie lui appartient : on n'y touche pas.
+     *
+     * L'input de fichier fait exception, et ce n'est pas un detail : un vrai
+     * Ctrl+V vise l'element focalise, et depuis que la vignette est un
+     * `<label>`, son seul element focalisable est cet input. Sans l'exemption,
+     * coller une adresse d'image sur la vignette ne faisait rien — mesure faite,
+     * et c'est precisement le chemin cense remplacer le champ « Adresse de
+     * l'image » supprime. Un test qui viserait le `<label>` plutot que l'element
+     * focalise n'aurait rien vu.
+     */
     const target = event.target as HTMLElement | null;
-    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+    const champDeSaisie =
+      target instanceof HTMLTextAreaElement ||
+      (target instanceof HTMLInputElement && target.type !== "file");
+    if (champDeSaisie) return;
 
     const url = imageUrlFromClipboard(event.clipboardData);
     if (url) {
       event.preventDefault();
-      patchItem(key, { image_url: url, hint: "Adresse d'image collee." });
+      patchItem(key, { image_url: url, imageHint: "Adresse d'image collée." });
     }
   }
 
   async function upload(key: string, file: File | null) {
     if (!file) return;
-    patchItem(key, { busy: "upload", hint: null });
+    patchItem(key, { busy: "upload", imageHint: null });
     const result = await uploadImage(file);
     if (result.ok) {
-      patchItem(key, { busy: null, image_url: result.url, hint: null });
+      patchItem(key, { busy: null, image_url: result.url, imageHint: null });
     } else {
-      patchItem(key, { busy: null, hint: result.error });
+      patchItem(key, { busy: null, imageHint: result.error });
     }
   }
 
@@ -924,7 +952,7 @@ export default function PageEditor(props: Props) {
           */}
           <p className="help">
             Jusqu&apos;à {LIMITS.itemsMax} propositions, dans l&apos;ordre que tu veux. Colle
-            l&apos;adresse d&apos;un produit et elle remplit le titre et l&apos;image — c&apos;est
+            l&apos;adresse d&apos;un produit pour en récupérer le titre et l&apos;image — c&apos;est
             aussi le lien qui te reviendra, après le choix, pour acheter. Un cadeau qui ne
             s&apos;achète pas en ligne se décrit très bien à la main.
             {filledCount === 1 && (
@@ -1027,7 +1055,7 @@ export default function PageEditor(props: Props) {
                         saisie. Retirer le champ d'adresse d'image a donc
                         *elargi* la surface de collage.
                       */}
-                      <label className={`row__thumb${row.busy === "upload" ? " is-busy" : ""}`}>
+                      <label className={`row__thumb${row.busy !== null ? " is-busy" : ""}`}>
                         {/*
                           Pas d'attribut `hidden` : il vaut display:none, qui
                           retire l'input de l'ordre de tabulation. Le masquage
@@ -1053,7 +1081,7 @@ export default function PageEditor(props: Props) {
                           </span>
                         )}
                       </label>
-                      {row.image_url && row.busy === null && (
+                      {row.image_url && row.busy !== "upload" && (
                         <button
                           type="button"
                           className="row__thumb-clear"
@@ -1091,6 +1119,7 @@ export default function PageEditor(props: Props) {
                       </Field>
                     </div>
                   </div>
+                  {row.imageHint && <p className="notice notice--info">{row.imageHint}</p>}
                 </div>
               </li>
             ))}

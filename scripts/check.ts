@@ -1446,6 +1446,23 @@ async function checkImages() {
       assert.ok(m, `la vignette n'impose plus de ${axe} en rem`);
       assert.ok(Number(m[1]) * 16 >= 44, `${axe} de ${Number(m[1]) * 16} px, minimum 44`);
     }
+
+    /*
+     * Et toutes les autres regles `.row__thumb`, pas la seule de base : une
+     * media query qui redefinit la vignette contournait ce garde-fou sans un
+     * bruit, et c'est la forme exacte qu'aurait un ajustement futur — or c'est
+     * au telephone, la ou les media queries mordent, qu'elle est la plus petite.
+     */
+    for (const [, corps] of css.matchAll(/^[ \t]*\.row__thumb\s*\{([^}]*)\}/gm)) {
+      for (const axe of ["min-width", "min-height"]) {
+        const m = new RegExp(`${axe}:\\s*([\\d.]+)rem`).exec(corps);
+        if (!m) continue;
+        assert.ok(
+          Number(m[1]) * 16 >= 44,
+          `${axe} de ${Number(m[1]) * 16} px dans une redefinition de .row__thumb, minimum 44`,
+        );
+      }
+    }
   });
 
   test("la vignette du cadeau reste atteignable au clavier", () => {
@@ -1468,9 +1485,10 @@ async function checkImages() {
      * Large a dessein : l'indentation, le type de guillemets et la presence d'un
      * litteral gabarit sont des details de style, et un garde-fou sur
      * l'accessibilite n'a pas a echouer parce que le `className` s'ecrit
-     * autrement. Toutes les vignettes sont controlees et non la seule premiere —
-     * un second <label> « Televerser » vit deja plus bas dans le fichier, et une
-     * regression sur lui serait invisible a un `.exec()`.
+     * autrement. `matchAll` et non `.exec()` : une ligne de cadeau se repete
+     * jusqu'a dix fois, et le jour ou une seconde vignette s'ecrira ailleurs
+     * dans le fichier, un test qui ne lirait que la premiere la laisserait
+     * regresser sans un bruit.
      */
     const vignettes = [
       ...editeur.matchAll(/<label[^>]*className=\{?[`"'][^`"']*row__thumb[\s\S]*?<\/label>/g),
@@ -1544,6 +1562,29 @@ async function checkImages() {
       css,
       /\.row__grid[\s,{]/,
       "row__grid ressuscite : l'ordre de la ligne repasserait par la grille",
+    );
+  });
+
+  test("coller une adresse d'image atteint la vignette", () => {
+    /*
+     * Mesure au navigateur : un vrai Ctrl+V vise l'element focalise, et depuis
+     * que la vignette est un `<label>`, son seul element focalisable est
+     * l'`<input type="file">`. Un `handlePaste` qui sort sur tout `INPUT` tuait
+     * donc le collage d'une adresse d'image — le chemin meme qui justifiait la
+     * suppression du champ « Adresse de l'image ». Le defaut ne se voyait ni au
+     * typage, ni au rendu, ni dans un test qui viserait le `<label>`.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    const i = editeur.indexOf("function handlePaste(");
+    assert.notEqual(i, -1, "handlePaste introuvable");
+    const corps = editeur.slice(i, editeur.indexOf("\n  }", i));
+    assert.match(
+      corps,
+      /type\s*!==\s*"file"/,
+      "handlePaste ne fait plus d'exception pour l'input de fichier : coller une adresse d'image sur la vignette ne fera plus rien",
     );
   });
 
