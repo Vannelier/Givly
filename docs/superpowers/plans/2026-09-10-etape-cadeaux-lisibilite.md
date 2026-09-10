@@ -22,6 +22,20 @@ est donc masqué en CSS, pas par l'attribut, et la tâche 1 pose le garde-fou co
 **Outils :** Next 15 / React 19, CSS écrit à la main dans `app/editor.css`, harnais maison
 `scripts/check.ts` (pas de Jest), mesure au navigateur via le volet Browser.
 
+> **La base n'est pas verte sur une copie de travail Windows.** Constaté en exécutant la tâche 1 :
+> `main` lui-même échoue sur deux vérifications, `le soulevement au survol epargne les ecrans
+> tactiles` et `le titre du voile est precede d'un silence`. Le CSS qu'elles protègent est intact ;
+> c'est `core.autocrlf=true` qui rend les fichiers CRLF, et leurs regex cherchent un `\n` nu. Elles
+> passent dans le conteneur Linux où le dépôt a été développé.
+>
+> **Hors périmètre de ce plan — ne pas les corriger ici.** Toutes les sorties attendues ci-dessous
+> comptent donc **2 échecs préexistants** en plus des échecs propres à chaque étape. « Vert » signifie
+> partout : ces deux-là et rien d'autre.
+>
+> Le même piège a été trouvé dans un garde-fou de la tâche 1 avant qu'il ne soit commité — d'où
+> `/\shidden\s/` plutôt que `/\n\s+hidden\n/`. Toute nouvelle assertion de ce plan doit tolérer
+> `\r\n`.
+
 ---
 
 ## Ce qu'on touche
@@ -80,8 +94,8 @@ inatteignable, et aucune ne se voit à la relecture : sous 44 px de côté elle 
 npm run check
 ```
 
-Attendu : `1 échec(s)` avec `la vignette du cadeau reste une cible tactile / regle .row__thumb
-introuvable`. La règle n'existe pas encore — c'est le bon échec.
+Attendu : `3 échec(s)` — les 2 préexistants, plus `la vignette du cadeau reste une cible tactile /
+regle .row__thumb introuvable`. La règle n'existe pas encore : c'est le bon échec.
 
 - [ ] **Étape 3 : ajouter le garde-fou du clavier, juste après**
 
@@ -107,9 +121,15 @@ introuvable`. La règle n'existe pas encore — c'est le bon échec.
     assert.ok(m, "vignette-label introuvable");
     const vignette = m[0];
     assert.match(vignette, /type="file"/, "l'input de fichier a quitte la vignette");
+    /*
+     * `\s` et non `\n` : `core.autocrlf` rend les fichiers CRLF dans la copie de
+     * travail, et une regex qui exige un `\n` juste apres le mot ne matche alors
+     * jamais — l'assertion passerait avec `hidden` present. Deux garde-fous plus
+     * anciens du fichier sont tombes dans ce piege.
+     */
     assert.doesNotMatch(
       vignette,
-      /\n\s+hidden\n/,
+      /\shidden\s/,
       "`hidden` de retour sur l'input : display:none n'est pas focalisable",
     );
 
@@ -129,7 +149,8 @@ introuvable`. La règle n'existe pas encore — c'est le bon échec.
 npm run check
 ```
 
-Attendu : `2 échec(s)`, le second disant `vignette-label introuvable`.
+Attendu : `4 échec(s)` — les 2 préexistants, plus les deux garde-fous de la vignette, le second
+disant `vignette-label introuvable`.
 
 - [ ] **Étape 5 : commiter les deux garde-fous**
 
@@ -193,7 +214,7 @@ exactement ce qu'un remaniement inverse en silence.
 npm run check
 ```
 
-Attendu : trois échecs maintenant. Le nouveau dit `zone row__source absente` — faux à la lettre
+Attendu : `5 échec(s)`. Le nouveau dit `zone row__source absente` — faux à la lettre
 (`.row__source` existe en CSS) mais vrai dans le JSX, où la classe est portée par un `<div>` sans
 que la chaîne `className="row__source"` y figure telle quelle. Vérifier le message : s'il dit
 autre chose, s'arrêter et comprendre pourquoi avant de continuer.
@@ -422,9 +443,10 @@ par :
 npm run check
 ```
 
-Attendu : `2 échec(s)`, tous deux imputables au JSX qui n'est pas encore fait — `zone row__source
-absente` et `vignette-label introuvable`. Le test « la vignette du cadeau reste une cible tactile »,
-lui, a disparu des échecs : c'est le seul des trois que le CSS seul pouvait satisfaire.
+Attendu : `4 échec(s)` — les 2 préexistants, plus les 2 imputables au JSX qui n'est pas encore fait
+(`zone row__source absente` et `vignette-label introuvable`). Le test « la vignette du cadeau reste
+une cible tactile », lui, a disparu des échecs : c'est le seul des trois que le CSS seul pouvait
+satisfaire.
 
 - [ ] **Étape 3 : commiter**
 
@@ -615,8 +637,8 @@ ligne elle-même qui le dit, et le répéter en tête ajoute du bruit. Remplacer
 npm run check && npx tsc --noEmit && npm run build
 ```
 
-Attendu : `npm run check` annonce `N vérifications passées.` sans échec, `tsc` ne dit rien, le build
-réussit. Si `tsc` se plaint d'un `imageUrlFromClipboard` désormais inutilisé, **ne pas le retirer** :
+Attendu : `npm run check` ne laisse que les **2 échecs préexistants** — les trois garde-fous de ce
+plan sont passés au vert. `tsc` ne dit rien, le build réussit. Si `tsc` se plaint d'un `imageUrlFromClipboard` désormais inutilisé, **ne pas le retirer** :
 il sert toujours dans `handlePaste`.
 
 - [ ] **Étape 4 : commiter**
@@ -708,7 +730,8 @@ npm run check
 git status --short
 ```
 
-Attendu : aucun échec, et `git status` propre — les trois mutations ont bien été défaites.
+Attendu : les 2 échecs préexistants et rien d'autre, et `git status` propre — toutes les mutations ont bien
+été défaites.
 
 ---
 
@@ -819,8 +842,8 @@ en base, on ne stocke pas de `data:` URI — donc `BLOB_READ_WRITE_TOKEN` est re
 npm run check
 ```
 
-Attendu : aucun échec — le harnais lit le README pour les effets et les décors, cette phrase ne les
-concerne pas, mais on confirme qu'on n'a rien cassé en éditant.
+Attendu : les 2 échecs préexistants et rien d'autre — le harnais lit le README pour les effets et
+les décors, cette phrase ne les concerne pas, mais on confirme qu'on n'a rien cassé en éditant.
 
 - [ ] **Étape 3 : commiter**
 
