@@ -187,7 +187,7 @@ exactement ce qu'un remaniement inverse en silence.
      * en montre. Il tenait sur des `grid-template-areas` qui reordonnaient la
      * grille contre l'ordre du DOM ; elles sont parties au profit de deux
      * conteneurs reels. Plus rien ne rattraperait donc une inversion du JSX —
-     * d'ou ce garde-fou, et la verification que `.row__grid` ne ressuscite pas.
+     * d'ou ce garde-fou, et le refus du retour de `.row__grid`.
      */
     const editeur = readFileSync(
       new URL("../components/editor/PageEditor.tsx", import.meta.url),
@@ -201,15 +201,20 @@ exactement ce qu'un remaniement inverse en silence.
      * `row__gift-grid`, qui vit dans la zone au lieu de la designer.
      */
     const positionDe = (classe: string) => {
-      const m = new RegExp(`className=\{?[\`"'][^\`"']*${classe}(?![\w-])`).exec(editeur);
+      const m = new RegExp(`className=\\{?[\`"'][^\`"']*${classe}(?![\\w-])`).exec(editeur);
       return m ? m.index : -1;
     };
     const source = positionDe("row__source");
     const cadeau = positionDe("row__gift");
     assert.notEqual(source, -1, "aucun element ne porte la classe row__source");
     assert.notEqual(cadeau, -1, "aucun element ne porte la classe row__gift");
-    assert.ok(source < cadeau, "row__gift est passe devant row__source")
+    assert.ok(source < cadeau, "row__gift est passe devant row__source");
 
+    /*
+     * `[\s,{]` en queue plutot qu'un `\n` : sous CRLF un `\n` exige juste apres
+     * le selecteur ne matcherait jamais, et l'assertion passerait avec la regle
+     * bel et bien revenue.
+     */
     const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
     assert.doesNotMatch(
       css,
