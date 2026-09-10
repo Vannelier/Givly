@@ -1435,11 +1435,15 @@ async function checkImages() {
     const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
     const i = css.indexOf("\n.row__thumb {");
     assert.notEqual(i, -1, "regle .row__thumb introuvable");
-    const regle = css.slice(i, css.indexOf("\n}", i));
+    const fin = css.indexOf("\n}", i);
+    assert.notEqual(fin, -1, "regle .row__thumb non fermee en colonne 0");
+    const regle = css.slice(i, fin);
 
     for (const axe of ["min-width", "min-height"]) {
       const m = new RegExp(`${axe}:\\s*([\\d.]+)rem`).exec(regle);
-      assert.ok(m, `la vignette n'impose plus de ${axe}`);
+      // « en rem » dans le message : l'assertion impose l'unite autant que la
+      // valeur, et sans ce mot elle laisse croire a une declaration absente.
+      assert.ok(m, `la vignette n'impose plus de ${axe} en rem`);
       assert.ok(Number(m[1]) * 16 >= 44, `${axe} de ${Number(m[1]) * 16} px, minimum 44`);
     }
   });
@@ -1453,34 +1457,49 @@ async function checkImages() {
      * autres chemins. Ils ont disparu tous les deux : `hidden` ici couperait le
      * clavier de l'image, sans qu'aucun test de rendu ne bronche.
      *
-     * L'attribut est donc refuse, et la regle de masquage clippee exigee.
+     * On refuse donc l'attribut cote JSX, et `display: none` comme
+     * `visibility: hidden` cote CSS — ou seule l'opacite doit masquer.
      */
     const editeur = readFileSync(
       new URL("../components/editor/PageEditor.tsx", import.meta.url),
       "utf8",
     );
-    /* Une regex plutot qu'un indexOf : l'indentation exacte du JSX n'a pas a
-       faire echouer un garde-fou sur l'accessibilite. */
-    const m = /<label\s+className=\{`row__thumb[\s\S]*?<\/label>/.exec(editeur);
-    assert.ok(m, "vignette-label introuvable");
-    const vignette = m[0];
-    assert.match(vignette, /type="file"/, "l'input de fichier a quitte la vignette");
     /*
-     * `\s` et non `\n` : `core.autocrlf` rend les fichiers CRLF dans la copie de
-     * travail, et une regex qui exige un `\n` juste apres le mot ne matche alors
-     * jamais — l'assertion passerait avec `hidden` present. Deux garde-fous plus
-     * anciens du fichier sont tombes dans ce piege.
+     * Large a dessein : l'indentation, le type de guillemets et la presence d'un
+     * litteral gabarit sont des details de style, et un garde-fou sur
+     * l'accessibilite n'a pas a echouer parce que le `className` s'ecrit
+     * autrement. Toutes les vignettes sont controlees et non la seule premiere —
+     * un second <label> « Televerser » vit deja plus bas dans le fichier, et une
+     * regression sur lui serait invisible a un `.exec()`.
      */
-    assert.doesNotMatch(
-      vignette,
-      /\shidden\s/,
-      "`hidden` de retour sur l'input : display:none n'est pas focalisable",
-    );
+    const vignettes = [
+      ...editeur.matchAll(/<label[^>]*className=\{?[`"'][^`"']*row__thumb[\s\S]*?<\/label>/g),
+    ].map((m) => m[0]);
+    assert.ok(vignettes.length > 0, "vignette : aucun <label> ne porte la classe row__thumb");
+
+    for (const vignette of vignettes) {
+      assert.match(vignette, /type="file"/, "l'input de fichier a quitte la vignette");
+      /*
+       * Jamais de `\n` en tete : `core.autocrlf` rend les fichiers CRLF, et une
+       * regex qui l'exige ne matche alors jamais. Jamais de `\s` en queue non
+       * plus : `hidden` s'ecrit aussi `hidden/>` et `hidden={vrai}`, que le `\s`
+       * laissait passer. Une assertion `doesNotMatch` qui ne peut pas matcher
+       * passe toujours, y compris avec le defaut present — c'est ainsi que la
+       * premiere version de ce garde-fou etait decorative.
+       */
+      assert.doesNotMatch(
+        vignette,
+        /\shidden(?=[\s/=>])/,
+        "`hidden` de retour sur l'input : display:none n'est pas focalisable",
+      );
+    }
 
     const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
     const j = css.indexOf('\n.row__thumb input[type="file"] {');
     assert.notEqual(j, -1, "regle de masquage de l'input introuvable");
-    const regle = css.slice(j, css.indexOf("\n}", j));
+    const finRegle = css.indexOf("\n}", j);
+    assert.notEqual(finRegle, -1, "regle de masquage non fermee en colonne 0");
+    const regle = css.slice(j, finRegle);
     assert.doesNotMatch(regle, /display:\s*none/, "masquage revenu a display:none");
     assert.doesNotMatch(regle, /visibility:\s*hidden/, "masquage revenu a visibility:hidden");
     assert.match(regle, /opacity:\s*0/, "l'input n'est plus masque");
