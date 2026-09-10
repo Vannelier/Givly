@@ -1446,6 +1446,23 @@ async function checkImages() {
       assert.ok(m, `la vignette n'impose plus de ${axe} en rem`);
       assert.ok(Number(m[1]) * 16 >= 44, `${axe} de ${Number(m[1]) * 16} px, minimum 44`);
     }
+
+    /*
+     * Et toutes les autres regles `.row__thumb`, pas la seule de base : une
+     * media query qui redefinit la vignette contournait ce garde-fou sans un
+     * bruit, et c'est la forme exacte qu'aurait un ajustement futur — or c'est
+     * au telephone, la ou les media queries mordent, qu'elle est la plus petite.
+     */
+    for (const [, corps] of css.matchAll(/^[ \t]*\.row__thumb\s*\{([^}]*)\}/gm)) {
+      for (const axe of ["min-width", "min-height"]) {
+        const m = new RegExp(`${axe}:\\s*([\\d.]+)rem`).exec(corps);
+        if (!m) continue;
+        assert.ok(
+          Number(m[1]) * 16 >= 44,
+          `${axe} de ${Number(m[1]) * 16} px dans une redefinition de .row__thumb, minimum 44`,
+        );
+      }
+    }
   });
 
   test("la vignette du cadeau reste atteignable au clavier", () => {
