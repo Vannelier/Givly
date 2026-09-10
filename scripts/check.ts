@@ -1422,6 +1422,70 @@ async function checkImages() {
     assert.ok(cadeaux < presentation, "les cadeaux doivent preceder la presentation");
   });
 
+  test("la vignette du cadeau reste une cible tactile", () => {
+    /*
+     * La vignette a absorbe le cadre de collage, le champ d'adresse et le bouton
+     * « Televerser » : elle est desormais le seul chemin vers le selecteur de
+     * fichier. Sous 44 px de cote (WCAG 2.5.8) elle devient inatteignable au
+     * pouce, et c'est au telephone qu'elle est la plus petite.
+     *
+     * On lit la regle comme du texte : `getComputedStyle` demanderait un
+     * navigateur, et le harnais tourne sans.
+     */
+    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const i = css.indexOf("\n.row__thumb {");
+    assert.notEqual(i, -1, "regle .row__thumb introuvable");
+    const regle = css.slice(i, css.indexOf("\n}", i));
+
+    for (const axe of ["min-width", "min-height"]) {
+      const m = new RegExp(`${axe}:\\s*([\\d.]+)rem`).exec(regle);
+      assert.ok(m, `la vignette n'impose plus de ${axe}`);
+      assert.ok(Number(m[1]) * 16 >= 44, `${axe} de ${Number(m[1]) * 16} px, minimum 44`);
+    }
+  });
+
+  test("la vignette du cadeau reste atteignable au clavier", () => {
+    /*
+     * Mesure au navigateur : un `<input type="file" hidden>` est `display: none`,
+     * donc non focalisable — `focus()` dessus laisse le focus sur `body`. Le
+     * bouton « Televerser » d'hier l'etait deja ; ca ne se voyait pas parce que
+     * le champ d'adresse d'image et la vignette `tabIndex={0}` offraient deux
+     * autres chemins. Ils ont disparu tous les deux : `hidden` ici couperait le
+     * clavier de l'image, sans qu'aucun test de rendu ne bronche.
+     *
+     * L'attribut est donc refuse, et la regle de masquage clippee exigee.
+     */
+    const editeur = readFileSync(
+      new URL("../components/editor/PageEditor.tsx", import.meta.url),
+      "utf8",
+    );
+    /* Une regex plutot qu'un indexOf : l'indentation exacte du JSX n'a pas a
+       faire echouer un garde-fou sur l'accessibilite. */
+    const m = /<label\s+className=\{`row__thumb[\s\S]*?<\/label>/.exec(editeur);
+    assert.ok(m, "vignette-label introuvable");
+    const vignette = m[0];
+    assert.match(vignette, /type="file"/, "l'input de fichier a quitte la vignette");
+    /*
+     * `\s` et non `\n` : `core.autocrlf` rend les fichiers CRLF dans la copie de
+     * travail, et une regex qui exige un `\n` juste apres le mot ne matche alors
+     * jamais — l'assertion passerait avec `hidden` present. Deux garde-fous plus
+     * anciens du fichier sont tombes dans ce piege.
+     */
+    assert.doesNotMatch(
+      vignette,
+      /\shidden\s/,
+      "`hidden` de retour sur l'input : display:none n'est pas focalisable",
+    );
+
+    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const j = css.indexOf('\n.row__thumb input[type="file"] {');
+    assert.notEqual(j, -1, "regle de masquage de l'input introuvable");
+    const regle = css.slice(j, css.indexOf("\n}", j));
+    assert.doesNotMatch(regle, /display:\s*none/, "masquage revenu a display:none");
+    assert.doesNotMatch(regle, /visibility:\s*hidden/, "masquage revenu a visibility:hidden");
+    assert.match(regle, /opacity:\s*0/, "l'input n'est plus masque");
+  });
+
   test("la barre d'action porte des cibles tactiles et des bords visibles", () => {
     /*
      * Deux defauts mesures, et rien dans le code ne les designait.
