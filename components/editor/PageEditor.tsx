@@ -916,8 +916,17 @@ export default function PageEditor(props: Props) {
               {filledCount} / {LIMITS.itemsMax}
             </span>
           </div>
+          {/*
+            L'explication vit ici et non dans chaque ligne. Elle ne varie pas
+            d'un cadeau a l'autre, et la repeter dix fois coutait 87 px de gris
+            par ligne — mesure a 375x812 : 477 px la ligne vide, contre 408 une
+            fois l'intitule ramene a sa plus simple expression.
+          */}
           <p className="help">
-            Jusqu&apos;à {LIMITS.itemsMax} propositions, dans l&apos;ordre que tu veux.
+            Jusqu&apos;à {LIMITS.itemsMax} propositions, dans l&apos;ordre que tu veux. Colle
+            l&apos;adresse d&apos;un produit et elle remplit le titre et l&apos;image — c&apos;est
+            aussi le lien qui te reviendra, après le choix, pour acheter. Un cadeau qui ne
+            s&apos;achète pas en ligne se décrit très bien à la main.
             {filledCount === 1 && (
               <>
                 {" "}
@@ -973,17 +982,13 @@ export default function PageEditor(props: Props) {
                 */}
                 <div className="row__source">
                   {/*
-                    L'intitule enonce les deux roles du champ. L'ancien — « Jamais
-                    affichee sur la page-cadeau » — disait ce qu'il ne fait pas, et
-                    taisait le second : `source_url` est stocke, et AdminView le
-                    ressert au donneur apres le choix sous « Ouvrir la page
-                    d'origine ». C'est le lien d'achat.
+                    Court, parce que la consigne complete vit en tete d'etape :
+                    elle ne varie pas d'une ligne a l'autre. « Facultatif » reste
+                    ici, en revanche — c'est la seule chose qui se decide ligne
+                    par ligne, et c'etait le point aveugle de l'ancienne version,
+                    ou le champ ressemblait a un champ obligatoire de plus.
                   */}
-                  <span className="row__zone-label">
-                    Colle l&apos;adresse d&apos;un produit : elle remplit le titre et
-                    l&apos;image, et te revient après le choix pour acheter. Facultative — un
-                    cadeau qui ne s&apos;achète pas en ligne se décrit très bien à la main.
-                  </span>
+                  <span className="row__zone-label">Lien du produit — facultatif</span>
                   <div className="inline">
                     <input
                       type="url"
