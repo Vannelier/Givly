@@ -1485,9 +1485,10 @@ async function checkImages() {
      * Large a dessein : l'indentation, le type de guillemets et la presence d'un
      * litteral gabarit sont des details de style, et un garde-fou sur
      * l'accessibilite n'a pas a echouer parce que le `className` s'ecrit
-     * autrement. Toutes les vignettes sont controlees et non la seule premiere —
-     * un second <label> « Televerser » vit deja plus bas dans le fichier, et une
-     * regression sur lui serait invisible a un `.exec()`.
+     * autrement. `matchAll` et non `.exec()` : une ligne de cadeau se repete
+     * jusqu'a dix fois, et le jour ou une seconde vignette s'ecrira ailleurs
+     * dans le fichier, un test qui ne lirait que la premiere la laisserait
+     * regresser sans un bruit.
      */
     const vignettes = [
       ...editeur.matchAll(/<label[^>]*className=\{?[`"'][^`"']*row__thumb[\s\S]*?<\/label>/g),

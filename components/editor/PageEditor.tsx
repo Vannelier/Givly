@@ -952,7 +952,7 @@ export default function PageEditor(props: Props) {
           */}
           <p className="help">
             Jusqu&apos;à {LIMITS.itemsMax} propositions, dans l&apos;ordre que tu veux. Colle
-            l&apos;adresse d&apos;un produit et elle remplit le titre et l&apos;image — c&apos;est
+            l&apos;adresse d&apos;un produit pour en récupérer le titre et l&apos;image — c&apos;est
             aussi le lien qui te reviendra, après le choix, pour acheter. Un cadeau qui ne
             s&apos;achète pas en ligne se décrit très bien à la main.
             {filledCount === 1 && (
@@ -1055,7 +1055,7 @@ export default function PageEditor(props: Props) {
                         saisie. Retirer le champ d'adresse d'image a donc
                         *elargi* la surface de collage.
                       */}
-                      <label className={`row__thumb${row.busy === "upload" ? " is-busy" : ""}`}>
+                      <label className={`row__thumb${row.busy !== null ? " is-busy" : ""}`}>
                         {/*
                           Pas d'attribut `hidden` : il vaut display:none, qui
                           retire l'input de l'ordre de tabulation. Le masquage
@@ -1081,7 +1081,7 @@ export default function PageEditor(props: Props) {
                           </span>
                         )}
                       </label>
-                      {row.image_url && row.busy === null && (
+                      {row.image_url && row.busy !== "upload" && (
                         <button
                           type="button"
                           className="row__thumb-clear"
