@@ -1632,11 +1632,13 @@ async function checkImages() {
      * une chaine `content: "/*"` fausserait le retrait des commentaires ; le
      * fichier n'en contient aucune.
      */
+    const sujets = (selecteurs: string) => {
+      let x = selecteurs.replace(/\[[^\]]*\]/g, "");
+      while (/\([^()]*\)/.test(x)) x = x.replace(/\([^()]*\)/g, "");
+      return x.split(",").map((s) => s.trim().split(/[\s>+~]+/).pop() ?? "");
+    };
     for (const [, selecteurs, corps] of css.matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
-      let sansGroupes = selecteurs.replace(/\[[^\]]*\]/g, "");
-      while (/\([^()]*\)/.test(sansGroupes)) sansGroupes = sansGroupes.replace(/\([^()]*\)/g, "");
-      const sujets = sansGroupes.split(",").map((s) => s.trim().split(/[\s>+~]+/).pop() ?? "");
-      const visent = sujets.some(
+      const visent = sujets(selecteurs).some(
         (s) => !s.includes("::") && /\.stepper__btn(?:--[\w-]+)?(?![\w-])/.test(s),
       );
       if (!visent) continue;
