@@ -1717,6 +1717,20 @@ async function checkImages() {
     const bord = /border-color:\s*var\((--[a-z-]+)\)/.exec(bloc[1]);
     assert.ok(bord, "le bouton secondaire de l'accroche n'impose plus de couleur de bord");
     assert.notEqual(bord[1], "--line", "bord revenu a --line, invisible sur le papier");
+
+    /*
+     * Au survol aussi : `.btn--ghost:hover:not(:disabled)`, plus specifique que
+     * la regle ci-dessus, repassait le bord a `--ink-faint` (environ 2,7:1). Une
+     * premiere version de ce garde-fou ne lisait que la regle au repos.
+     */
+    const survol = /\.lp-cta \.btn--ghost:hover:not\(:disabled\) \{([^}]*)\}/.exec(css);
+    assert.ok(survol, "regle de survol .lp-cta .btn--ghost introuvable : le survol repasse le bord a --ink-faint");
+    const bordSurvol = /border-color:\s*var\((--[a-z-]+)\)/.exec(survol[1]);
+    assert.ok(bordSurvol, "le survol du bouton secondaire n'impose plus de couleur de bord");
+    assert.ok(
+      !["--line", "--ink-faint"].includes(bordSurvol[1]),
+      `bord de survol a ${bordSurvol[1]}, sous 3:1 sur le papier`,
+    );
   });
 
   test("l'ecran de creation ramene a l'editeur", () => {

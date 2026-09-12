@@ -184,6 +184,15 @@
   border-color: var(--ink-soft);
 }
 
+/*
+ * Et au survol : `.btn--ghost:hover:not(:disabled)`, plus specifique, repassait
+ * le bord a `--ink-faint`, environ 2,7:1 — sous le seuil, a l'instant precis ou
+ * l'on vise le bouton. La barre d'action de l'editeur a la meme regle-miroir.
+ */
+.lp-cta .btn--ghost:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
 @media (min-width: 52rem) {
   /*
    * Deux boutons et une note dans une rangee : faute de retour a la ligne, les
