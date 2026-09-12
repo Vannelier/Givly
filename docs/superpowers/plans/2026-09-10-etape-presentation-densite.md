@@ -73,12 +73,6 @@ d'une cible tactile à toutes les largeurs. Le garde-fou s'écrit avant la règl
      * 39 px de haut a 375, et 41 a 768 comme a 1440 : sous les 44 px d'une cible
      * tactile (WCAG 2.5.8) a toutes les largeurs. C'est la navigation entre
      * etapes, au bord haut de l'ecran.
-     *
-     * Toutes les regles `.stepper__btn` sont lues, pas la seule de base : elle
-     * est deja redefinie dans une media query telephone, et c'est la qu'un
-     * ajustement futur ramenerait la hauteur sous 44 px. Le garde-fou de la
-     * vignette ne lisait que sa regle de base, et une media query le contournait
-     * sans un bruit.
      */
     const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
     const i = css.indexOf("\n.stepper__btn {");
@@ -89,13 +83,41 @@ d'une cible tactile à toutes les largeurs. Le garde-fou s'écrit avant la règl
     assert.ok(base, "l'echelle d'etapes n'impose plus de min-height en rem");
     assert.ok(Number(base[1]) * 16 >= 44, `min-height de ${Number(base[1]) * 16} px, minimum 44`);
 
-    for (const [, corps] of css.matchAll(/^[ \t]*\.stepper__btn\s*\{([^}]*)\}/gm)) {
-      const m = /min-height:\s*([\d.]+)rem/.exec(corps);
-      if (!m) continue;
-      assert.ok(
-        Number(m[1]) * 16 >= 44,
-        `min-height de ${Number(m[1]) * 16} px dans une redefinition de .stepper__btn, minimum 44`,
-      );
+    /*
+     * Puis toutes les regles dont le bouton est le sujet, et pas seulement celles
+     * dont le selecteur est `.stepper__btn` tout court. Le fichier en compte cinq :
+     * la base, la redefinition telephone, `:disabled`, et deux etats
+     * (`.stepper__item.is-done .stepper__btn`, `.is-current`) plus specifiques
+     * que la base — un `min-height` pose la reduirait vraiment. Une premiere
+     * version ne lisait que `.stepper__btn` seul, et laissait passer ces etats,
+     * les listes de selecteurs et `:not(...)` : prouve par mutation.
+     *
+     * Et toute valeur de `min-height` y est jugee, pas seulement celles en rem :
+     * `0` et `auto` sont justement la maniere habituelle de remettre a zero dans
+     * une media query, et une boucle qui les ignorait en faisait une issue de
+     * secours.
+     *
+     * Les commentaires sont retires d'abord : ceux de ce fichier citent souvent
+     * du CSS entre accolades, qu'on prendrait sinon pour des regles.
+     */
+    const sansCommentaires = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [, selecteurs, corps] of sansCommentaires.matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
+      const visent = selecteurs
+        .split(",")
+        .some((s) => /\.stepper__btn(?![\w-])/.test(s.trim().split(/[\s>+~]+/).pop() ?? ""));
+      if (!visent) continue;
+      for (const [, brute] of corps.matchAll(/min-height\s*:\s*([^;]+)/g)) {
+        const valeur = brute.replace(/!important/, "").trim();
+        const m = /^([\d.]+)rem$/.exec(valeur);
+        assert.ok(
+          m,
+          `min-height « ${valeur} » sur « ${selecteurs.trim()} » : attendu en rem, et d'au moins 2.75`,
+        );
+        assert.ok(
+          Number(m[1]) * 16 >= 44,
+          `min-height de ${Number(m[1]) * 16} px sur « ${selecteurs.trim()} », minimum 44`,
+        );
+      }
     }
   });
 ```
