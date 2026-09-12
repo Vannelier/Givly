@@ -73,59 +73,80 @@ d'une cible tactile à toutes les largeurs. Le garde-fou s'écrit avant la règl
      * 39 px de haut a 375, et 41 a 768 comme a 1440 : sous les 44 px d'une cible
      * tactile (WCAG 2.5.8) a toutes les largeurs. C'est la navigation entre
      * etapes, au bord haut de l'ecran.
+     *
+     * Les commentaires sont retires avant toute lecture. Commenter la seule
+     * declaration `min-height` de la base est le geste le plus probable d'un
+     * reglage de densite, et une lecture qui voyait les commentaires le laissait
+     * passer : prouve par mutation. A l'inverse, un commentaire citant une
+     * ancienne valeur declenchait une fausse alerte.
      */
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8").replace(
+      /\/\*[\s\S]*?\*\//g,
+      "",
+    );
     const i = css.indexOf("\n.stepper__btn {");
     assert.notEqual(i, -1, "regle .stepper__btn introuvable");
     const fin = css.indexOf("\n}", i);
     assert.notEqual(fin, -1, "regle .stepper__btn non fermee en colonne 0");
-    const base = /min-height:\s*([\d.]+)rem/.exec(css.slice(i, fin));
+    const base = /(?:^|[;{\s])min-height\s*:\s*([\d.]+)rem/.exec(css.slice(i, fin));
     assert.ok(base, "l'echelle d'etapes n'impose plus de min-height en rem");
     assert.ok(Number(base[1]) * 16 >= 44, `min-height de ${Number(base[1]) * 16} px, minimum 44`);
 
     /*
-     * Puis toutes les regles dont le bouton est le sujet, et pas seulement celles
-     * dont le selecteur est `.stepper__btn` tout court. Le fichier en compte cinq :
-     * la base, la redefinition telephone, `:disabled`, et deux etats
+     * Puis chaque regle dont le bouton, ou une de ses variantes `--`, est le
+     * sujet : le dernier compose d'un de ses selecteurs, une fois parentheses et
+     * crochets mis de cote. Le fichier en compte cinq aujourd'hui — la base, la
+     * redefinition telephone, `:disabled`, et deux etats
      * (`.stepper__item.is-done .stepper__btn`, `.is-current`) plus specifiques
-     * que la base — un `min-height` pose la reduirait vraiment. Une premiere
-     * version ne lisait que `.stepper__btn` seul, et laissait passer ces etats,
-     * les listes de selecteurs et `:not(...)` : prouve par mutation.
+     * que la base, ou un `min-height` la reduirait vraiment. Les variantes
+     * comptent parce que ce depot fait ainsi ses tailles : `.btn--sm` a deja
+     * fait descendre des boutons a 40 px.
      *
-     * Et toute valeur de `min-height` y est jugee, pas seulement celles en rem :
-     * `0` et `auto` sont justement la maniere habituelle de remettre a zero dans
-     * une media query, et une boucle qui les ignorait en faisait une issue de
-     * secours.
+     * Toute valeur de `min-height` y est jugee, pas seulement celles en rem : `0`
+     * et `auto` sont la maniere habituelle de remettre a zero dans une media
+     * query.
      *
-     * Les commentaires sont retires d'abord : ceux de ce fichier citent souvent
-     * du CSS entre accolades, qu'on prendrait sinon pour des regles.
+     * Ne voit pas : une regle qui vise le bouton par son element (`button`),
+     * `min-block-size`, ni un pseudo-element (`::after` n'est pas le bouton). Et
+     * une chaine `content: "/*"` fausserait le retrait des commentaires ; le
+     * fichier n'en contient aucune.
      */
-    const sansCommentaires = css.replace(/\/\*[\s\S]*?\*\//g, "");
-    for (const [, selecteurs, corps] of sansCommentaires.matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
-      const visent = selecteurs
-        .split(",")
-        .some((s) => /\.stepper__btn(?![\w-])/.test(s.trim().split(/[\s>+~]+/).pop() ?? ""));
+    const sujets = (selecteurs: string) => {
+      let x = selecteurs.replace(/\[[^\]]*\]/g, "");
+      while (/\([^()]*\)/.test(x)) x = x.replace(/\([^()]*\)/g, "");
+      return x.split(",").map((s) => s.trim().split(/[\s>+~]+/).pop() ?? "");
+    };
+    for (const [, selecteurs, corps] of css.matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
+      const visent = sujets(selecteurs).some(
+        (s) => !s.includes("::") && /\.stepper__btn(?:--[\w-]+)?(?![\w-])/.test(s),
+      );
       if (!visent) continue;
-      for (const [, brute] of corps.matchAll(/min-height\s*:\s*([^;]+)/g)) {
-        const valeur = brute.replace(/!important/, "").trim();
+      const nom = selecteurs.replace(/\s+/g, " ").trim();
+      for (const [, brute] of corps.matchAll(/(?:^|[;{\s])min-height\s*:\s*([^;]+)/g)) {
+        const valeur = brute.replace(/!\s*important/, "").trim();
         const m = /^([\d.]+)rem$/.exec(valeur);
-        assert.ok(
-          m,
-          `min-height « ${valeur} » sur « ${selecteurs.trim()} » : attendu en rem, et d'au moins 2.75`,
-        );
+        assert.ok(m, `min-height « ${valeur} » sur « ${nom} » : attendu en rem, et d'au moins 2.75`);
         assert.ok(
           Number(m[1]) * 16 >= 44,
-          `min-height de ${Number(m[1]) * 16} px sur « ${selecteurs.trim()} », minimum 44`,
+          `min-height de ${Number(m[1]) * 16} px sur « ${nom} », minimum 44`,
         );
       }
     }
   });
 ```
 
-Pourquoi ces ancres tiennent en CRLF : `"\n.stepper__btn {"` trouve le `\n` de `\r\n` ; `^` en mode
-`m` se place après chaque `\n` ; `[^}]*` traverse les `\r` sans difficulté. Et
-`^[ \t]*\.stepper__btn\s*\{` ne peut pas attraper `.stepper__btn:disabled {` : le `:` n'est ni une
-espace ni une accolade.
+Ce que fait ce test : il retire d'abord les commentaires, puis lit les blocs les plus intérieurs
+du CSS — `([^{};]+)\{([^{}]*)\}` : un corps ne contient pas d'accolade, donc un bloc `@media` n'est
+jamais pris pour une règle. Il retient ceux dont un sélecteur a pour **sujet** le bouton ou une de
+ses variantes `--` — le dernier composé, parenthèses et crochets mis de côté —, et juge toute valeur
+de `min-height`. `"\n.stepper__btn {"` trouve le `\n` de `\r\n`, en CRLF comme en LF.
+
+Trois relectures l'ont amené là, chaque fois preuves par mutation à l'appui. La première version ne
+lisait que `.stepper__btn` tout court et ignorait les valeurs hors `rem` : les états `.is-done` et
+`.is-current`, comme les remises à zéro `0` et `auto`, passaient sans bruit. La deuxième lisait encore
+le CSS brut pour la règle de base — commenter sa seule déclaration faisait passer le test — et
+laissait passer `.stepper__btn--compact`. La troisième a fait rétablir la fonction nommée `sujets`,
+qu'on avait intégrée à la boucle pour convenir à un script jetable du scratchpad.
 
 - [ ] **Étape 2 : le lancer et constater l'échec**
 
