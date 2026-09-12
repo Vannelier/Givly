@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import GiftCover from "@/components/GiftCover";
 import GiftEffect from "@/components/GiftEffect";
 import GiftMotif from "@/components/GiftMotif";
@@ -35,6 +36,12 @@ type Props = {
   variant?: "full" | "embedded";
   /** Aperçu : quitter et revenir au formulaire. */
   onExitPreview?: () => void;
+  /**
+   * Apercu public : un lien de sortie plutot qu'une fonction. Une page serveur,
+   * comme /exemple, ne peut pas passer de fonction a un composant client ; un
+   * libelle et une adresse, si.
+   */
+  lienSortie?: { libelle: string; href: string };
 };
 
 type Phase = "choosing" | "submitting" | "done" | "locked";
@@ -92,6 +99,7 @@ export default function GiftView({
   previewScreen,
   variant = "full",
   onExitPreview,
+  lienSortie,
 }: Props) {
   const alreadyChosen = Boolean(page.chosen_at);
   const [phase, setPhase] = useState<Phase>(alreadyChosen ? "locked" : "choosing");
@@ -574,6 +582,11 @@ export default function GiftView({
                 <button type="button" className="btn btn--sm" onClick={onExitPreview}>
                   Revenir au formulaire
                 </button>
+              )}
+              {lienSortie && (
+                <Link className="btn btn--sm" href={lienSortie.href}>
+                  {lienSortie.libelle}
+                </Link>
               )}
             </div>
           )}

@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
+import { EXEMPLE } from "../lib/exemple";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
 import { sslFor as bootSslFor, mediaDir as bootMediaDir } from "./boot.mjs";
 import {
@@ -161,6 +162,12 @@ test("toute page du site occupe un slug reserve", () => {
  * enverrait une requete a /api/pages/exemple/choose : au mieux une erreur sur
  * la page censee convaincre, au pire une ecriture sur une carte reelle qui
  * porterait ce slug.
+ *
+ * Il lit le texte de la page : un composant qui envelopperait GiftView pour lui
+ * imposer un autre mode lui echapperait. Il faudrait l'ecrire expres ; un
+ * remaniement ordinaire, qui deplacerait GiftView dans un sous-composant, le
+ * fait au contraire echouer. Et le pire reste ferme ailleurs : le slug est
+ * reserve, aucune carte nouvelle ne peut le prendre.
  */
 test("la page d'exemple reste en mode apercu", () => {
   const chemin = new URL("../app/exemple/page.tsx", import.meta.url);
@@ -168,6 +175,24 @@ test("la page d'exemple reste en mode apercu", () => {
   const rendus = lire(chemin).match(/<GiftView\b[^>]*>/g) ?? [];
   assert.equal(rendus.length, 1, "la page d'exemple doit rendre GiftView une fois, et une seule");
   assert.match(rendus[0], /\bmode="preview"/, "GiftView n'y est plus en mode apercu");
+});
+
+/*
+ * Chaque photo de l'exemple doit exister sous public/ : une photo renommee ou
+ * oubliee afficherait une image cassee, precisement la ou le produit doit
+ * seduire. Les donnees sont importees et non relues comme du texte : une regex
+ * qui ne trouverait plus rien passerait en silence.
+ */
+test("chaque photo de la page d'exemple existe", () => {
+  assert.equal(EXEMPLE.items.length, 4, "l'exemple montre quatre cadeaux");
+  for (const item of EXEMPLE.items) {
+    assert.ok(item.image_url, `${item.label} : pas de photo`);
+    assert.ok(item.image_url.startsWith("/"), `${item.label} : photo hors du site (${item.image_url})`);
+    assert.ok(
+      existsSync(new URL(`../public${item.image_url}`, import.meta.url)),
+      `${item.label} : ${item.image_url} manque sous public/`,
+    );
+  }
 });
 
 test("suggestVariant reste dans la limite de longueur", () => {

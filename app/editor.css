@@ -1241,6 +1241,7 @@ label.btn.is-disabled {
 }
 
 .preview-ribbon__exit {
+  text-decoration: none;
   border: 1px solid rgba(250, 246, 240, 0.4);
   background: transparent;
   color: inherit;
