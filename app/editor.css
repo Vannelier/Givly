@@ -94,6 +94,13 @@
 
 .stepper__btn {
   width: 100%;
+  /*
+   * 44 px, la taille d'une cible tactile : sans elle, les boutons faisaient
+   * 39 px a 375 et 41 a 768 comme a 1440. `scripts/check.ts` la tient, y
+   * compris contre une redefinition, un etat ou une variante qui la
+   * ramenerait en dessous.
+   */
+  min-height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
