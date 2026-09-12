@@ -1,7 +1,7 @@
 # L'étape Présentation — densifier sans rien cacher
 
 **Date** : 2026-09-10
-**État** : validé, prêt pour le plan d'implémentation
+**État** : implémenté, mesuré sur le code réel
 
 ## Le problème
 
@@ -195,14 +195,24 @@ cadre-de-collage / champ d'adresse / `<input type="file" hidden>`. C'est le déf
 corrigé sur la vignette des cadeaux au chantier précédent : `hidden` vaut `display: none`, qui n'est
 pas focalisable. Il relève de l'accessibilité et non de la densité, et n'est pas traité ici.
 
-## Mesure attendue
+## Mesure
 
-| | avant | après |
+Relevé sur le code réel, dans un navigateur, page posée — polices chargées, une demi-seconde de
+répit — et à l'état par défaut : repli d'ouverture ouvert, aucun champ rempli.
+
+| | avant | après, mesuré |
 |---|---|---|
-| page de l'étape 3, à 375 × 812 | 4 453 px | ≈ 4 168 px |
-| espacement de l'étape 3, à 768 | — | −152 px |
-| grille des palettes, à 375 | 401 px | 237 px |
-| boutons de l'échelle, toutes largeurs | 39 à 41 px | 44 px |
+| page de l'étape 3, à 375 × 812 | 4 453 px | **4 170 px** |
+| page de l'étape 3, à 768 × 1024 | 3 714 px | **3 565 px** |
+| grille des palettes, à 375 | 401 px | **237 px** |
+| boutons de l'échelle, toutes largeurs | 39 à 41 px | **44 px** |
+| lignes d'aide sur deux lignes, à 375 | 3 | **0** |
 
-Le plan d'implémentation relèvera ces chiffres sur le code réel, et non sur la simulation, avant de
-conclure.
+Soit −283 px à 375, 5,1 écrans au lieu de 5,4, et −149 px à 768. L'écart de 2 px avec les 4 168
+prévus tient dans l'arrondi des cinq mesures simulées, chacune au pixel près.
+
+**Une mesure prise trop tôt ment.** Relevée dès l'apparition de l'échelle d'étapes, juste après une
+compilation, la page des tâches 2 et 3 faisait 90 px de moins que la réalité. L'hypothèse d'un
+chargement de polices, avancée pour l'expliquer, s'est révélée fausse : polices chargées, la base
+restait à 4 453. La même mesure, prise une fois la page posée, retrouvait la prévision au pixel
+près, à 375 comme à 768.

@@ -952,6 +952,15 @@ d'action ouvre le même rendu en plein écran, là où il a la place d'être lis
 CSS et non en JavaScript : lire la largeur de la fenêtre pendant le rendu ferait diverger
 l'hydratation.
 
+**La présentation se densifie au téléphone, sans rien cacher.** Elle faisait 4 453 px à 375 — cinq
+écrans et demi pour quatorze champs, dont 1 365 px de grilles de tuiles. Les palettes passent en
+trois colonnes sous 34 rem (401 → 237 px) ; trois lignes d'aide qui débordaient sur deux reviennent
+à une ; l'espacement se resserre en colonne unique. Mesuré : **4 170 px** à 375, et 3 714 → **3 565**
+à 768. Replier les grilles aurait rapporté davantage, mais caché des réglages — dont la police et
+l'ouverture, que l'occasion ne choisit pas. Les lignes d'aide qui disent où tombe chaque texte
+restent : l'aperçu, masqué, ne le montre plus. L'échelle d'étapes passe au passage de 39 à **44 px**,
+la taille d'une cible tactile, à toutes les largeurs.
+
 **L'ordre d'une ligne de cadeau est fixe, à toutes les largeurs.** Deux zones réelles du DOM —
 `row__source` (l'adresse du produit), puis `row__gift` (la vignette, le titre, la note) — le disent
 maintenant, en remplacement de `grid-template-areas` qui remontait l'adresse produit au-dessus de la
