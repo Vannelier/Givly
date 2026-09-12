@@ -198,7 +198,8 @@ Dans la règle `.stepper__btn` (vers la ligne 95), juste après `width: 100%;`, 
   /*
    * 44 px, la taille d'une cible tactile : sans elle, les boutons faisaient
    * 39 px a 375 et 41 a 768 comme a 1440. `scripts/check.ts` la tient, y
-   * compris contre une redefinition en media query.
+   * compris contre une redefinition, un etat ou une variante qui la
+   * ramenerait en dessous.
    */
   min-height: 2.75rem;
 ```
@@ -291,10 +292,10 @@ Juste après la fermeture de `@media (min-width: 62rem) { … }` du bloc `compos
  * cadeaux et aux autres ecrans. Limite aussi a la colonne unique : au-dela de
  * 62 rem l'etape passe en deux colonnes, et la regle n'y a aucun effet.
  *
- * `.compose .field:first-of-type` est ecrit en toutes lettres. Ce bloc vit
+ * `.compose .field:first-of-type` est ecrit en toutes lettres : ce bloc vit
  * avant la regle `.field:first-of-type`, de meme specificite que
- * `.compose .field` : sans cette ligne, le premier champ de chaque cadre
- * garderait sa marge, la ou la mesure a ete prise sans elle.
+ * `.compose .field`, qui l'emporterait donc sur le premier champ de chaque
+ * cadre. Le gain mesure suppose que toutes les marges tombent a 0.7rem.
  */
 @media (max-width: 61.999rem) {
   .compose .field,
@@ -576,7 +577,15 @@ Attendu : `3`.
 
 - [ ] **Étape 2 : relever à 375**
 
+**Attends que la page soit posée.** Une première mesure des tâches 2 et 3, prise dès l'apparition de
+l'échelle d'étapes juste après une compilation, a donné 90 px de moins que la réalité — et l'hypothèse
+d'un chargement de polices, avancée pour l'expliquer, s'est révélée fausse. La même mesure, prise après
+`document.fonts.ready` et une demi-seconde de pose, retrouvait la prévision au pixel près : 4 222 px à
+375 et 3 565 à 768. Le script ci-dessous attend donc les deux.
+
 ```js
+await document.fonts.ready;
+await new Promise(r => setTimeout(r, 500));
 const g = e => { const r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; };
 const pal = document.querySelector('.palettes');
 const btns = [...document.querySelectorAll('.stepper__btn')];
