@@ -176,17 +176,23 @@
 /* --- Palettes -------------------------------------------------------------- */
 
 /*
- * Trois colonnes au telephone, quatre au-dela de 34 rem. En deux, la grille
- * faisait 401 px a 375 pour neuf palettes ; en trois, 237, et aucun nom ne
- * deborde de ses 95 px. Quatre y donneraient des tuiles d'environ 70 px, trop
- * etroites pour le nuancier et le nom.
+ * Trois colonnes des que le nom le plus long y tient, deux en dessous, quatre
+ * au-dela de 34 rem. En deux, la grille faisait 401 px a 375 pour neuf
+ * palettes ; en trois, 237.
  *
- * `minmax(0, 1fr)` et non `1fr` : une colonne `1fr` ne descend pas sous la
+ * Le nombre de colonnes suit la largeur minimale d'une tuile, et non un chiffre
+ * fixe. Trois colonnes imposees mettaient « Terracotta », 64 px, dans une zone
+ * utile de 58 px a 320 de large : le nom mordait de 6 px sur le rembourrage et
+ * decentrait la tuile. 5.4rem, c'est ce nom plus le rembourrage et la bordure
+ * de la tuile ; un nom de palette plus long demanderait de relever ce minimum.
+ * Trois colonnes a 360 comme a 375, deux a 320.
+ *
+ * `minmax(…, 1fr)` et non `1fr` seul : une colonne `1fr` ne descend pas sous la
  * largeur minimale de son contenu, et un nom long l'aurait elargie.
  */
 .palettes {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr));
   gap: 0.5rem;
 }
 
@@ -666,15 +672,26 @@ input[type="datetime-local"]:focus {
  * cadeaux et aux autres ecrans. Limite aussi a la colonne unique : au-dela de
  * 62 rem l'etape passe en deux colonnes, et la regle n'y a aucun effet.
  *
- * `.compose .field:first-of-type` est ecrit en toutes lettres : ce bloc vit
- * avant la regle `.field:first-of-type`, de meme specificite que
- * `.compose .field`, qui l'emporterait donc sur le premier champ de chaque
- * cadre. Le gain mesure suppose que toutes les marges tombent a 0.7rem.
+ * Le gain vient des rembourrages, des ecarts entre cadres et des champs qui ne
+ * sont pas premiers. Les premiers champs se comportent chacun a leur maniere :
+ * - apres une ligne d'aide (Intro, Cadeaux, Choix), leur marge fusionne avec la
+ *   marge basse de cette ligne, plus grande : rien a gagner ;
+ * - sans ligne d'aide (Palette, Nom de la carte), `.compose .field:first-of-type`
+ *   les aligne sur les autres. Sans lui, `.field:first-of-type` — meme
+ *   specificite que `.compose .field`, et plus bas — l'emporterait ;
+ * - dans un repli ouvert, la marge reste nulle, et c'est ecrit ici plutot que
+ *   laisse a `.optional__body .field:first-of-type`, plus bas : a specificite
+ *   egale, cette regle ne gagnait que par son rang, et ranger ce bloc sous elle
+ *   aurait ajoute 11 px par repli ouvert sans que rien ne le signale.
  */
 @media (max-width: 61.999rem) {
   .compose .field,
   .compose .field:first-of-type {
     margin-top: 0.7rem;
+  }
+
+  .compose .optional__body .field:first-of-type {
+    margin-top: 0;
   }
 
   .compose .panel {

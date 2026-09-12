@@ -1176,10 +1176,10 @@ export default function PageEditor(props: Props) {
                 personne qui reçoit : ce qu'elle voit en arrivant, les cadeaux, puis
                 l'écran qui suit son choix. */}
             {/*
-              Les lignes d'aide de ces cadres disent ou tombe chaque texte sur la
-              page du receveur. Au telephone l'apercu est masque, et elles sont la
-              seule indication de position qui reste : on peut les raccourcir, pas
-              les retirer.
+              Les lignes d'aide de ces cadres disent, pour la plupart, ou tombe
+              chaque texte sur la page du receveur. Au telephone l'apercu est
+              masque, et elles sont la seule indication de position qui reste :
+              on peut les raccourcir, pas les retirer.
             */}
             <section
               className="panel"

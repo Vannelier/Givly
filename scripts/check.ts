@@ -1613,10 +1613,11 @@ async function checkImages() {
 
   test("l'echelle d'etapes reste une cible tactile", () => {
     /*
-     * Les trois boutons de l'echelle — Occasion, Cadeaux, Presentation — font
-     * 39 px de haut a 375, et 41 a 768 comme a 1440 : sous les 44 px d'une cible
-     * tactile (WCAG 2.5.8) a toutes les largeurs. C'est la navigation entre
-     * etapes, au bord haut de l'ecran.
+     * Les trois boutons de l'echelle — Occasion, Cadeaux, Presentation — faisaient
+     * 39 px de haut a 375, et 41 a 768 comme a 1440 : sous les 44 px recommandes
+     * pour une cible tactile (WCAG 2.5.5, niveau AAA ; le minimum AA de 2.5.8,
+     * 24 px, etait deja tenu). C'est la navigation entre etapes, au bord haut de
+     * l'ecran.
      *
      * Les commentaires sont retires avant toute lecture. Commenter la seule
      * declaration `min-height` de la base est le geste le plus probable d'un
@@ -1624,7 +1625,7 @@ async function checkImages() {
      * passer : prouve par mutation. A l'inverse, un commentaire citant une
      * ancienne valeur declenchait une fausse alerte.
      */
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8").replace(
+    const css = lire(new URL("../app/editor.css", import.meta.url)).replace(
       /\/\*[\s\S]*?\*\//g,
       "",
     );
@@ -1641,19 +1642,22 @@ async function checkImages() {
      * sujet : le dernier compose d'un de ses selecteurs, une fois parentheses et
      * crochets mis de cote. Le fichier en compte cinq aujourd'hui — la base, la
      * redefinition telephone, `:disabled`, et deux etats
-     * (`.stepper__item.is-done .stepper__btn`, `.is-current`) plus specifiques
-     * que la base, ou un `min-height` la reduirait vraiment. Les variantes
-     * comptent parce que ce depot fait ainsi ses tailles : `.btn--sm` a deja
-     * fait descendre des boutons a 40 px.
+     * (`.stepper__item.is-done .stepper__btn`, `.is-current`). Un `min-height`
+     * pose dans n'importe laquelle reduirait le bouton ; les deux etats valent
+     * d'etre nommes parce qu'ils sont plus specifiques que la base, et
+     * l'emporteraient sur elle ou qu'on les range. Les variantes comptent parce
+     * que ce depot fait ainsi ses tailles : `.btn--sm` a deja fait descendre des
+     * boutons a 40 px.
      *
      * Toute valeur de `min-height` y est jugee, pas seulement celles en rem : `0`
      * et `auto` sont la maniere habituelle de remettre a zero dans une media
      * query.
      *
      * Ne voit pas : une regle qui vise le bouton par son element (`button`),
-     * `min-block-size`, ni un pseudo-element (`::after` n'est pas le bouton). Et
-     * une chaine `content: "/*"` fausserait le retrait des commentaires ; le
-     * fichier n'en contient aucune.
+     * `min-block-size`, un pseudo-element (`::after` n'est pas le bouton), ni une
+     * autre feuille de style que celle-ci (`globals.css`, `landing.css`). Et une
+     * chaine `content: "/*"` fausserait le retrait des commentaires ; le fichier
+     * n'en contient aucune.
      */
     const sujets = (selecteurs: string) => {
       let x = selecteurs.replace(/\[[^\]]*\]/g, "");
