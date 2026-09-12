@@ -676,7 +676,8 @@ input[type="datetime-local"]:focus {
  * sont pas premiers. Les premiers champs se comportent chacun a leur maniere :
  * - apres une ligne d'aide (Intro, Cadeaux, Choix), leur marge fusionne avec la
  *   marge basse de cette ligne, plus grande : rien a gagner ;
- * - sans ligne d'aide (Palette, Nom de la carte), `.compose .field:first-of-type`
+ * - sans ligne d'aide — Palette, et dans le cadre du lien Nom de la carte a
+ *   la creation, Adresse du lien en edition —, `.compose .field:first-of-type`
  *   les aligne sur les autres. Sans lui, `.field:first-of-type` — meme
  *   specificite que `.compose .field`, et plus bas — l'emporterait ;
  * - dans un repli ouvert, la marge reste nulle, et c'est ecrit ici plutot que

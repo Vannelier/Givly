@@ -224,6 +224,10 @@ répit — et à l'état par défaut : repli d'ouverture ouvert, aucun champ rem
 Soit −283 px à 375, 5,1 écrans au lieu de 5,5, et −149 px à 768. L'écart de 2 px avec les 4 168
 prévus tient dans l'arrondi des cinq mesures simulées, chacune au pixel près.
 
+Aux plus petits écrans, mesuré contre le bord utile de chaque tuile : deux colonnes de palettes
+à 320 et 340 px, trois dès 350, quatre au-delà de 34 rem — et aucun nom ni nuancier qui déborde,
+de 320 à 768.
+
 **Une mesure prise trop tôt ment.** Relevée dès l'apparition de l'échelle d'étapes, juste après une
 compilation, la page des tâches 2 et 3 faisait 90 px de moins que la réalité. L'hypothèse d'un
 chargement de polices, avancée pour l'expliquer, s'est révélée fausse : polices chargées, la base
