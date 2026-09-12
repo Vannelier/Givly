@@ -714,7 +714,7 @@ donc aucun ne peut mentir.
   « Cadeaux ».
 - **L'aperçu en direct**, à l'étape « La présentation » : une réduction du rendu réel, qui réagit
   à chaque réglage. **Au-delà de 62 rem seulement** — voir « L'assistant de composition ».
-  Colonne collante à partir de 62 rem, bandeau en haut de l'étape en dessous. Il est mis à l'échelle
+  Colonne collante à partir de 62 rem, masqué en dessous. Il est mis à l'échelle
   par `transform: scale()` — ce qui crée au passage un bloc englobant, si bien que la barre de
   confirmation et le voile, en `position: fixed`, restent enfermés dans le cadre au lieu de
   s'échapper sur toute la fenêtre.
