@@ -29,6 +29,9 @@ et `le titre du voile est precede d'un silence`. Le CSS qu'elles protègent est 
 `core.autocrlf=true` qui met la copie de travail en CRLF alors que leurs regex cherchent un `\n` nu.
 **Hors périmètre, n'y touche pas.** Partout ci-dessous, « vert » signifie : ces deux-là et rien d'autre.
 
+**Mise à jour, après la fusion de `main` :** la PR #26 fait passer toute lecture de source du harnais
+par `lire()`, en LF. Les deux échecs préexistants ont disparu, et `npm run check` est vert en entier.
+
 **Toute nouvelle assertion doit tolérer `\r\n`.** Une assertion `doesNotMatch` dont la regex ne peut
 pas matcher passe toujours, y compris avec le défaut présent — deux garde-fous du chantier précédent
 ont été décoratifs pour cette raison avant qu'une mutation ne le montre.
@@ -259,17 +262,23 @@ par :
 
 ```css
 /*
- * Trois colonnes au telephone, quatre au-dela de 34 rem. En deux, la grille
- * faisait 401 px a 375 pour neuf palettes ; en trois, 237, et aucun nom ne
- * deborde de ses 95 px. Quatre y donneraient des tuiles d'environ 70 px, trop
- * etroites pour le nuancier et le nom.
+ * Trois colonnes des que le nom le plus long y tient, deux en dessous, quatre
+ * au-dela de 34 rem. En deux, la grille faisait 401 px a 375 pour neuf
+ * palettes ; en trois, 237.
  *
- * `minmax(0, 1fr)` et non `1fr` : une colonne `1fr` ne descend pas sous la
+ * Le nombre de colonnes suit la largeur minimale d'une tuile, et non un chiffre
+ * fixe. Trois colonnes imposees mettaient « Terracotta », 64 px, dans une zone
+ * utile de 58 px a 320 de large : le nom mordait de 6 px sur le rembourrage et
+ * decentrait la tuile. 5.4rem, c'est ce nom plus le rembourrage et la bordure
+ * de la tuile ; un nom de palette plus long demanderait de relever ce minimum.
+ * Trois colonnes a 360 comme a 375, deux a 320.
+ *
+ * `minmax(…, 1fr)` et non `1fr` seul : une colonne `1fr` ne descend pas sous la
  * largeur minimale de son contenu, et un nom long l'aurait elargie.
  */
 .palettes {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr));
   gap: 0.5rem;
 }
 ```
@@ -292,15 +301,26 @@ Juste après la fermeture de `@media (min-width: 62rem) { … }` du bloc `compos
  * cadeaux et aux autres ecrans. Limite aussi a la colonne unique : au-dela de
  * 62 rem l'etape passe en deux colonnes, et la regle n'y a aucun effet.
  *
- * `.compose .field:first-of-type` est ecrit en toutes lettres : ce bloc vit
- * avant la regle `.field:first-of-type`, de meme specificite que
- * `.compose .field`, qui l'emporterait donc sur le premier champ de chaque
- * cadre. Le gain mesure suppose que toutes les marges tombent a 0.7rem.
+ * Le gain vient des rembourrages, des ecarts entre cadres et des champs qui ne
+ * sont pas premiers. Les premiers champs se comportent chacun a leur maniere :
+ * - apres une ligne d'aide (Intro, Cadeaux, Choix), leur marge fusionne avec la
+ *   marge basse de cette ligne, plus grande : rien a gagner ;
+ * - sans ligne d'aide (Palette, Nom de la carte), `.compose .field:first-of-type`
+ *   les aligne sur les autres. Sans lui, `.field:first-of-type` — meme
+ *   specificite que `.compose .field`, et plus bas — l'emporterait ;
+ * - dans un repli ouvert, la marge reste nulle, et c'est ecrit ici plutot que
+ *   laisse a `.optional__body .field:first-of-type`, plus bas : a specificite
+ *   egale, cette regle ne gagnait que par son rang, et ranger ce bloc sous elle
+ *   aurait ajoute 11 px par repli ouvert sans que rien ne le signale.
  */
 @media (max-width: 61.999rem) {
   .compose .field,
   .compose .field:first-of-type {
     margin-top: 0.7rem;
+  }
+
+  .compose .optional__body .field:first-of-type {
+    margin-top: 0;
   }
 
   .compose .panel {
@@ -527,7 +547,11 @@ avant la suivante.** Ne les cumule pas. Aucun commit pour cette tâche.
 
 - [ ] **M3 — le contournement par media query.** C'est la mutation qui justifie ce garde-fou. Dans la
   redéfinition `@media (max-width: 30rem) { .stepper__btn { … } }`, ajoute `min-height: 1.75rem;`.
-  Attendu : `… min-height de 28 px dans une redefinition de .stepper__btn, minimum 44`. Défais.
+  Attendu : `min-height de 28 px sur « .stepper__btn », minimum 44`. Défais.
+
+- [x] **M4 — un état plus spécifique que la base.** Dans `.stepper__item.is-current .stepper__btn`,
+  ajoute `min-height: 1.75rem;`. Attendu : `min-height de 28 px sur « .stepper__item.is-current .stepper__btn », minimum 44`.
+  Défais.
 
 **Si une mutation ne produit pas l'échec annoncé, arrête-toi et rapporte-le sans maquiller** : cela
 voudrait dire que le garde-fou est décoratif.
@@ -595,7 +619,13 @@ JSON.stringify({
   pageH: document.documentElement.scrollHeight,
   palettes: g(pal),
   tuilePalette: g(pal.children[0]),
-  nomsQuiDebordent: [...pal.querySelectorAll('span')].filter(s => s.scrollWidth > s.clientWidth + 1).length,
+  // Comparer les largeurs du nom ne voit rien : il s'etire avec la piste de
+  // grille. Le debordement se lit contre le bord utile de la tuile.
+  nomsQuiDebordent: [...pal.querySelectorAll('.palette')].filter(b => {
+    const n = b.querySelector('.palette__name').getBoundingClientRect();
+    const cs = getComputedStyle(b);
+    return n.right > b.getBoundingClientRect().right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight) + 0.5;
+  }).map(b => b.textContent.trim()),
   echelle: btns.map(g),
   rangeesEchelle: new Set(btns.map(b => Math.round(b.getBoundingClientRect().top))).size,
   aidesSurDeuxLignes: [...document.querySelectorAll('.compose .field__help')]
@@ -607,10 +637,12 @@ JSON.stringify({
 Attendu :
 - `docW === vw === 375` — aucun débordement horizontal ;
 - `pageH` autour de **4 168** (avant : 4 453) ;
-- `palettes` à environ `[338, 237]` (avant : 401 de haut), tuiles d'environ 95 px de large,
-  `nomsQuiDebordent: 0` ;
+- `palettes` à environ `[300, 237]` (avant : 401 de haut), tuiles d'environ 95 px de large,
+  `nomsQuiDebordent: []` ;
 - `echelle` à 44 px de haut pour les trois boutons, `rangeesEchelle: 1` ;
-- `aidesSurDeuxLignes` : vide, ou seulement l'aide de l'ouverture désactivée si elle est affichée.
+- `aidesSurDeuxLignes` : vide, ou seulement l'aide de l'ouverture désactivée si elle est affichée ;
+- à 320, refais la mesure : les palettes y passent en deux colonnes, et nomsQuiDebordent doit rester
+  vide.
 
 - [ ] **Étape 3 : relever à 768 et à 1440**
 
@@ -629,7 +661,7 @@ d'abord, et rapporte-le.
 
 Sinon, deux endroits reçoivent les valeurs **relevées**, et non celles de la simulation :
 
-1. Le tableau « Mesure attendue » de la spec
+1. Le tableau « Mesure » de la spec
    `docs/superpowers/specs/2026-09-10-etape-presentation-densite-design.md` — donne-les pour ce
    qu'elles sont, mesurées.
 

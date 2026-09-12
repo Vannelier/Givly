@@ -192,7 +192,7 @@ reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
 | **Photo d'en-tête** | Intro | Une photo large en haut de la carte. |
 | **Titre** | Cadeaux | Au-dessus des cadeaux. Vide = « À toi de choisir ». |
 | **Contenu** | Cadeaux | La ligne sous ce titre. Vide = « Choisis celui qui te fait le plus envie. » |
-| **Signature** | Cadeaux | Une ligne en bas de page. Facultative. |
+| **Signature** | Cadeaux | Une ligne en bas de page. |
 | **Message de fin** | Choix | Après la confirmation du choix. |
 | **Mot du receveur** | Choix | Un bouton, sur l'écran de confirmation, qui ouvre la saisie. Désactivé par défaut. |
 | **Palette** | Thème | Neuf palettes. Réglée par l'occasion, modifiable ensuite. |
@@ -954,12 +954,13 @@ l'hydratation.
 
 **La présentation se densifie au téléphone, sans rien cacher.** Elle faisait 4 453 px à 375 — cinq
 écrans et demi pour quatorze champs, dont 1 365 px de grilles de tuiles. Les palettes passent en
-trois colonnes sous 34 rem (401 → 237 px) ; trois lignes d'aide qui débordaient sur deux reviennent
-à une ; l'espacement se resserre en colonne unique. Mesuré : **4 170 px** à 375, et 3 714 → **3 565**
-à 768. Replier les grilles aurait rapporté davantage, mais caché des réglages — dont la police et
-l'ouverture, que l'occasion ne choisit pas. Les lignes d'aide qui disent où tombe chaque texte
-restent : l'aperçu, masqué, ne le montre plus. L'échelle d'étapes passe au passage de 39 à **44 px**,
-la taille d'une cible tactile, à toutes les largeurs.
+trois colonnes dès que le nom le plus long y tient (401 → 237 px à 375), et restent en deux sur les
+plus petits écrans ; trois lignes d'aide qui débordaient sur deux reviennent à une ; l'espacement se
+resserre en colonne unique. Mesuré : **4 170 px** à 375, et 3 714 → **3 565** à 768. Replier les
+grilles aurait rapporté davantage, mais caché des réglages — dont la police et l'ouverture, que
+l'occasion ne choisit pas. Les lignes d'aide qui disent où tombe chaque texte restent : l'aperçu,
+masqué, ne le montre plus. Enfin, l'échelle d'étapes passe à **44 px**, la taille recommandée pour
+une cible tactile, à toutes les largeurs — elle en faisait 39 à 41.
 
 **L'ordre d'une ligne de cadeau est fixe, à toutes les largeurs.** Deux zones réelles du DOM —
 `row__source` (l'adresse du produit), puis `row__gift` (la vignette, le titre, la note) — le disent

@@ -6,7 +6,7 @@
 ## Le problème
 
 Au téléphone, l'étape 3 de l'éditeur est la plus longue de tout le parcours. Mesuré à 375 × 812 :
-**4 453 px de page défilable**, soit 5,4 écrans, pour cinq cadres et quatorze champs. À titre de
+**4 453 px de page défilable**, soit 5,5 écrans, pour cinq cadres et quatorze champs. À titre de
 comparaison, l'étape des cadeaux fait 1 703 px et celle de l'occasion 1 545.
 
 Où partent les 4 453 px :
@@ -69,7 +69,7 @@ page réelle, par simulation dans le navigateur :
 | Échelle d'étapes portée à la taille d'une cible tactile | +5 px |
 | **Total** | **≈ −285 px** |
 
-**4 453 → ≈ 4 168 px**, soit 5,1 écrans au lieu de 5,4.
+**4 453 → ≈ 4 168 px**, soit 5,1 écrans au lieu de 5,5.
 
 ### Palettes en trois colonnes
 
@@ -79,6 +79,13 @@ donc l'exception, pas le large : il passe à **trois colonnes** sous 34 rem.
 Mesuré : les tuiles font 95 px de large, **aucun nom de palette ne déborde**, et la grille passe de
 401 à 237 px. Quatre colonnes au téléphone donneraient des tuiles d'environ 70 px, trop étroites pour
 le nuancier et le nom.
+
+**Correction après relecture.** « Aucun nom ne déborde » avait été relevé par un détecteur aveugle :
+il comparait les largeurs du nom, qui s'étire avec la piste de grille, alors que le débordement se
+produit au niveau de la tuile. Mesuré contre le bord utile de la tuile, tout tient à 360, 375 et
+768 ; mais à 320, « Terracotta » — 64 px — mordait de 6 px sur le rembourrage d'une zone utile de 58.
+Le nombre de colonnes suit donc la largeur minimale d'une tuile, `repeat(auto-fill, minmax(5.4rem,
+1fr))` : trois colonnes à 360 comme à 375, deux à 320.
 
 ### Trois lignes d'aide ramenées à une ligne
 
@@ -127,13 +134,19 @@ comme voulu.
 
 Mesuré avec ces règles exactes, sans `!important` : **−72 px à 375**, et **−152 px à 768** — la
 tablette gagne deux fois plus, parce que le rembourrage des cadres y valait déjà 1,6 rem. Une première
-simulation, qui forçait les valeurs, donnait 70 à 375 : elle écrasait aussi `.field:first-of-type`,
-que les vraies règles ne touchent qu'à égalité de spécificité.
+simulation, qui forçait les valeurs avec `!important`, donnait 70 à 375 ; elle ne reproduisait pas la
+cascade des règles écrites, et c'est la mesure sur le code réel qui fait foi.
+
+Tous les champs ne gagnent pas. Le premier d'un cadre qui s'ouvre sur une ligne d'aide voit sa marge
+fusionner avec la marge basse de cette ligne, plus grande. Celui d'un repli ouvert reste à zéro — par
+une règle explicite, `.compose .optional__body .field:first-of-type`, et non plus par le seul rang
+d'une autre règle dans le fichier, qu'un rangement aurait suffi à inverser.
 
 ### Échelle d'étapes à 44 px
 
 Les trois boutons de l'échelle — Occasion, Cadeaux, Présentation — font **39 px de haut à 375, et
-41 px à 768 comme à 1440** : sous les 44 px d'une cible tactile (WCAG 2.5.8) à toutes les largeurs.
+41 px à 768 comme à 1440** : sous les 44 px recommandés pour une cible tactile (WCAG 2.5.5, niveau AAA ; le minimum AA de 2.5.8,
+24 px, était déjà tenu) à toutes les largeurs.
 C'est la navigation entre étapes, au bord haut de l'écran.
 
 `.stepper__btn` reçoit `min-height: 2.75rem`. Mesuré aux trois largeurs : les boutons passent à
@@ -208,7 +221,7 @@ répit — et à l'état par défaut : repli d'ouverture ouvert, aucun champ rem
 | boutons de l'échelle, toutes largeurs | 39 à 41 px | **44 px** |
 | lignes d'aide sur deux lignes, à 375 | 3 | **0** |
 
-Soit −283 px à 375, 5,1 écrans au lieu de 5,4, et −149 px à 768. L'écart de 2 px avec les 4 168
+Soit −283 px à 375, 5,1 écrans au lieu de 5,5, et −149 px à 768. L'écart de 2 px avec les 4 168
 prévus tient dans l'arrondi des cinq mesures simulées, chacune au pixel près.
 
 **Une mesure prise trop tôt ment.** Relevée dès l'apparition de l'échelle d'étapes, juste après une
