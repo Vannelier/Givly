@@ -68,6 +68,9 @@ export default function LandingPage() {
             <Link className="btn btn--auto" href="/creer">
               Composer ma page-cadeau
             </Link>
+            <Link className="btn btn--ghost btn--auto" href="/exemple">
+              Voir un exemple
+            </Link>
             <span className="lp-cta__note">Gratuit · sans compte · trois étapes</span>
           </div>
         </div>
