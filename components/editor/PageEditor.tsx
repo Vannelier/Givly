@@ -1175,6 +1175,12 @@ export default function PageEditor(props: Props) {
             {/* Les trois cadres suivent l'ordre des écrans que traverse la
                 personne qui reçoit : ce qu'elle voit en arrivant, les cadeaux, puis
                 l'écran qui suit son choix. */}
+            {/*
+              Les lignes d'aide de ces cadres disent ou tombe chaque texte sur la
+              page du receveur. Au telephone l'apercu est masque, et elles sont la
+              seule indication de position qui reste : on peut les raccourcir, pas
+              les retirer.
+            */}
             <section
               className="panel"
               onFocusCapture={() => setEcranApercu("intro")}
@@ -1187,7 +1193,7 @@ export default function PageEditor(props: Props) {
 
               <Field
                 label="Prénom de la personne"
-                help="Facultatif. Affiché tout en haut."
+                help="Affiché tout en haut."
               >
                 <input
                   type="text"
@@ -1231,7 +1237,7 @@ export default function PageEditor(props: Props) {
                 label="Texte du bouton"
                 help={
                   sealEnabled
-                    ? "Le bouton qui lève le voile et découvre les cadeaux."
+                    ? "Le bouton qui lève le voile."
                     : "Sans voile d'ouverture, ce bouton ne s'affiche pas."
                 }
               >
@@ -1348,7 +1354,7 @@ export default function PageEditor(props: Props) {
                 <Counter value={itemsMessage} max={LIMITS.itemsMessage} />
               </Field>
 
-              <Field label="Signature" help="Facultatif. En bas de page, pour dire de qui ça vient.">
+              <Field label="Signature" help="En bas de page, pour dire de qui ça vient.">
                 <input
                   type="text"
                   value={signature}
@@ -1484,7 +1490,7 @@ export default function PageEditor(props: Props) {
 
               <Field
                 label="Effet"
-                help="Ce qui tombe sur la page une fois découverte. Une seule fois, pas en boucle."
+                help="Joué une fois, pas en boucle."
               >
                 <div className="effects" role="radiogroup" aria-label="Effet">
                   {EFFECTS.map((e) => (
