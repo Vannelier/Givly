@@ -75,6 +75,41 @@ function throwsValidation(fn: () => unknown, expectedField?: string) {
   assert.fail("aucune erreur levée");
 }
 
+// --- Lecture des sources ---------------------------------------------------
+
+/*
+ * Toute source lue comme du texte passe par ici, et en ressort en LF.
+ *
+ * L'index du depot est en LF ; une copie Windows sous `core.autocrlf` ne l'est
+ * pas. Deux assertions qui attendaient un `\n` juste apres une accolade y
+ * echouaient donc en permanence, CSS intact — alors qu'elles passaient dans le
+ * conteneur Linux ou elles avaient ete ecrites. Le cas symetrique est pire : un
+ * `doesNotMatch` ecrit de la meme facon ne matcherait plus rien et passerait
+ * toujours, defaut present ou non. L'audit par mutation n'en a trouve aucun,
+ * mais rien n'empechait le suivant. Normaliser ici fait lire a chaque
+ * assertion le texte tel qu'il est commite, sur n'importe quelle copie.
+ */
+function sansRetourChariot(texte: string) {
+  return texte.replace(/\r\n/g, "\n");
+}
+
+function lire(chemin: string | URL) {
+  return sansRetourChariot(readFileSync(chemin, "utf8"));
+}
+
+test("les sources sont lues en fins de ligne LF, quelle que soit la copie", () => {
+  /*
+   * Les deux moities du piege, et aucune ne se verrait sous Linux : si la
+   * normalisation disparaissait, rien d'autre n'y echouerait ; et une lecture
+   * directe ajoutee par un test futur y passerait, pour rendre ses `\r` a la
+   * premiere copie Windows venue.
+   */
+  assert.equal(sansRetourChariot("a {\r\n  b;\r\n}\r\n"), "a {\n  b;\n}\n");
+  const source = lire(new URL("./check.ts", import.meta.url));
+  const directes = source.match(/\breadFileSync\(/g) ?? [];
+  assert.equal(directes.length, 1, `${directes.length} lectures de fichier : lire() doit etre la seule`);
+});
+
 // --- Slugs -----------------------------------------------------------------
 
 test("slugify enlève accents, ponctuation et tirets aux extrémités", () => {
@@ -1105,7 +1140,7 @@ test("GiftMotif sait dessiner chaque decor du catalogue", () => {
    * Le composant est lu comme du texte, faute de rendu React dans ce harnais —
    * ce qui suffit a attraper l'oubli.
    */
-  const source = readFileSync(new URL("../components/GiftMotif.tsx", import.meta.url), "utf8");
+  const source = lire(new URL("../components/GiftMotif.tsx", import.meta.url));
   for (const d of DECORS) {
     if (d === "none") continue;
     assert.ok(source.includes(`case "${d}":`), `aucun trace pour ${d}`);
@@ -1295,8 +1330,8 @@ async function checkImages() {
  * Ils sont fixes ici pour qu'un retour en arriere se voie tout de suite.
  */
 {
-  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  const impression = readFileSync(new URL("../app/print.css", import.meta.url), "utf8");
+  const css = lire(new URL("../app/globals.css", import.meta.url));
+  const impression = lire(new URL("../app/print.css", import.meta.url));
   const bloc = (selecteur: string) => {
     const i = css.indexOf(`\n${selecteur} {`);
     assert.notEqual(i, -1, `regle absente : ${selecteur}`);
@@ -1387,7 +1422,7 @@ async function checkImages() {
      * verifie donc que chaque nom du catalogue apparait quelque part, ce qui
      * attrape le vrai defaut — un effet ou un decor ajoute sans un mot.
      */
-    const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8").toLowerCase();
+    const readme = lire(new URL("../README.md", import.meta.url)).toLowerCase();
     for (const e of EFFECTS) {
       if (e.id === "aucun") continue;
       assert.ok(readme.includes(e.name.toLowerCase()), `effet absent du README : ${e.name}`);
@@ -1408,10 +1443,7 @@ async function checkImages() {
      * Le selecteur doit donc rester dans l'etape 1, avant le marqueur de
      * l'etape des cadeaux.
      */
-    const editeur = readFileSync(
-      new URL("../components/editor/PageEditor.tsx", import.meta.url),
-      "utf8",
-    );
+    const editeur = lire(new URL("../components/editor/PageEditor.tsx", import.meta.url));
     const selecteur = editeur.indexOf('className="occasion-groups"');
     const cadeaux = editeur.indexOf("{step === 2 && (");
     const presentation = editeur.indexOf("{step === 3 && (");
@@ -1432,7 +1464,7 @@ async function checkImages() {
      * On lit la regle comme du texte : `getComputedStyle` demanderait un
      * navigateur, et le harnais tourne sans.
      */
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const css = lire(new URL("../app/editor.css", import.meta.url));
     const i = css.indexOf("\n.row__thumb {");
     assert.notEqual(i, -1, "regle .row__thumb introuvable");
     const fin = css.indexOf("\n}", i);
@@ -1477,10 +1509,7 @@ async function checkImages() {
      * On refuse donc l'attribut cote JSX, et `display: none` comme
      * `visibility: hidden` cote CSS — ou seule l'opacite doit masquer.
      */
-    const editeur = readFileSync(
-      new URL("../components/editor/PageEditor.tsx", import.meta.url),
-      "utf8",
-    );
+    const editeur = lire(new URL("../components/editor/PageEditor.tsx", import.meta.url));
     /*
      * Large a dessein : l'indentation, le type de guillemets et la presence d'un
      * litteral gabarit sont des details de style, et un garde-fou sur
@@ -1498,12 +1527,12 @@ async function checkImages() {
     for (const vignette of vignettes) {
       assert.match(vignette, /type="file"/, "l'input de fichier a quitte la vignette");
       /*
-       * Jamais de `\n` en tete : `core.autocrlf` rend les fichiers CRLF, et une
-       * regex qui l'exige ne matche alors jamais. Jamais de `\s` en queue non
-       * plus : `hidden` s'ecrit aussi `hidden/>` et `hidden={vrai}`, que le `\s`
-       * laissait passer. Une assertion `doesNotMatch` qui ne peut pas matcher
-       * passe toujours, y compris avec le defaut present — c'est ainsi que la
-       * premiere version de ce garde-fou etait decorative.
+       * Jamais de `\s` en queue : `hidden` s'ecrit aussi `hidden/>` et
+       * `hidden={vrai}`, que le `\s` laissait passer. Une assertion
+       * `doesNotMatch` qui ne peut pas matcher passe toujours, y compris avec
+       * le defaut present — c'est ainsi que la premiere version de ce garde-fou
+       * etait decorative. Elle exigeait en outre un `\n` en tete, qu'une copie
+       * CRLF ne presentait jamais — ce que `lire` rattrape desormais partout.
        */
       assert.doesNotMatch(
         vignette,
@@ -1512,7 +1541,7 @@ async function checkImages() {
       );
     }
 
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const css = lire(new URL("../app/editor.css", import.meta.url));
     const j = css.indexOf('\n.row__thumb input[type="file"] {');
     assert.notEqual(j, -1, "regle de masquage de l'input introuvable");
     const finRegle = css.indexOf("\n}", j);
@@ -1531,10 +1560,7 @@ async function checkImages() {
      * conteneurs reels. Plus rien ne rattraperait donc une inversion du JSX —
      * d'ou ce garde-fou, et le refus du retour de `.row__grid`.
      */
-    const editeur = readFileSync(
-      new URL("../components/editor/PageEditor.tsx", import.meta.url),
-      "utf8",
-    );
+    const editeur = lire(new URL("../components/editor/PageEditor.tsx", import.meta.url));
     /*
      * Le type de guillemets et la presence d'un litteral gabarit sont des
      * details de style : les figer ferait echouer ce garde-fou sur une reecriture
@@ -1553,11 +1579,11 @@ async function checkImages() {
     assert.ok(source < cadeau, "row__gift est passe devant row__source");
 
     /*
-     * `[\s,{]` en queue plutot qu'un `\n` : sous CRLF un `\n` exige juste apres
-     * le selecteur ne matcherait jamais, et l'assertion passerait avec la regle
-     * bel et bien revenue.
+     * `[\s,{]` en queue plutot qu'un `\n` : la regle peut s'ouvrir par une
+     * espace, une virgule ou l'accolade collee, et un `\n` seul laisserait
+     * passer les trois. La classe ecarte aussi les `.row__grid-…` sans rapport.
      */
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const css = lire(new URL("../app/editor.css", import.meta.url));
     assert.doesNotMatch(
       css,
       /\.row__grid[\s,{]/,
@@ -1574,10 +1600,7 @@ async function checkImages() {
      * suppression du champ « Adresse de l'image ». Le defaut ne se voyait ni au
      * typage, ni au rendu, ni dans un test qui viserait le `<label>`.
      */
-    const editeur = readFileSync(
-      new URL("../components/editor/PageEditor.tsx", import.meta.url),
-      "utf8",
-    );
+    const editeur = lire(new URL("../components/editor/PageEditor.tsx", import.meta.url));
     const i = editeur.indexOf("function handlePaste(");
     assert.notEqual(i, -1, "handlePaste introuvable");
     const corps = editeur.slice(i, editeur.indexOf("\n  }", i));
@@ -1669,7 +1692,7 @@ async function checkImages() {
      * On lit la regle comme du texte : `getComputedStyle` demanderait un
      * navigateur, et le harnais tourne sans.
      */
-    const css = readFileSync(new URL("../app/editor.css", import.meta.url), "utf8");
+    const css = lire(new URL("../app/editor.css", import.meta.url));
     const bloc = /\.editor__nav \.btn \{([^}]*)\}/.exec(css);
     assert.ok(bloc, "regle .editor__nav .btn introuvable");
 
@@ -1719,13 +1742,13 @@ async function checkImages() {
      * absente ne casse rien de visible, il depose seulement le donneur en haut
      * d'une page ou il n'a rien a faire.
      */
-    const flux = readFileSync(new URL("../components/CreateFlow.tsx", import.meta.url), "utf8");
+    const flux = lire(new URL("../components/CreateFlow.tsx", import.meta.url));
     assert.ok(
       flux.includes("#modifier"),
       "l'ecran « Ta page est prete » ne renvoie plus a l'editeur",
     );
 
-    const admin = readFileSync(new URL("../components/AdminView.tsx", import.meta.url), "utf8");
+    const admin = lire(new URL("../components/AdminView.tsx", import.meta.url));
     assert.ok(admin.includes('id="modifier"'), "l'ancre #modifier a disparu de l'administration");
   });
 
@@ -1761,7 +1784,7 @@ async function checkImages() {
     assert.ok(fichiers.length > 40, `parcours trop court : ${fichiers.length} fichiers`);
 
     for (const chemin of fichiers) {
-      let contenu = readFileSync(chemin, "utf8");
+      let contenu = lire(chemin);
       for (const p of permis) contenu = contenu.split(p).join("");
       assert.ok(
         !/givly/i.test(contenu),
@@ -1781,10 +1804,7 @@ async function checkImages() {
      * que le README emploie le meme mot. La forme « du temps des deux etapes »
      * reste permise : elle raconte l'ancien decoupage, elle ne l'annonce pas.
      */
-    const editeur = readFileSync(
-      new URL("../components/editor/PageEditor.tsx", import.meta.url),
-      "utf8",
-    );
+    const editeur = lire(new URL("../components/editor/PageEditor.tsx", import.meta.url));
     const bloc = /const STEPS = \[(.*?)\] as const;/s.exec(editeur);
     assert.ok(bloc, "tableau STEPS introuvable dans l'editeur");
     const combien = (bloc[1].match(/\{ n: \d+,/g) ?? []).length;
@@ -1794,7 +1814,7 @@ async function checkImages() {
     const attendu = mots[combien];
     assert.ok(attendu, `pas de mot pour ${combien} etapes`);
 
-    const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+    const readme = lire(new URL("../README.md", import.meta.url));
     const annonces = readme.match(/en \*{0,2}(deux|trois|quatre)\*{0,2} étapes/g) ?? [];
     assert.ok(annonces.length >= 2, "le README n'annonce plus le nombre d'etapes");
     for (const a of annonces) {
@@ -1827,10 +1847,7 @@ async function checkImages() {
      * sur la feuille elle-meme.
      */
     for (const fichier of ["PrintableCard", "CardPreview"]) {
-      const source = readFileSync(
-        new URL(`../components/${fichier}.tsx`, import.meta.url),
-        "utf8",
-      );
+      const source = lire(new URL(`../components/${fichier}.tsx`, import.meta.url));
       const decors = source.match(/<GiftMotif /g) ?? [];
       assert.equal(decors.length, 1, `${fichier} : ${decors.length} decors au lieu d'un`);
     }
@@ -1849,7 +1866,7 @@ async function checkImages() {
      * 3. Sur grand ecran les colonnes sont posees explicitement — sans cela, la
      *    carte, ecrite en premier, heritait de la colonne etroite des reglages.
      */
-    const carte = readFileSync(new URL("../components/PrintableCard.tsx", import.meta.url), "utf8");
+    const carte = lire(new URL("../components/PrintableCard.tsx", import.meta.url));
     const scene = carte.indexOf('className="print-scene"');
     const reglages = carte.indexOf('className="print-reglages"');
     assert.notEqual(scene, -1, "print-scene absent");
