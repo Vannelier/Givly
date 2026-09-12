@@ -175,9 +175,18 @@
 
 /* --- Palettes -------------------------------------------------------------- */
 
+/*
+ * Trois colonnes au telephone, quatre au-dela de 34 rem. En deux, la grille
+ * faisait 401 px a 375 pour neuf palettes ; en trois, 237, et aucun nom ne
+ * deborde de ses 95 px. Quatre y donneraient des tuiles d'environ 70 px, trop
+ * etroites pour le nuancier et le nom.
+ *
+ * `minmax(0, 1fr)` et non `1fr` : une colonne `1fr` ne descend pas sous la
+ * largeur minimale de son contenu, et un nom long l'aurait elargie.
+ */
 .palettes {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -645,6 +654,36 @@ input[type="datetime-local"]:focus {
     display: block;
     position: sticky;
     top: 1rem;
+  }
+}
+
+/*
+ * En colonne unique, l'etape 3 faisait 4 453 px a 375 — cinq ecrans et demi
+ * pour quatorze champs. Resserrer ses marges rapporte 72 px a 375 et 152 a 768,
+ * ou le rembourrage des cadres valait deja 1.6rem.
+ *
+ * Limite a `.compose` : `.field` et `.panel` servent aussi a l'etape des
+ * cadeaux et aux autres ecrans. Limite aussi a la colonne unique : au-dela de
+ * 62 rem l'etape passe en deux colonnes, et la regle n'y a aucun effet.
+ *
+ * `.compose .field:first-of-type` est ecrit en toutes lettres : ce bloc vit
+ * avant la regle `.field:first-of-type`, de meme specificite que
+ * `.compose .field`, qui l'emporterait donc sur le premier champ de chaque
+ * cadre. Le gain mesure suppose que toutes les marges tombent a 0.7rem.
+ */
+@media (max-width: 61.999rem) {
+  .compose .field,
+  .compose .field:first-of-type {
+    margin-top: 0.7rem;
+  }
+
+  .compose .panel {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .compose__main {
+    row-gap: 0.75rem;
   }
 }
 
