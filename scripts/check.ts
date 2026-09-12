@@ -1704,6 +1704,21 @@ async function checkImages() {
     }
   });
 
+  test("le bouton secondaire de l'accroche a un bord visible", () => {
+    /*
+     * « Voir un exemple » portait le bord `--line` de `.btn--ghost` : environ
+     * 1,2:1 avec le papier, mesure au navigateur. A cote du bouton plein, il se
+     * lisait comme du texte. `--line` est le jeton exact de ce defaut, comme
+     * pour la barre d'action de l'editeur.
+     */
+    const css = lire(new URL("../app/landing.css", import.meta.url));
+    const bloc = /\.lp-cta \.btn--ghost \{([^}]*)\}/.exec(css);
+    assert.ok(bloc, "regle .lp-cta .btn--ghost introuvable");
+    const bord = /border-color:\s*var\((--[a-z-]+)\)/.exec(bloc[1]);
+    assert.ok(bord, "le bouton secondaire de l'accroche n'impose plus de couleur de bord");
+    assert.notEqual(bord[1], "--line", "bord revenu a --line, invisible sur le papier");
+  });
+
   test("l'ecran de creation ramene a l'editeur", () => {
     /*
      * Le bouton « Creer la page » se touche par erreur en visant « Apercu »,

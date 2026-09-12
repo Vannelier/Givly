@@ -174,11 +174,34 @@
   gap: 0.85rem;
 }
 
+/*
+ * Le bouton secondaire portait le bord `--line` de `.btn--ghost` : environ
+ * 1,2:1 de contraste avec le papier, quand la regle 1.4.11 en demande 3:1. A
+ * cote du bouton plein, « Voir un exemple » se lisait comme du texte. Meme
+ * correction que la barre d'action de l'editeur, et meme garde-fou.
+ */
+.lp-cta .btn--ghost {
+  border-color: var(--ink-soft);
+}
+
 @media (min-width: 52rem) {
+  /*
+   * Deux boutons et une note dans une rangee : faute de retour a la ligne, les
+   * libelles des boutons se cassaient a 1440 (« Composer ma page- / cadeau »),
+   * la rangee n'ayant plus la place pour trois elements. Les boutons gardent
+   * leur libelle entier ; c'est la note qui passe dessous. Au telephone,
+   * `.lp-cta` est une colonne et les boutons ont toute la largeur : rien a y
+   * changer, et un libelle insecable y deborderait a 320.
+   */
   .lp-cta {
     flex-direction: row;
     align-items: center;
     gap: 1.1rem;
+    flex-wrap: wrap;
+  }
+
+  .lp-cta .btn {
+    white-space: nowrap;
   }
 }
 

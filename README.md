@@ -743,9 +743,10 @@ obtient sans rien écrire. Les prénoms sont épicènes — Camille, Sacha — e
 expériences et objets.
 
 **Ses photos** sont libres de droits, sous licence Unsplash, réduites à 1 200 px et servies depuis
-`public/exemple/`. Elles ont été choisies sans visage au premier plan ni marque lisible — la page offre
-un zoom, et un casque dont le logo se lisait sur les charnières a été écarté pour cette raison. Un
-garde-fou vérifie que chacune existe.
+`public/exemple/`. Elles ont été choisies sans visage au premier plan, et sans marque qui se lise à
+l'œil nu — la page offre un zoom : un casque dont le logo se lisait sur les charnières a été écarté
+pour cette raison, et seul l'appareil photo garde « instax SQ1 » en relief, blanc sur blanc,
+discernable au zoom. Un garde-fou vérifie que chacune existe.
 
 | photo | auteur | source | licence |
 |---|---|---|---|
