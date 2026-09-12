@@ -5,7 +5,7 @@
  *   npm run check
  */
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { canonicaliseUrl, cleanTitle, parseHtml } from "../lib/extract";
 import { sslFor, toQuery } from "../lib/db";
 // @ts-expect-error — module JavaScript simple, volontairement hors du bundle Next.
@@ -152,6 +152,22 @@ test("toute page du site occupe un slug reserve", () => {
   for (const nom of pages) {
     assert.ok(RESERVED_SLUGS.has(nom), `/${nom} manque dans RESERVED_SLUGS`);
   }
+});
+
+/*
+ * La page d'exemple se joue en mode apercu : on leve le voile, on choisit, on
+ * confirme, on ecrit un mot — et rien ne part, parce que ce mode rend la main
+ * avant toute requete. En mode direct, le premier visiteur qui choisirait
+ * enverrait une requete a /api/pages/exemple/choose : au mieux une erreur sur
+ * la page censee convaincre, au pire une ecriture sur une carte reelle qui
+ * porterait ce slug.
+ */
+test("la page d'exemple reste en mode apercu", () => {
+  const chemin = new URL("../app/exemple/page.tsx", import.meta.url);
+  assert.ok(existsSync(chemin), "app/exemple/page.tsx introuvable");
+  const rendus = lire(chemin).match(/<GiftView\b[^>]*>/g) ?? [];
+  assert.equal(rendus.length, 1, "la page d'exemple doit rendre GiftView une fois, et une seule");
+  assert.match(rendus[0], /\bmode="preview"/, "GiftView n'y est plus en mode apercu");
 });
 
 test("suggestVariant reste dans la limite de longueur", () => {
