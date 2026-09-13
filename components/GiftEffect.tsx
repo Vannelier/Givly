@@ -5,8 +5,7 @@ import type { EffectId } from "@/lib/occasions";
  * ou neige.
  *
  * Séparé de l'ouverture à dessein. L'ouverture dit comment le voile se lève ;
- * l'effet, ce qui se passe derrière. Les deux se combinent librement, et un
- * effet reste utile quand le donneur a coupé le voile.
+ * l'effet, ce qui se passe derrière. Les deux se combinent librement.
  *
  * Tout est en CSS : aucune boucle JavaScript, aucun canvas. Les particules sont
  * des `<span>` vides que le compositeur peut déplacer sans repeindre.

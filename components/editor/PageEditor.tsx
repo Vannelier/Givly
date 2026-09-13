@@ -192,7 +192,6 @@ export default function PageEditor(props: Props) {
   const [effect, setEffect] = useState<EffectId>(effectById(initial.theme.effect).id);
   const [replyOn, setReplyOn] = useState(initial.theme.reply === true);
   const [linkTitle, setLinkTitle] = useState(initial.link_title);
-  const [sealEnabled, setSealEnabled] = useState(initial.theme.cover !== false);
   // Remonte GiftView pour rejouer l'ouverture sans recharger la page.
   const [replay, setReplay] = useState(0);
   /*
@@ -262,7 +261,6 @@ export default function PageEditor(props: Props) {
     linkTitle,
     motif,
     replyOn,
-    sealEnabled,
     headerOn,
     linkOn,
     revealOn,
@@ -324,7 +322,6 @@ export default function PageEditor(props: Props) {
     setLinkTitle(b.linkTitle);
     setMotif(b.motif);
     setReplyOn(b.replyOn);
-    setSealEnabled(b.sealEnabled);
     setHeaderOn(b.headerOn);
     setLinkOn(b.linkOn);
     setRevealOn(b.revealOn);
@@ -401,7 +398,6 @@ export default function PageEditor(props: Props) {
     setLinkTitle("");
     setMotif(true);
     setReplyOn(false);
-    setSealEnabled(true);
     setHeaderOn(false);
     setLinkOn(false);
     setRevealOn(false);
@@ -607,7 +603,6 @@ export default function PageEditor(props: Props) {
     occasion,
     font,
     motif: current.motif !== "none" && motif,
-    cover: sealEnabled,
     opening,
     effect,
     reply: replyOn,
@@ -1229,11 +1224,7 @@ export default function PageEditor(props: Props) {
 
               <Field
                 label="Texte du bouton"
-                help={
-                  sealEnabled
-                    ? "Le bouton qui lève le voile et découvre les cadeaux."
-                    : "Sans voile d'ouverture, ce bouton ne s'affiche pas."
-                }
+                help="Le bouton qui lève le voile et découvre les cadeaux."
               >
                 <input
                   type="text"
@@ -1246,36 +1237,29 @@ export default function PageEditor(props: Props) {
                 <Counter value={openLabel} max={LIMITS.openLabel} />
               </Field>
 
-              <div className="options">
-                <Optional
-                  label="Ouvrir la carte d&apos;un geste"
-                  help="Un voile opaque porte ces mots ; les cadeaux apparaissent après."
-                  checked={sealEnabled}
-                  onChange={setSealEnabled}
-                >
-                  <Field label="Manière de l&apos;ouvrir">
-                    <div className="openings" role="radiogroup" aria-label="Manière de l'ouvrir">
-                      {OPENINGS.map((o) => (
-                        <button
-                          key={o.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={opening === o.id}
-                          className={`opening${opening === o.id ? " is-on" : ""}`}
-                          onClick={() => setOpeningStyle(o.id)}
-                        >
-                          <span className={`opening__glyph opening__glyph--${o.id}`} aria-hidden="true">
-                            <i />
-                            <i />
-                          </span>
-                          <span className="opening__name">{o.name}</span>
-                          <span className="opening__hint">{o.hint}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                </Optional>
+              <Field label="Manière de l&apos;ouvrir">
+                <div className="openings" role="radiogroup" aria-label="Manière de l'ouvrir">
+                  {OPENINGS.map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={opening === o.id}
+                      className={`opening${opening === o.id ? " is-on" : ""}`}
+                      onClick={() => setOpeningStyle(o.id)}
+                    >
+                      <span className={`opening__glyph opening__glyph--${o.id}`} aria-hidden="true">
+                        <i />
+                        <i />
+                      </span>
+                      <span className="opening__name">{o.name}</span>
+                      <span className="opening__hint">{o.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
 
+              <div className="options">
                 <Optional
                   label="Ouvrir à une date précise"
                   help="Avant elle, la carte reste scellée sur un compte à rebours — tu peux donc envoyer le lien à l'avance."

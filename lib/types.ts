@@ -9,8 +9,6 @@ export type Theme = {
   font?: string;
   /** Decor de l'occasion. Actif par defaut des qu'une occasion en propose un. */
   motif?: boolean;
-  /** Voile d'ouverture avant de decouvrir les cadeaux. Actif par defaut. */
-  cover?: boolean;
   /** Proposer au receveur de laisser un mot avec son choix. Inactif par defaut. */
   reply?: boolean;
   /** Maniere dont le voile se leve. */

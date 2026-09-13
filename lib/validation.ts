@@ -105,10 +105,13 @@ export function validateTheme(value: unknown): Theme {
   const hasMotif = occasionById(occasion).motif !== "none";
   const motif = hasMotif ? o.motif !== false : false;
 
-  // Le voile d'ouverture est actif par defaut : il faut le refuser explicitement.
-  const cover = o.cover !== false;
+  /*
+   * Plus de `cover` : le voile ne se refuse plus. Une carte sans lui s'ouvrait
+   * directement sur la liste, sans rien a lever — la mise en scene, qui fait la
+   * page, disparaissait avec. Un `cover` envoye est ignore, comme tout champ
+   * inconnu.
+   */
   const opening = isOpeningId(o.opening) ? o.opening : DEFAULT_OPENING_ID;
-  // L'effet vaut aussi sans voile : il ne depend pas de `cover`.
   const effect = isEffectId(o.effect) ? o.effect : DEFAULT_EFFECT_ID;
   // Laisser un mot n'a pas de sens quand on scanne le QR devant la personne :
   // c'est donc au donneur de l'activer, jamais actif par defaut.
@@ -120,7 +123,6 @@ export function validateTheme(value: unknown): Theme {
     occasion,
     font,
     motif,
-    cover,
     opening,
     effect,
     reply,

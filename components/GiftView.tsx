@@ -158,9 +158,13 @@ export default function GiftView({
   // choisie ou expiree doit montrer son etat tout de suite.
   const revealAt = page.reveal_at ? new Date(page.reveal_at) : null;
   const sealed = isSealed(page);
-  // Une carte scellee garde son voile meme si le donneur l'avait desactive :
-  // c'est lui qui porte le compte a rebours.
-  const coverEnabled = (page.theme.cover !== false || sealed) && !alreadyChosen;
+  /*
+   * Toujours un voile tant qu'un choix est attendu, y compris sur une carte
+   * ancienne qui porte encore `cover: false` en base. Le donneur pouvait le
+   * couper ; la page s'ouvrait alors directement sur la liste, sans rien a
+   * lever — et c'est la mise en scene qui fait la page.
+   */
+  const coverEnabled = !alreadyChosen;
   const [opened, setOpened] = useState(!coverEnabled);
   const [closing, setClosing] = useState(false);
 
@@ -288,13 +292,6 @@ export default function GiftView({
     // rendu du parent, et l'apercu de l'editeur rend a chaque frappe. Observer
     // son identite relancait toute la mise en scene entre deux lettres.
   }, [revealing, coverEnabled, page.items.length]);
-
-  // `useState` ne lit sa valeur initiale qu'au montage. Sans cette synchro, couper
-  // le voile depuis le formulaire ne changeait rien a l'apercu deja affiche.
-  useEffect(() => {
-    setClosing(false);
-    setOpened(!coverEnabled);
-  }, [coverEnabled]);
 
   /*
    * L'apercu suit le cadre qu'on modifie.

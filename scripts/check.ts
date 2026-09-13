@@ -655,16 +655,21 @@ test("validatePatch accepte de vider la signature", () => {
 
 // --- Voile d'ouverture ------------------------------------------------------
 
-test("le voile d'ouverture est actif par defaut", () => {
-  assert.equal(validateCreate(validBody).theme.cover, true);
-  assert.equal(validateCreate({ ...validBody, theme: { occasion: "noel" } }).theme.cover, true);
-});
-
-test("le voile ne se coupe que sur un refus explicite", () => {
-  assert.equal(validateCreate({ ...validBody, theme: { cover: false } }).theme.cover, false);
-  // Une valeur bancale ne doit pas desactiver le voile par accident.
-  assert.equal(validateCreate({ ...validBody, theme: { cover: "non" } }).theme.cover, true);
-  assert.equal(validateCreate({ ...validBody, theme: { cover: 0 } }).theme.cover, true);
+/*
+ * Le voile ne se refuse plus. Les cartes creees avant portent encore
+ * `cover: false` en base : le relire — dans `normaliseTheme` ou dans GiftView —
+ * leur retirerait de nouveau le voile, en silence, sur des liens deja envoyes.
+ */
+test("le voile ne se refuse plus, meme sur une carte ancienne", () => {
+  const theme = validateCreate({ ...validBody, theme: { cover: false, effect: "neige" } }).theme;
+  assert.ok(!("cover" in theme), "validateTheme garde de nouveau cover");
+  assert.equal(theme.effect, "neige");
+  assert.doesNotMatch(lire("lib/db.ts"), /raw\.cover\b/, "normaliseTheme relit de nouveau cover");
+  assert.doesNotMatch(
+    lire("components/GiftView.tsx"),
+    /theme\.cover\b/,
+    "GiftView relit de nouveau theme.cover",
+  );
 });
 
 test("chaque occasion propose une suggestion de titre et de remerciement", () => {
@@ -1040,11 +1045,6 @@ test("validateTheme ne garde qu'une ouverture et un effet connus", () => {
   assert.equal(ko.effect, DEFAULT_EFFECT_ID);
 });
 
-test("l'effet ne depend pas du voile : il survit a cover false", () => {
-  const t = validateTheme({ cover: false, effect: "neige" });
-  assert.equal(t.cover, false);
-  assert.equal(t.effect, "neige");
-});
 
 // --- Limitation de debit ---------------------------------------------------
 

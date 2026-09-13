@@ -155,7 +155,8 @@ function normaliseTheme(value: unknown): Theme {
     occasion: raw.occasion,
     font: raw.font,
     motif: raw.motif,
-    cover: raw.cover,
+    // `cover` n'est pas relu : le voile ne se refuse plus, et les cartes creees
+    // avec `cover: false` le retrouvent sans migration.
     opening: raw.opening,
     effect: raw.effect,
     reply: raw.reply,

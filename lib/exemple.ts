@@ -32,7 +32,6 @@ export const EXEMPLE: PublicPage = {
     palette: { id: anniversaire.palette },
     occasion: anniversaire.id,
     motif: anniversaire.motif !== "none",
-    cover: true,
     effect: anniversaire.effect,
     // Le mot du receveur est active pour que le parcours se voie en entier.
     reply: true,

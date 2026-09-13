@@ -79,7 +79,6 @@ export type Brouillon = {
   linkTitle: string;
   motif: boolean;
   replyOn: boolean;
-  sealEnabled: boolean;
   headerOn: boolean;
   linkOn: boolean;
   revealOn: boolean;
@@ -204,7 +203,6 @@ export function lireBrouillon(): Brouillon | null {
     linkTitle: texte(o.linkTitle),
     motif: bool(o.motif, true),
     replyOn: bool(o.replyOn, false),
-    sealEnabled: bool(o.sealEnabled, true),
     headerOn: bool(o.headerOn, false),
     linkOn: bool(o.linkOn, false),
     revealOn: bool(o.revealOn, false),

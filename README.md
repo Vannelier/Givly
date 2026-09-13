@@ -191,7 +191,7 @@ reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
 | **Mot d'ouverture** | Intro | La ligne au-dessus du titre. Vide = celle de l'occasion. |
 | **Message principal** | Intro | Le grand titre du voile, et le titre de l'aperçu de lien. |
 | **Texte du bouton** | Intro | Le bouton qui lève le voile. Vide = la suggestion de l'occasion (« Ouvrir », « Ouvrir mon cadeau »…). |
-| **Ouverture** | Intro | Le voile à lever, en six styles : voile, rideau, volets, enveloppe, couvercle, halo. Désactivable. |
+| **Ouverture** | Intro | Le voile à lever, en six styles : voile, rideau, volets, enveloppe, couvercle, halo. Toujours présent. |
 | **Date de révélation** | Intro | Avant elle, la carte reste scellée sur un compte à rebours. |
 | **Mot d'attente** | Intro | Sous le compte à rebours, tant que la carte est scellée. Vide = la suggestion de l'occasion. |
 | **Photo d'en-tête** | Intro | Une photo large en haut de la carte. |
@@ -211,12 +211,18 @@ reçoit — **Intro**, **Cadeaux**, **Choix** — suivis du thème et du lien.
 **Chaque écran a ses propres mots.** Le voile porte le prénom, le mot d'ouverture et le message
 principal ; l'écran des cadeaux porte son titre et son contenu ; l'écran de confirmation porte le
 message de fin. Le voile et l'écran des cadeaux répétaient auparavant les deux mêmes lignes, lues
-coup sur coup. Quand l'ouverture animée est désactivée, il n'y a plus de voile où loger l'intro :
-l'écran des cadeaux la reprend alors à son compte, en tête, et son propre titre passe en `h2`.
+coup sur coup. Une carte déjà choisie s'ouvre sans voile, puisqu'il n'y a plus rien à attendre :
+l'écran des cadeaux reprend alors l'intro à son compte, en tête, et son propre titre passe en `h2`.
 
 **Le facultatif se replie.** Un réglage optionnel est d'abord une case à cocher ; le champ
 n'apparaît qu'une fois cochée (composant `Optional`). Décocher **efface la valeur** : un réglage
 invisible mais toujours actif — une date de révélation oubliée, par exemple — serait un piège.
+
+**Le voile, lui, n'est plus facultatif.** Une case « Ouvrir la carte d'un geste » permettait de le
+couper : la carte s'ouvrait alors directement sur la liste, sans rien à lever, et perdait la mise en
+scène qui la distingue d'une liste de souhaits. Les cartes créées sans voile le retrouvent sans
+migration — `theme.cover` n'est plus relu en base (`normaliseTheme`) ni dans `GiftView`, et un
+garde-fou de `npm run check` l'interdit.
 Un repli s'ouvre d'emblée si le champ porte déjà une valeur, pour qu'en édition rien de rempli ne
 se cache.
 
@@ -614,8 +620,7 @@ seconde et demie après que tout ce qu'on voit se soit posé.
 ## Les effets
 
 **Séparés des ouvertures, à dessein.** L'ouverture dit comment le voile se lève ; l'effet, ce qui se
-passe derrière. Les deux se combinent librement — un halo peut lâcher des confettis — et un effet
-reste utile quand le donneur a coupé le voile.
+passe derrière. Les deux se combinent librement — un halo peut lâcher des confettis.
 
 | effet | rendu |
 |---|---|
