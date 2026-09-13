@@ -2,12 +2,47 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GiftView from "@/components/GiftView";
 import { EXEMPLE } from "@/lib/exemple";
+import { alt as altBanniere, size as tailleBanniere } from "@/app/opengraph-image";
+
+const DESCRIPTION =
+  "Une vraie page-cadeau à essayer : lève le voile, choisis parmi quatre idées, confirme. Rien n'est envoyé.";
 
 export const metadata: Metadata = {
   title: "Exemple de page-cadeau — MyPresentsForYou",
-  description:
-    "Une vraie page-cadeau à essayer : lève le voile, choisis parmi quatre idées, confirme. Rien n'est envoyé.",
+  description: DESCRIPTION,
   alternates: { canonical: "/exemple" },
+  /*
+   * Un `openGraph` de page remplace celui du layout en entier, sans fusion :
+   * type, nom du site et langue y sont repetes. L'exemple se partage — c'est
+   * ce qui justifiait une page plutot qu'un apercu — et son titre doit le dire.
+   *
+   * L'image, en revanche, est citee a la main : des que la page declare son
+   * propre openGraph, celle du fichier app/opengraph-image.tsx ne sort plus —
+   * mesure dans le HTML servi, aucune og:image. Ses dimensions et son texte
+   * alternatif viennent de ce fichier, pour suivre la banniere si elle change.
+   */
+  openGraph: {
+    type: "website",
+    siteName: "MyPresentsForYou",
+    locale: "fr_BE",
+    url: "/exemple",
+    title: "Exemple de page-cadeau — MyPresentsForYou",
+    description: DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: tailleBanniere.width,
+        height: tailleBanniere.height,
+        alt: altBanniere,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Exemple de page-cadeau — MyPresentsForYou",
+    description: DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
 };
 
 /*
