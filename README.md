@@ -632,7 +632,7 @@ passe derrière. Les deux se combinent librement — un halo peut lâcher des co
 | **Bulles** | Elles montent, grossissent, et éclatent en fin de course. |
 | **Feuilles** | Chute lente, avec un tournoiement sur deux axes. |
 | **Ballons** | Sept seulement, gros et lents, avec leur ficelle. |
-| **Poussière d'or** | Un scintillement sur place, sans chute. |
+| **Poussière d'or** | Des étoiles à quatre branches qui scintillent sur place, sans chute. |
 
 Comme la palette et le décor, **l'occasion en propose un** : neige pour Noël, confettis pour un
 anniversaire, pétales pour la Saint-Valentin, bulles pour une naissance, ballons pour une
@@ -654,8 +654,11 @@ plus de soin :
   effets et n'a pas à connaître les besoins de chacun.
 - **La poussière d'or ne traverse rien.** Tous les autres entrent par un bord et ressortent par
   l'autre ; celle-ci se pose où elle tombe et scintille sur place. D'où `--y`, la hauteur de départ
-  que le composant tire pour chaque grain, et trois grains par `<span>` posés en `box-shadow` :
-  vingt-six points sur un écran entier, c'est un désert.
+  que le composant tire pour chaque grain. Ces grains sont des **étoiles à quatre branches** — la
+  même que l'icône de l'effet dans l'éditeur — et non plus des points de deux à quatre pixels, qui se
+  lisaient comme de la poussière au sens propre. Découpées au masque dans les pseudo-éléments : deux
+  par `<span>`, parce que vingt-six sur un écran entier, c'est un désert, et qu'une `box-shadow`
+  copie la boîte, pas l'étoile. Le halo est un dégradé sur le `<span>` lui-même.
 
 Trois règles de fabrication :
 

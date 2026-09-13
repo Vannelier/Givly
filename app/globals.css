@@ -1765,33 +1765,67 @@ select {
 }
 
 /*
- * Poussiere d'or : un scintillement, et rien qui traverse l'ecran.
+ * Poussiere d'or : des etoiles qui scintillent, et rien qui traverse l'ecran.
  *
  * Le seul effet qui ne va nulle part. Les autres entrent par un bord et
  * ressortent par l'autre ; celui-ci se pose la ou il tombe — d'ou `--y`, la
  * hauteur de depart que le composant tire pour chaque grain — et se contente de
- * respirer sur place. Des grains fins et nombreux, avec un halo.
+ * respirer sur place.
+ *
+ * Des etoiles a quatre branches, et non plus des points. Un point de deux a
+ * quatre pixels se lisait comme une poussiere au sens propre, pas comme un
+ * eclat. C'est la meme etoile que l'icone de l'effet dans l'editeur (✧).
  */
 .fx--poussiere span {
   top: var(--y);
-  border-radius: 999px;
-  background: var(--accent);
   /*
-   * Trois grains par span, poses en `box-shadow` : vingt-six points sur un ecran
-   * entier, c'est un desert. Le decalage negatif de la troisieme valeur retrecit
-   * les copies, ce qui evite trois grains parfaitement identiques ; la premiere
-   * ombre, sans decalage, est le halo.
+   * Le span ne porte que le halo. Les etoiles sont decoupees au masque dans ses
+   * pseudo-elements : une ombre, elle, copie la boite et non l'etoile — les
+   * grains qu'ajoutait `box-shadow` seraient restes des points.
    */
-  box-shadow:
-    0 0 5px var(--accent),
-    17px -26px 0 -0.4px var(--accent),
-    -21px 31px 0 -0.7px var(--accent);
-  width: calc(var(--size) * 0.3);
-  height: calc(var(--size) * 0.3);
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--accent) 35%, transparent),
+    transparent
+  );
+  width: calc(var(--size) * 1.5);
+  height: calc(var(--size) * 1.5);
   animation-name: fx-poussiere;
   animation-duration: calc(var(--dur) * 0.62);
   /* Il respire plusieurs fois avant de s'eteindre — sinon on ne le voit pas. */
   animation-iteration-count: 3;
+}
+
+/* Quatre branches aux flancs creuses : un eclat, pas une croix. */
+.fx--poussiere span::before,
+.fx--poussiere span::after {
+  content: "";
+  position: absolute;
+  background: var(--accent);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 0C12.9 7.2 16.8 11.1 24 12 16.8 12.9 12.9 16.8 12 24 11.1 16.8 7.2 12.9 0 12 7.2 11.1 11.1 7.2 12 0z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 0C12.9 7.2 16.8 11.1 24 12 16.8 12.9 12.9 16.8 12 24 11.1 16.8 7.2 12.9 0 12 7.2 11.1 11.1 7.2 12 0z'/%3E%3C/svg%3E");
+}
+
+/* L'etoile principale, au centre de son halo. */
+.fx--poussiere span::before {
+  inset: 16%;
+}
+
+/*
+ * Une seconde etoile, plus petite et decalee : vingt-six etoiles sur un ecran
+ * entier, c'est un desert. Elle reprend le role des grains en ombre.
+ */
+.fx--poussiere span::after {
+  width: 36%;
+  height: 36%;
+  left: 118%;
+  top: -52%;
 }
 
 /* Etincelles : elles partent du bas et s'eteignent en montant. */
@@ -1949,7 +1983,9 @@ select {
   }
   78% {
     opacity: 0.85;
-    transform: translate3d(calc(var(--drift) * -0.1), -15px, 0) scale(0.8);
+    /* L'etoile pivote un peu : c'est ce qui la fait scintiller plutot que clignoter. */
+    transform: translate3d(calc(var(--drift) * -0.1), -15px, 0) scale(0.8)
+      rotate(calc(var(--spin) * 0.06));
   }
 }
 
