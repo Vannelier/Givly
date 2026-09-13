@@ -58,7 +58,7 @@ const QUESTIONS: { q: string; r: string[] }[] = [
   {
     q: "Combien de temps la page reste-t-elle en ligne ?",
     r: [
-      "Trente jours si personne ne choisit — passé ce délai, elle est supprimée automatiquement. Une fois le choix fait, la carte se fige sur ce choix et reste consultable jusqu'à ce que tu la supprimes toi-même.",
+      "Un an si personne ne choisit — passé ce délai, elle est supprimée automatiquement. Une fois le choix fait, la carte se fige sur ce choix et reste consultable jusqu'à ce que tu la supprimes toi-même.",
     ],
   },
   {

@@ -5,9 +5,18 @@ export function baseUrl(): string {
   return "http://localhost:3000";
 }
 
+/**
+ * Un an. A trente jours, une carte avait disparu bien avant que l'occasion ne
+ * revienne — un anniversaire, Noel — alors que c'est a ce moment-la qu'on
+ * voudrait la retrouver. Exportee pour la carte a imprimer, dont les mots gardes
+ * sur l'appareil se perimment avec la page : deux durees recopiees a la main
+ * finiraient par diverger.
+ */
+export const DUREE_VIE_PAGE_JOURS = 365;
+
 export function freePageTtlDays(): number {
   const n = Number.parseInt(process.env.FREE_PAGE_TTL_DAYS ?? "", 10);
-  return Number.isFinite(n) && n > 0 ? n : 30;
+  return Number.isFinite(n) && n > 0 ? n : DUREE_VIE_PAGE_JOURS;
 }
 
 export function publicUrlFor(slug: string): string {

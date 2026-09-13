@@ -33,6 +33,7 @@ import { hexToHsl, hslToHex, styleDeTeinte, teinteDuTheme } from "../lib/carteCo
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
+import { freePageTtlDays } from "../lib/env";
 import { MEDIA_DIR } from "../lib/mediaStore";
 import {
   DEFAULT_PRINT_LAYOUT,
@@ -349,6 +350,18 @@ test("isExpired : null n'expire jamais, une date passée oui", () => {
   assert.equal(isExpired({ expires_at: null }), false);
   assert.equal(isExpired({ expires_at: new Date(Date.now() + 60_000).toISOString() }), false);
   assert.equal(isExpired({ expires_at: new Date(Date.now() - 60_000).toISOString() }), true);
+});
+
+test("une page vit un an, et la carte a imprimer perime avec elle", () => {
+  const avant = process.env.FREE_PAGE_TTL_DAYS;
+  try {
+    delete process.env.FREE_PAGE_TTL_DAYS;
+    assert.equal(freePageTtlDays(), 365);
+  } finally {
+    if (avant !== undefined) process.env.FREE_PAGE_TTL_DAYS = avant;
+  }
+  // Une duree recopiee a la main finirait par diverger de celle de la page.
+  assert.match(lire("lib/printTexts.ts"), /const DUREE_MS = DUREE_VIE_PAGE_JOURS \*/);
 });
 
 test("isLocked suit chosen_at", () => {

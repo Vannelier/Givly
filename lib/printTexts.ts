@@ -22,14 +22,17 @@
  * Aucun import Node : ce module part dans le bundle navigateur.
  */
 
+import { DUREE_VIE_PAGE_JOURS } from "./env";
+
 /** Change dès que la forme change. Une version antérieure est jetée, pas devinée. */
 const VERSION = 1;
 
 /**
- * Trente jours, la durée de vie d'une page gratuite : au-delà, la carte à
- * laquelle ces mots appartenaient n'existe plus.
+ * La durée de vie d'une page gratuite : au-delà, la carte à laquelle ces mots
+ * appartenaient n'existe plus. Lue dans `env.ts` plutôt que recopiée, pour
+ * suivre la page si sa durée change.
  */
-const DUREE_MS = 30 * 24 * 60 * 60 * 1000;
+const DUREE_MS = DUREE_VIE_PAGE_JOURS * 24 * 60 * 60 * 1000;
 
 /** Une clé par carte : un donneur peut en avoir plusieurs en cours. */
 function cle(slug: string): string {
@@ -40,7 +43,7 @@ function cle(slug: string): string {
  * L'ancienne cle, du temps ou le site portait un autre nom. Meme raison que dans
  * `draft.ts` : renommer sans relire jette ce qui etait deja ecrit. La perte
  * serait moins grave — des textes de carte, pas une carte entiere — mais le
- * rattrapage tient en une ligne. A retirer passe les trente jours de `DUREE_MS`.
+ * rattrapage tient en une ligne. A retirer passe la duree de `DUREE_MS`.
  */
 function cleAncienne(slug: string): string {
   return `givly:carte:${slug}`;

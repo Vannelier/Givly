@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import TextPage from "@/components/TextPage";
 
-const MISE_A_JOUR = "2026-09-07";
+const MISE_A_JOUR = "2026-09-13";
 
 export const metadata: Metadata = {
   title: "Conditions d'utilisation — MyPresentsForYou",
@@ -41,7 +41,7 @@ export default function Conditions() {
       <h2>Durée de vie d&apos;une carte</h2>
       <p>
         Une carte sur laquelle personne n&apos;a choisi est supprimée{" "}
-        <strong>30 jours après sa création</strong>. Une fois le choix fait, elle se fige sur ce
+        <strong>un an après sa création</strong>. Une fois le choix fait, elle se fige sur ce
         choix : elle n&apos;est plus modifiable, et reste consultable jusqu&apos;à ce que tu la
         supprimes.
       </p>

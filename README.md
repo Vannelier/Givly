@@ -46,7 +46,7 @@ récupère les valeurs du projet.
 | `POSTGRES_PRISMA_URL` | injectée par Vercel ; le code ne la lit jamais |
 | `BLOB_READ_WRITE_TOKEN` | écriture Vercel Blob ; absent, repli sur `.media/` |
 | `NEXT_PUBLIC_BASE_URL` | base absolue des liens, balises Open Graph, `robots.txt` et sitemap |
-| `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 30) |
+| `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 365) |
 | `RATE_LIMIT_DISABLED` | `1` coupe les quotas. Développement seulement — voir « Les routes anonymes » |
 
 ### 3. Créer le schéma
@@ -472,7 +472,8 @@ colonnes, une migration et autant de règles de validation, pour un texte qu'on 
 avant d'imprimer. `localStorage` couvre le vrai risque — recharger la page, ou revenir imprimer un
 deuxième exemplaire — sans rien ajouter au schéma. C'est le même arbitrage que pour le modèle de
 carte, et le même mécanisme que le brouillon de composition : une clé par carte, une version qui
-invalide les formes anciennes, une péremption à 30 jours (la durée de vie d'une page gratuite), et
+invalide les formes anciennes, une péremption à un an (la durée de vie d'une page gratuite,
+`DUREE_VIE_PAGE_JOURS`, lue dans `lib/env.ts` et non recopiée), et
 tous les accès enveloppés dans des `try` — en navigation privée, lire `localStorage` lève.
 
 Le panneau est replié par défaut : neuf fois sur dix les mots de la page conviennent, et un
@@ -807,7 +808,7 @@ Les pages-cadeau, elles, gardent leur propre aperçu, composé à partir de l'im
 ## Les routes anonymes et leurs quotas
 
 Aucun compte, aucun paiement, aucune adresse : rien n'identifie qui appelle l'API. Les routes
-ouvertes coûtent pourtant — une ligne en base, des images stockées trente jours, des requêtes
+ouvertes coûtent pourtant — une ligne en base, des images stockées un an, des requêtes
 sortantes. `lib/rateLimit.ts` leur pose un quota par adresse.
 
 | route | quota | pourquoi ce seuil |
@@ -914,7 +915,7 @@ L'application ne dépend d'aucun hébergeur en particulier.
 | `POSTGRES_URL_NON_POOLING` | connexion directe pour la migration ; souvent la même |
 | `NEXT_PUBLIC_BASE_URL` | base absolue des liens, QR codes et balises Open Graph |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob ; absent, les images vont dans `.media/` |
-| `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 30) |
+| `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 365) |
 
 Deux pièges, tous deux silencieux :
 
@@ -1072,7 +1073,7 @@ les cadeaux (voir « Ce qui est personnalisable »). Il est bon en soi, et n'eng
 
 **Les images sont recopiées, jamais hotlinkées.** Qu'elle vienne de l'extraction OG, d'une URL
 collée ou d'un téléversement, chaque image est rapatriée dans Vercel Blob. Une page doit rester
-intacte 30 jours ; hotlinker l'image d'un marchand la casse dès qu'il touche à son site. Si la
+intacte un an ; hotlinker l'image d'un marchand la casse dès qu'il touche à son site. Si la
 copie échoue (403, lien mort, format refusé), l'URL d'origine est conservée en dernier recours et
 l'UI le signale — la création n'est jamais bloquée pour autant.
 

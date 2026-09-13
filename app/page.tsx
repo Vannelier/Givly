@@ -209,7 +209,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      <SiteFooter note="Une page reste en ligne 30 jours. Garde bien ton lien d'administration pour voir le cadeau désiré par la personne qui reçoit ta page-cadeau." />
+      <SiteFooter note="Une page reste en ligne un an. Garde bien ton lien d'administration pour voir le cadeau désiré par la personne qui reçoit ta page-cadeau." />
     </main>
   );
 }

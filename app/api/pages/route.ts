@@ -13,7 +13,7 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     // La route la plus couteuse du site : une insertion, la recopie des images
-    // vers le stockage, et une page qui vivra trente jours. Deux garde-fous —
+    // vers le stockage, et une page qui vivra un an. Deux garde-fous —
     // un par adresse, et un plafond global qui tient meme si l'abus est reparti
     // sur beaucoup d'adresses.
     const trop =

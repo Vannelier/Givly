@@ -25,7 +25,7 @@ export function isOwnBlobUrl(url: string): boolean {
 /**
  * Rapatrie une image externe dans Vercel Blob.
  *
- * Une page doit rester visuellement intacte pendant 30 jours : hotlinker l'image
+ * Une page doit rester visuellement intacte pendant un an : hotlinker l'image
  * d'un marchand la casse des qu'il touche a son site. En cas d'echec (403, lien
  * mort, type refuse) on rend l'URL d'origine en dernier recours, avec un message
  * a afficher dans l'UI de creation — jamais une erreur bloquante.
