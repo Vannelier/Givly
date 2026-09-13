@@ -33,7 +33,7 @@ import { hexToHsl, hslToHex, styleDeTeinte, teinteDuTheme } from "../lib/carteCo
 import { RESERVED_SLUGS, slugError, slugify, suggestVariant } from "../lib/slug";
 import { REPLY_WINDOW_MS, isExpired, isLocked, isSealed, replyWindowOpen } from "../lib/types";
 import { LIMITS } from "../lib/limits";
-import { freePageTtlDays } from "../lib/env";
+import { adsensePublisherId, freePageTtlDays } from "../lib/env";
 import { MEDIA_DIR } from "../lib/mediaStore";
 import {
   DEFAULT_PRINT_LAYOUT,
@@ -362,6 +362,32 @@ test("une page vit un an, et la carte a imprimer perime avec elle", () => {
   }
   // Une duree recopiee a la main finirait par diverger de celle de la page.
   assert.match(lire("lib/printTexts.ts"), /const DUREE_MS = DUREE_VIE_PAGE_JOURS \*/);
+});
+
+/*
+ * Le code d'annonce AdSense montre `ca-pub-…` ; ads.txt veut `pub-…`. C'est la
+ * premiere forme qu'on copie : la refuser laisserait /ads.txt en 404 sans que
+ * rien ne dise pourquoi.
+ */
+test("ads.txt accepte l'identifiant AdSense sous ses deux formes, et rien d'autre", () => {
+  const avant = process.env.ADSENSE_PUBLISHER_ID;
+  const cas: [string | undefined, string | null][] = [
+    [undefined, null],
+    ["pub-1234567890123456", "pub-1234567890123456"],
+    [" ca-pub-1234567890123456 ", "pub-1234567890123456"],
+    ["pub-123", null],
+    ["google.com, pub-1234567890123456, DIRECT", null],
+  ];
+  try {
+    for (const [valeur, attendu] of cas) {
+      if (valeur === undefined) delete process.env.ADSENSE_PUBLISHER_ID;
+      else process.env.ADSENSE_PUBLISHER_ID = valeur;
+      assert.equal(adsensePublisherId(), attendu, `ADSENSE_PUBLISHER_ID=${valeur}`);
+    }
+  } finally {
+    if (avant === undefined) delete process.env.ADSENSE_PUBLISHER_ID;
+    else process.env.ADSENSE_PUBLISHER_ID = avant;
+  }
 });
 
 test("isLocked suit chosen_at", () => {
@@ -1057,7 +1083,6 @@ test("validateTheme ne garde qu'une ouverture et un effet connus", () => {
   assert.equal(ko.opening, DEFAULT_OPENING_ID);
   assert.equal(ko.effect, DEFAULT_EFFECT_ID);
 });
-
 
 // --- Limitation de debit ---------------------------------------------------
 

@@ -19,6 +19,22 @@ export function freePageTtlDays(): number {
   return Number.isFinite(n) && n > 0 ? n : DUREE_VIE_PAGE_JOURS;
 }
 
+/**
+ * L'identifiant d'editeur AdSense, s'il est pose et bien forme ; `null` sinon.
+ *
+ * Il vit dans l'environnement et non dans le code : changer de compte, ou
+ * retirer la publicite, ne demande qu'une variable. Un identifiant mal forme est
+ * ignore plutot que publie — un ads.txt qui declare un compte inexistant ne sert
+ * a rien, et Google le signale comme une erreur.
+ *
+ * `ca-pub-…` est accepte : c'est la forme que montre le code d'annonce, donc
+ * celle qu'on copie. ads.txt, lui, veut `pub-…`.
+ */
+export function adsensePublisherId(): string | null {
+  const id = (process.env.ADSENSE_PUBLISHER_ID?.trim() ?? "").replace(/^ca-/, "");
+  return /^pub-\d{16}$/.test(id) ? id : null;
+}
+
 export function publicUrlFor(slug: string): string {
   return `${baseUrl()}/${slug}`;
 }

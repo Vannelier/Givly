@@ -47,6 +47,7 @@ récupère les valeurs du projet.
 | `BLOB_READ_WRITE_TOKEN` | écriture Vercel Blob ; absent, repli sur `.media/` |
 | `NEXT_PUBLIC_BASE_URL` | base absolue des liens, balises Open Graph, `robots.txt` et sitemap |
 | `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 365) |
+| `ADSENSE_PUBLISHER_ID` | identifiant d'éditeur AdSense (`pub-…` ou `ca-pub-…`), publié dans `/ads.txt` ; absent, `/ads.txt` répond 404 |
 | `RATE_LIMIT_DISABLED` | `1` coupe les quotas. Développement seulement — voir « Les routes anonymes » |
 
 ### 3. Créer le schéma
@@ -153,15 +154,25 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `/admin/[token]` | vue admin — `noindex` |
 
 Les slugs `admin`, `api`, `creer`, `_next`, `contact`, `conditions`, `confidentialite`,
-`mentions-legales`, `questions`, `exemple`, `favicon.ico`, `robots.txt`, `sitemap.xml`,
-`manifest.webmanifest`, `icon`, `icon.svg`, `apple-icon`, `apple-touch-icon.png`, `opengraph-image`
-et `twitter-image` sont réservés : `/[slug]` les traite en 404 sans requête en base. Les noms à
-points ne peuvent de toute façon pas former un slug ; ils restent listés pour que la liste dise ce
-qui est pris.
+`mentions-legales`, `questions`, `exemple`, `favicon.ico`, `robots.txt`, `llms.txt`, `ads.txt`,
+`sitemap.xml`, `manifest.webmanifest`, `icon`, `icon.svg`, `apple-icon`, `apple-touch-icon.png`,
+`opengraph-image` et `twitter-image` sont réservés : `/[slug]` les traite en 404 sans requête en
+base. Les noms à points ne peuvent de toute façon pas former un slug ; ils restent listés pour que
+la liste dise ce qui est pris.
 
 `/robots.txt` laisse explorer les pages-cadeau — c'est en les lisant qu'un robot voit leur
 `noindex` — mais interdit `/admin/` : un jeton d'administration n'a rien à faire dans un index.
 `/sitemap.xml` déclare les pages du site — l'accueil, `/creer`, `/questions`, `/exemple`… —, jamais les cartes.
+
+`/llms.txt` résume le site pour les assistants conversationnels, au format de llmstxt.org : ce que
+fait le service, et les pages qui comptent. Comme le sitemap, il ne cite jamais une carte, et il est
+figé au build — `NEXT_PUBLIC_BASE_URL` doit donc exister dès cette phase.
+
+`/ads.txt` déclare le compte AdSense autorisé à vendre de l'espace publicitaire sur le site. Il est
+lu dans `ADSENSE_PUBLISHER_ID` à chaque requête ; sans elle, il répond 404 plutôt qu'un fichier vide
+ou un compte fictif, qu'AdSense signalerait comme une erreur. **Aucune annonce n'est affichée
+aujourd'hui** : en afficher poserait des cookies, ce que la politique de confidentialité exclut
+(« aucun cookie, aucun traqueur »), et demanderait un bandeau de consentement.
 
 ### API
 
@@ -916,6 +927,7 @@ L'application ne dépend d'aucun hébergeur en particulier.
 | `NEXT_PUBLIC_BASE_URL` | base absolue des liens, QR codes et balises Open Graph |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob ; absent, les images vont dans `.media/` |
 | `FREE_PAGE_TTL_DAYS` | durée de vie d'une page gratuite (défaut : 365) |
+| `ADSENSE_PUBLISHER_ID` | identifiant AdSense publié dans `/ads.txt` ; facultatif |
 
 Deux pièges, tous deux silencieux :
 

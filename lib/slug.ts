@@ -19,6 +19,8 @@ export const RESERVED_SLUGS = new Set([
   "exemple",
   "favicon.ico",
   "robots.txt",
+  "llms.txt",
+  "ads.txt",
   "sitemap.xml",
   "manifest.webmanifest",
   "icon",
