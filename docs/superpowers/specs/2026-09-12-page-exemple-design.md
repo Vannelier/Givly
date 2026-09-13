@@ -63,7 +63,7 @@ le choix.
 ### Jouable, sans rien envoyer
 
 La page rend `GiftView` en **mode aperçu**. Dans ce mode, `confirm()` et `sendReply()` rendent la
-main avant toute requête (dans `confirm()` et `sendReply()` de `components/GiftView.tsx`) : on lève
+main avant toute requête (`components/GiftView.tsx`) : on lève
 le voile, on choisit, on confirme, on écrit un mot — et rien ne part. N'importe qui peut la jouer,
 autant de fois qu'il veut, sans rien écrire en base ni solliciter une seule route de l'API.
 
