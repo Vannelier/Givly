@@ -1,7 +1,7 @@
 # La page d'exemple — voir une page-cadeau avant d'en composer une
 
 **Date** : 2026-09-12
-**État** : validé, prêt pour le plan d'implémentation
+**État** : implémenté — voir « Écarts au livré »
 
 ## Le problème
 
@@ -63,9 +63,9 @@ le choix.
 ### Jouable, sans rien envoyer
 
 La page rend `GiftView` en **mode aperçu**. Dans ce mode, `confirm()` et `sendReply()` rendent la
-main avant toute requête (`components/GiftView.tsx`, vers les lignes 392 et 426) : on lève le voile,
-on choisit, on confirme, on écrit un mot — et rien ne part. N'importe qui peut la jouer, autant de
-fois qu'il veut, sans rien écrire en base ni solliciter une seule route de l'API.
+main avant toute requête (dans `confirm()` et `sendReply()` de `components/GiftView.tsx`) : on lève
+le voile, on choisit, on confirme, on écrit un mot — et rien ne part. N'importe qui peut la jouer,
+autant de fois qu'il veut, sans rien écrire en base ni solliciter une seule route de l'API.
 
 ### Ce qui dit que c'est un exemple
 
@@ -156,6 +156,34 @@ répit, leçon du chantier précédent, où une mesure prise trop tôt avait men
 - la console : aucune erreur d'hydratation ;
 - l'accueil à 375 et à 1440 : les deux boutons et la note, sans débordement horizontal ;
 - le poids des quatre photos.
+
+## Écarts au livré
+
+La spec ci-dessus décrit l'intention ; cette section, ce qui a changé en cours de route, et pourquoi.
+
+- **Un troisième garde-fou.** Mesuré à 1440 après l'ajout du bouton, le bord du bouton secondaire
+  valait environ 1,2:1 contre le papier (`--line`), et 2,7:1 au survol (`--ink-faint`) : il se lisait
+  comme du texte. Il passe à `--ink-soft` au repos et à `--ink` au survol, comme la barre d'action de
+  l'éditeur, et un garde-fou tient les deux.
+- **La note de l'accroche passe sous les boutons.** À 1440, trois éléments dans la rangée cassaient
+  les libellés des boutons sur deux lignes. Au-delà de 52 rem, les libellés sont insécables et la
+  rangée revient à la ligne : la note passe dessous. Vers 840 px, la colonne de texte est trop
+  étroite pour les deux boutons côte à côte : le bouton secondaire passe lui aussi dessous, sans
+  débordement ; ils sont de nouveau côte à côte à 860.
+- **L'exemple occupe la fenêtre.** Le mode aperçu laissait à l'éditeur trois rôles que `/exemple`
+  n'a personne pour tenir : le verrou du défilement sous le voile, la remontée à l'ouverture, la
+  restauration du défilement coupée. Un prop `pleineFenetre` les lui rend, et le garde-fou du mode
+  aperçu l'exige.
+- **Le partage dit « exemple ».** `/exemple` porte ses propres métadonnées de partage. L'image du site
+  y est citée explicitement : dès que la page déclare son propre `openGraph`, celle du fichier
+  `app/opengraph-image.tsx` ne sort plus.
+- **Le garde-fou des photos compare la casse**, que `existsSync` ignore sous Windows.
+- **Non vérifié à l'œil : l'apparition des cartes à 375.** Le volet du navigateur était fermé pendant
+  la mesure (`document.visibilityState: hidden`), ce qui suspend l'observateur d'intersection qui
+  révèle les cartes. Les photos se chargent à 1440 et sur l'écran de fin ; à confirmer sur un vrai
+  téléphone après le déploiement.
+- **« Rejouer l'aperçu »** reste le libellé de l'écran de fin, hérité de l'éditeur, et le second
+  passage ne remet pas le voile. Comportement préexistant, désormais public ; laissé en l'état.
 
 ## Hors périmètre
 

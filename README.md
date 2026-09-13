@@ -152,10 +152,12 @@ Les deux écrivent dans le même `.next` et le graphe de modules du serveur de d
 | `/[slug]` | page-cadeau publique — `noindex` |
 | `/admin/[token]` | vue admin — `noindex` |
 
-Les slugs `admin`, `api`, `creer`, `_next`, `icon`, `apple-icon`, `opengraph-image`,
-`twitter-image`, `favicon.ico`, `robots.txt`, `sitemap.xml` et `manifest.webmanifest` sont
-réservés : `/[slug]` les traite en 404 sans requête en base. Les noms à points ne peuvent de toute
-façon pas former un slug ; ils restent listés pour que la liste dise ce qui est pris.
+Les slugs `admin`, `api`, `creer`, `_next`, `contact`, `conditions`, `confidentialite`,
+`mentions-legales`, `questions`, `exemple`, `favicon.ico`, `robots.txt`, `sitemap.xml`,
+`manifest.webmanifest`, `icon`, `icon.svg`, `apple-icon`, `apple-touch-icon.png`, `opengraph-image`
+et `twitter-image` sont réservés : `/[slug]` les traite en 404 sans requête en base. Les noms à
+points ne peuvent de toute façon pas former un slug ; ils restent listés pour que la liste dise ce
+qui est pris.
 
 `/robots.txt` laisse explorer les pages-cadeau — c'est en les lisant qu'un robot voit leur
 `noindex` — mais interdit `/admin/` : un jeton d'administration n'a rien à faire dans un index.
