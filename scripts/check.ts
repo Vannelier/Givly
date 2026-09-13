@@ -175,6 +175,17 @@ test("la page d'exemple reste en mode apercu", () => {
   const rendus = lire(chemin).match(/<GiftView\b[^>]*>/g) ?? [];
   assert.equal(rendus.length, 1, "la page d'exemple doit rendre GiftView une fois, et une seule");
   assert.match(rendus[0], /\bmode="preview"/, "GiftView n'y est plus en mode apercu");
+
+  /*
+   * Et elle occupe la fenetre : sans `pleineFenetre`, le mode apercu laisse la
+   * page defiler sous le voile et peut jouer l'ouverture hors du champ — il
+   * compte sur l'editeur pour tenir ces roles, et l'exemple n'a pas d'editeur.
+   */
+  assert.match(
+    rendus[0],
+    /\bpleineFenetre\b(?!=\{false\})/,
+    "GiftView n'y occupe plus la fenetre : le voile ne retient plus le defilement",
+  );
 });
 
 /*

@@ -17,7 +17,9 @@ export const metadata: Metadata = {
  *
  * Le bandeau est celui de l'apercu de l'editeur. Le voile, en position fixe et
  * au-dessus, le recouvre pendant l'ouverture : on arrive ici par un bouton qui
- * dit deja « exemple ».
+ * dit deja « exemple ». Elle occupe la fenetre, comme une vraie page :
+ * `pleineFenetre` lui rend le verrou du defilement sous le voile et la
+ * remontee a l'ouverture, que l'editeur tient lui-meme autour de son apercu.
  */
 export default function ExemplePage() {
   return (
@@ -31,6 +33,7 @@ export default function ExemplePage() {
       <GiftView
         page={EXEMPLE}
         mode="preview"
+        pleineFenetre
         lienSortie={{ libelle: "Composer ma page-cadeau", href: "/creer" }}
       />
     </>
