@@ -199,9 +199,17 @@ test("chaque photo de la page d'exemple existe", () => {
   for (const item of EXEMPLE.items) {
     assert.ok(item.image_url, `${item.label} : pas de photo`);
     assert.ok(item.image_url.startsWith("/"), `${item.label} : photo hors du site (${item.image_url})`);
+    /*
+     * La casse compte : `existsSync` l'ignore sous Windows, ou `Casque.jpg`
+     * passerait pour `casque.jpg` — et renverrait un 404 sur un serveur Linux.
+     * On compare donc au nom exact tel qu'il figure dans son dossier.
+     */
+    const coupe = item.image_url.lastIndexOf("/");
+    const dossier = new URL(`../public${item.image_url.slice(0, coupe + 1)}`, import.meta.url);
+    const nom = item.image_url.slice(coupe + 1);
     assert.ok(
-      existsSync(new URL(`../public${item.image_url}`, import.meta.url)),
-      `${item.label} : ${item.image_url} manque sous public/`,
+      existsSync(dossier) && readdirSync(dossier).includes(nom),
+      `${item.label} : ${item.image_url} manque sous public/ (casse comprise)`,
     );
   }
 });
