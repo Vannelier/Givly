@@ -549,12 +549,16 @@ pastille de validation occupant le coin opposé.
 Une cérémonie, pas un écran utilitaire — **et un seul rythme du début à la fin**. Mesuré au
 chronomètre dans le navigateur :
 
-| l'écran d'accueil du receveur | à |
+| l'écran d'accueil du receveur, à mi-opacité | à |
 |---|---|
-| le prénom | 1,36 s |
-| le mot d'ouverture | 1,80 s |
-| le titre | 2,60 s |
-| le bouton d'ouverture | 2,88 s |
+| le prénom | 1,18 s |
+| le mot d'ouverture | 2,02 s |
+| le titre | 3,98 s |
+| le bouton d'ouverture | 5,85 s |
+
+Relevé animation par animation, par pas de 10 ms. Le bouton arrivait à 6,45 s ; sa pause après le
+titre est passée de 3,2 s à 2,6 s parce que l'attente paraissait longue. Le titre atteint 98 % de son
+opacité à 5,34 s : il reste une demi-seconde où l'on n'a que la phrase sous les yeux.
 
 | après le clic | à |
 |---|---|

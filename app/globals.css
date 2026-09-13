@@ -1470,14 +1470,15 @@ select {
    * les yeux. C'est pourtant la que se joue l'envie d'ouvrir : on lit, on
    * comprend, et c'est *ensuite* qu'on cherche par ou entrer.
    *
-   * 3,2 s laissent 1,2 s de blanc apres la pose du titre, soit le double du
-   * souffle qui precede le titre lui-meme. Le rapport est voulu : le silence
-   * grandit a mesure qu'on approche de ce qu'on est venu chercher.
+   * 2,6 s, et non plus 3,2 : l'attente paraissait longue. Mesure par pas de
+   * 10 ms, le titre atteint 98 % de son opacite a 5,34 s, et le bouton ne passe
+   * la moitie de la sienne qu'a 5,85 s — contre 6,45 s avant. Le silence tient
+   * encore, une demi-seconde ; plus court, il se refermerait.
    *
    * Sa duree reste 1,4 s. C'est la derniere chose qui bouge, elle donne le
    * signal — elle doit arriver franchement, pas ramper apres une longue attente.
    */
-  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle) + 3.2s);
+  animation-delay: calc(0.2s + 2 * var(--voile-pas) + var(--voile-souffle) + 2.6s);
   animation-duration: 1.4s;
 }
 
